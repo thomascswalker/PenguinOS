@@ -2,7 +2,10 @@
 
 . ./scripts/config.sh
 
-rm -r build
+if [ -e build ]
+then
+	rm -r build
+fi
 mkdir build
 
 # Make the ISO build folder structure

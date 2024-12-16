@@ -15,4 +15,4 @@ kernel:
 	$(GCC) -c terminal.h -o ../build/terminal.o -std=$(C_VERSION) $(C_FLAGS) -Wall -Wextra
 
 # Link the kernel and all source files
-	$(GCC) -T ../source/linker.ld -o ../build/boot/PengOS.bin $(C_FLAGS) -nostdlib ../build/boot.o ../build/kernel.o
+	$(GCC) -T linker.ld -o ../build/boot/PengOS.bin $(C_FLAGS) -nostdlib ../build/boot.o ../build/kernel.o
