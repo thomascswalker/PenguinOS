@@ -8,18 +8,18 @@ i686-elf-as source/boot.s -o build/boot.o
 i686-elf-gcc -c source/kernel.c -o build/kernel.o -std=gnu99 -ffreestanding -O2 -Wall -Wextra
 
 # Link the kernel and all source files
-i686-elf-gcc -T source/linker.ld -o build/myos.bin -ffreestanding -O2 -nostdlib build/boot.o build/kernel.o -lgcc
+i686-elf-gcc -T linker.ld -o build/PengOS.bin -ffreestanding -O2 -nostdlib build/boot.o build/kernel.o -lgcc
 
 # Make the ISO build folder structure
-mkdir -p build/isodir/boot/grub
+mkdir -p build/iso/boot/grub
 
 # Move the bin file we created
-mv build/myos.bin build/isodir/boot/myos.bin
+mv build/PengOS.bin build/iso/boot/PengOS.bin
 
 # Copy the grub config file
-cp source/grub.cfg build/isodir/boot/grub/grub.cfg
+cp grub.cfg build/iso/boot/grub/grub.cfg
 
 # Run grub
-grub-mkrescue -o build/isodir/myos.iso build/isodir
+grub-mkrescue -o build/iso/PengOS.iso build/iso
 
-qemu-system-i386 -cdrom build/isodir/myos.iso
+qemu-system-i386 -cdrom build/iso/PengOS.iso
