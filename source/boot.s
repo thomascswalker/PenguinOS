@@ -27,20 +27,9 @@ doesn't make sense to return from this function as the bootloader is gone.
 .global _start
 .type _start, @function
 _start:
-	# To set up a stack, we set the esp register to point to the top of the
-	# stack (as it grows downwards on x86 systems). This is necessarily done
-	# in assembly as languages such as C cannot function without a stack.
-	mov $stack_top, %esp
-
-	/*
-	Enter the high-level kernel. The ABI requires the stack is 16-byte
-	aligned at the time of the call instruction (which afterwards pushes
-	the return pointer of size 4 bytes). The stack was originally 16-byte
-	aligned above and we've pushed a multiple of 16 bytes to the
-	stack since (pushed 0 bytes so far), so the alignment has thus been
-	preserved and the call is well defined.
-	*/
-	call kernel_main
+	mov $stack_top, %esp									# Set the esp (stack pointer) register to point to the
+															# top of the stack
+	call kernel_main										# Enter the kernel
 
 	# Loop
 	cli														# Disable interrupts
