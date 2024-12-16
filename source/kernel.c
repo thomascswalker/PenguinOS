@@ -31,6 +31,9 @@ typedef unsigned char uint8_t;
 typedef unsigned short uint16_t;
 typedef unsigned long uint32_t;
 
+const char CHAR_NEW_LINE = '\n';
+const char CHAR_TAB = '\t';
+
 static inline uint8_t VGA_EntryColor(enum VGAColor foreColor, enum VGAColor backColor)
 {
     return foreColor | backColor << 4;
@@ -41,14 +44,14 @@ static inline uint16_t VGA_Entry(unsigned char character, uint8_t color)
     return (uint16_t)character | (uint16_t)color << 8;
 }
 
-uint32_t String_Length(const char *str)
+uint32_t String_Length(const char *string)
 {
-    uint32_t len = 0;
-    while (str[len])
+    uint32_t length = 0;
+    while (string[length])
     {
-        len++;
+        length++;
     }
-    return len;
+    return length;
 }
 
 static const uint32_t g_VGA_WIDTH = 80;
@@ -88,6 +91,12 @@ void Terminal_PutEntryAt(char c, uint8_t color, uint32_t x, uint32_t y)
 
 void Terminal_PutChar(char c)
 {
+    if (c == CHAR_NEW_LINE)
+    {
+        g_terminalRow++;
+        g_terminalColumn = 0;
+        return;
+    }
     Terminal_PutEntryAt(c, g_terminalColor, g_terminalColumn, g_terminalRow);
     if (++g_terminalColumn == g_VGA_WIDTH)
     {
@@ -118,5 +127,5 @@ void Kernel_Main(void)
     Terminal_Initialize();
 
     /* Newline support is left as an exercise. */
-    Terminal_PrintF("Welcome to PengOS.\n");
+    Terminal_PrintF("Welcome to PengOS.\nTest new line.\n");
 }
