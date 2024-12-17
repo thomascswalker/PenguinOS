@@ -84,6 +84,11 @@ void set_terminal_color(uint8 color)
 	g_terminal.color = color;
 }
 
+void reset_terminal_color()
+{
+	g_terminal.color = VGA_COLOR_WHITE;
+}
+
 void put_terminal(char c)
 {
 	// Handle special characters
@@ -126,17 +131,16 @@ void write_terminal(const char* data, size_t size)
 
 void println(const char* data)
 {
-	write_terminal(data, strlen(data));
+	write_terminal(data, str_length(data));
+	write_terminal("\n", 1);
 }
 
-void printlnc(const char* data, vga_color_t color)
+void formatln(const char* fmt, ...)
 {
-	// Store the current color as previous.
-	vga_color_t prev_color = g_terminal.color;
-	// Temporarily set the terminal color to the specified color.
-	set_terminal_color(color);
-	// Write the text to the terminal.
-	write_terminal(data, strlen(data));
-	// Reset the terminal color back to the previous color.
-	set_terminal_color(prev_color);
+	va_list args;
+	va_start(args, fmt);
+	const char* fmt_str = format(fmt, args);
+	write_terminal(fmt_str, str_length(fmt_str));
+	write_terminal("\n", 1);
+	va_end(args)
 }
