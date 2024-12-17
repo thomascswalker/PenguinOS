@@ -1,9 +1,11 @@
-#include "terminal.h"
+#include "stdlib/terminal.h"
 
 void kernel_main(void)
 {
 	init_terminal();
-	printfc("Welcome to PengOS.\n", VGA_COLOR_LIGHT_GREEN);
-	printf("\tThomas Walker\n");
-	printf("t\tTest");
+	set_terminal_color(VGA_COLOR_GREEN);
+	println("Welcome to PengOS.\n");
+	set_terminal_color(VGA_COLOR_DEFAULT);
+	println("\tThomas Walker\n");
+	println("\tmeow");
 }

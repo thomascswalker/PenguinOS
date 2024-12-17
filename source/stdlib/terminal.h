@@ -1,3 +1,5 @@
+#pragma once
+
 #if defined(__linux__)
 #error "You are not using a cross-compiler."
 #endif
@@ -6,14 +8,7 @@
 // #error "This needs to be compiled with ix86-elf."
 #endif
 
-// Types
-
-typedef signed char	   int8_t;
-typedef signed short   int16_t;
-typedef signed long	   int32_t;
-typedef unsigned char  uint8_t;
-typedef unsigned short uint16_t;
-typedef unsigned long  uint32_t;
+#include "string.h"
 
 // VGA
 
@@ -39,45 +34,34 @@ enum vga_color
 	VGA_COLOR_LIGHT_MAGENTA = 13,
 	VGA_COLOR_LIGHT_BROWN = 14,
 	VGA_COLOR_WHITE = 15,
+	VGA_COLOR_DEFAULT = VGA_COLOR_WHITE,
 };
 
 typedef enum vga_color vga_color_t;
 
-static inline uint8_t make_entry_color(vga_color_t fore_color, vga_color_t back_color)
+static inline uint8 make_entry_color(vga_color_t fore_color, vga_color_t back_color)
 {
 	return fore_color | back_color << 4;
 }
 
-static inline uint16_t create_entry(unsigned char character, uint8_t color)
+static inline uint16 create_entry(unsigned char character, uint8 color)
 {
-	return (uint16_t)character | (uint16_t)color << 8;
-}
-
-// String
-
-uint32_t strlen(const char* string)
-{
-	uint32_t length = 0;
-	while (string[length])
-	{
-		length++;
-	}
-	return length;
+	return (uint16)character | (uint16)color << 8;
 }
 
 // Terminal
 
 struct terminal
 {
-	uint16_t*	buffer; // Buffer of all terminal text.
+	uint16*		buffer; // Buffer of all terminal text.
 	vga_color_t color;	// The current cursor color.
-	uint32_t	row;	// The current cursor row.
-	uint32_t	column; // The current cursor column.
+	uint32		row;	// The current cursor row.
+	uint32		column; // The current cursor column.
 };
 typedef struct terminal terminal_t;
 static terminal_t		g_terminal;
 
-#define TERMINAL_BUFFER_START (uint16_t*)0xB8000
+#define TERMINAL_BUFFER_START (uint16*)0xB8000
 
 void init_terminal(void)
 {
@@ -85,17 +69,17 @@ void init_terminal(void)
 	g_terminal.column = 0;
 	g_terminal.color = make_entry_color(VGA_COLOR_LIGHT_GREY, VGA_COLOR_BLACK);
 	g_terminal.buffer = TERMINAL_BUFFER_START;
-	for (uint32_t y = 0; y < VGA_HEIGHT; y++)
+	for (uint32 y = 0; y < VGA_HEIGHT; y++)
 	{
-		for (uint32_t x = 0; x < VGA_WIDTH; x++)
+		for (uint32 x = 0; x < VGA_WIDTH; x++)
 		{
-			const uint32_t index = y * VGA_WIDTH + x;
+			const uint32 index = y * VGA_WIDTH + x;
 			g_terminal.buffer[index] = create_entry(' ', g_terminal.color);
 		}
 	}
 }
 
-void set_terminal_color(uint8_t color)
+void set_terminal_color(uint8 color)
 {
 	g_terminal.color = color;
 }
@@ -113,14 +97,14 @@ void put_terminal(char c)
 			}
 		case '\t':
 			{
-				uint32_t remainder = g_terminal.column % 4;
+				uint32 remainder = g_terminal.column % 4;
 				g_terminal.column += remainder != 0 ? remainder : 4;
 				return;
 			}
 	}
 
 	// Display standard characters
-	const uint32_t index = g_terminal.row * VGA_WIDTH + g_terminal.column;
+	const uint32 index = g_terminal.row * VGA_WIDTH + g_terminal.column;
 	g_terminal.buffer[index] = create_entry(c, g_terminal.color);
 	if (++g_terminal.column == VGA_WIDTH)
 	{
@@ -132,20 +116,20 @@ void put_terminal(char c)
 	}
 }
 
-void write_terminal(const char* data, uint32_t size)
+void write_terminal(const char* data, size_t size)
 {
-	for (uint32_t i = 0; i < size; i++)
+	for (size_t i = 0; i < size; i++)
 	{
 		put_terminal(data[i]);
 	}
 }
 
-void printf(const char* data)
+void println(const char* data)
 {
 	write_terminal(data, strlen(data));
 }
 
-void printfc(const char* data, vga_color_t color)
+void printlnc(const char* data, vga_color_t color)
 {
 	// Store the current color as previous.
 	vga_color_t prev_color = g_terminal.color;
