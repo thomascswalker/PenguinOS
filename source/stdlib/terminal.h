@@ -133,7 +133,8 @@ void write_terminal(const char* data, size_t size)
 
 enum format_spec
 {
-	FMT_STRING = 's'
+	FMT_STRING = 's',
+	FMT_INT = 'i'
 };
 typedef enum format_spec format_spec_t;
 
@@ -170,16 +171,28 @@ void println(const char* fmt, ...)
 			continue;
 		}
 
-		i++;					 // Go to next char (%x, where x is the next)
-		char specifier = fmt[i]; // Get the format specifier
+		// Go to next char (%x, where x is the next)
+		i++;
+		// Get the format specifier.
+		format_spec_t specifier = fmt[i];
 
 		switch (specifier)
 		{
 			case FMT_STRING: // Strings
 				{
 					print(va_arg(args, char*));
+					break;
+				}
+			case FMT_INT:
+				{
+					const char* string = itos(va_arg(args, int));
+					print(string);
+					break;
 				}
 			default:
+				print("Invalid specifier [");
+				print(specifier);
+				print("].");
 				break;
 		}
 		i++; // Go to next token after the format specifier

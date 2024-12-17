@@ -7,6 +7,5 @@ void kernel_main(void)
 	println("Welcome to PengOS.");
 	reset_terminal_color();
 	println("\tThomas Walker");
-	const char* str = "FORMAT";
-	println("Format line: %s.", str);
+	println("I have %i %s.", 12345, "apples");
 }
