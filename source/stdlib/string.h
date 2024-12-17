@@ -4,6 +4,17 @@
 #include "stdmem.h"
 #include "types.h"
 
+typedef int (*buffer_write_func)(char*);
+
+struct stringstream
+{
+	size_t			  buffer_length; // Size of the stream
+	size_t			  buffer_pos;	 // Current position of the cursor
+	char*			  buffer;		 // The actual character buffer
+	buffer_write_func func;			 // The write function which writes to this buffer
+};
+typedef struct stringstream stringstream_t;
+
 size_t str_length(const char* string)
 {
 	size_t length = 0;
@@ -30,20 +41,4 @@ bool str_equal(const char* lhs, const char* rhs)
 	}
 
 	return true;
-}
-
-const char* format(const char* fmt, ...)
-{
-	va_list args;
-	va_start(args, fmt);
-
-	// Create the output character buffer
-	const char* out;
-
-	// Direct copy from source to dest
-	mem_copy((void*)out, (void*)fmt, str_length(fmt));
-
-	va_end(args);
-
-	return fmt;
 }

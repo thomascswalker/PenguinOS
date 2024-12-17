@@ -129,18 +129,63 @@ void write_terminal(const char* data, size_t size)
 	}
 }
 
-void println(const char* data)
+// Printing
+
+enum format_spec
 {
-	write_terminal(data, str_length(data));
-	write_terminal("\n", 1);
+	FMT_STRING = 's'
+};
+typedef enum format_spec format_spec_t;
+
+void print(const char* str)
+{
+	write_terminal(str, str_length(str));
 }
 
-void formatln(const char* fmt, ...)
+void println(const char* fmt, ...)
 {
 	va_list args;
 	va_start(args, fmt);
-	const char* fmt_str = format(fmt, args);
-	write_terminal(fmt_str, str_length(fmt_str));
-	write_terminal("\n", 1);
-	va_end(args)
+
+	size_t i = 0; // Track current position in 'fmt'
+
+	while (i < str_length(fmt))
+	{
+		char c = fmt[i]; // Get the current character
+		if (!is_ascii(c))
+		{
+			char* msg = "Invalid token [%].";
+			//------------------------- ^ INDEX 16
+			msg[16] = c;
+			print(msg);
+			return;
+		}
+
+		// If the current character is not the start of
+		// a format token, display it and continue.
+		if (c != '%')
+		{
+			put_terminal(c);
+			i++;
+			continue;
+		}
+
+		i++;					 // Go to next char (%x, where x is the next)
+		char specifier = fmt[i]; // Get the format specifier
+
+		switch (specifier)
+		{
+			case FMT_STRING: // Strings
+				{
+					print(va_arg(args, char*));
+				}
+			default:
+				break;
+		}
+		i++; // Go to next token after the format specifier
+	}
+
+	va_end(args);
+
+	put_terminal('\n');
 }
