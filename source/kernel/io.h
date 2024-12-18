@@ -1,11 +1,13 @@
 #pragma once
 
-#if defined(__linux__)
-#error "You are not using a cross-compiler."
+// If on a normal desktop platform, define i386 as to not
+// throw an error.
+#ifdef _WIN32
+#define __i386__
 #endif
 
 #if !defined(__i386__)
-// #error "This needs to be compiled with ix86-elf."
+#error "This needs to be compiled with ix86-elf."
 #endif
 
 #include <string.h>
@@ -21,7 +23,7 @@
 #define VGA_PORT_INDEX_CGA 0x3d4
 
 /* Hardware text mode color constants. */
-enum vga_color
+typedef enum vga_color
 {
 	VGA_COLOR_BLACK = 0,
 	VGA_COLOR_BLUE = 1,
@@ -40,8 +42,7 @@ enum vga_color
 	VGA_COLOR_LIGHT_BROWN = 14,
 	VGA_COLOR_WHITE = 15,
 	VGA_COLOR_DEFAULT = VGA_COLOR_WHITE,
-};
-typedef enum vga_color vga_color_t;
+} vga_color_t;
 
 static inline uint8 make_entry_color(vga_color_t fore_color, vga_color_t back_color)
 {
@@ -66,15 +67,14 @@ static inline uint16 create_entry(unsigned char character, uint8 color)
 
 // Terminal
 
-struct terminal
+typedef struct terminal
 {
 	uint16*		buffer; // Buffer of all terminal text.
 	vga_color_t color;	// The current cursor color.
 	uint32		x;		// The current cursor row.
 	uint32		y;		// The current cursor column.
-};
-typedef struct terminal terminal_t;
-static terminal_t		g_terminal;
+} terminal_t;
+static terminal_t g_terminal;
 
 #define TERMINAL_BUFFER_START (uint16*)0xB8000
 

@@ -1,4 +1,4 @@
-#include "terminal.h"
+#include "io.h"
 
 // Entry point
 void kernel_main(void)
