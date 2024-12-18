@@ -18,10 +18,6 @@
 #define VGA_WIDTH 80
 #define VGA_HEIGHT 25
 
-#define VGA_INDEX_MDA 0x3b4
-#define VGA_GCR_ADDR 0x3ce
-#define VGA_PORT_INDEX_CGA 0x3d4
-
 /* Hardware text mode color constants. */
 typedef enum vga_color
 {
@@ -41,10 +37,10 @@ typedef enum vga_color
 	VGA_COLOR_LIGHT_MAGENTA = 13,
 	VGA_COLOR_LIGHT_BROWN = 14,
 	VGA_COLOR_WHITE = 15,
-	VGA_COLOR_DEFAULT = VGA_COLOR_WHITE,
+	VGA_COLOR_DEFAULT = VGA_COLOR_LIGHT_GREY,
 } vga_color_t;
 
-static inline uint8 make_entry_color(vga_color_t fore_color, vga_color_t back_color)
+static inline vga_color_t make_entry_color(vga_color_t fore_color, vga_color_t back_color)
 {
 	// Backcolor is shifted four bytes to match the correct
 	// memory alignment.
@@ -65,8 +61,7 @@ static inline uint16 create_entry(unsigned char character, uint8 color)
 	return (uint16)character | (uint16)color << 8;
 }
 
-// Terminal
-
+// Terminal containing a 16-bit text buffer.
 typedef struct terminal
 {
 	uint16*		buffer; // Buffer of all terminal text.
@@ -74,15 +69,20 @@ typedef struct terminal
 	uint32		x;		// The current cursor row.
 	uint32		y;		// The current cursor column.
 } terminal_t;
+// Global terminal object.
 static terminal_t g_terminal;
 
+// The starting point of the terminal's text buffer in memory.
 #define TERMINAL_BUFFER_START (uint16*)0xB8000
 
+// Returns the current cursor position in the terminal.
 uint32 get_cursor_pos()
 {
 	return (g_terminal.x * VGA_WIDTH) + g_terminal.y;
 }
 
+// Sets the current cursor position in the terminal to
+// `[x,y]`.
 void set_cursor_pos(int8 x, int8 y)
 {
 	uint16 pos = y * VGA_WIDTH + x;
@@ -107,12 +107,8 @@ void disable_cursor()
 	outb(0x3D5, 0x20);
 }
 
-void init_terminal()
+void clear_terminal()
 {
-	g_terminal.x = 0;
-	g_terminal.y = 0;
-	g_terminal.color = make_entry_color(VGA_COLOR_LIGHT_GREY, VGA_COLOR_BLACK);
-	g_terminal.buffer = TERMINAL_BUFFER_START;
 	for (uint32 y = 0; y < VGA_HEIGHT; y++)
 	{
 		for (uint32 x = 0; x < VGA_WIDTH; x++)
@@ -121,6 +117,16 @@ void init_terminal()
 			g_terminal.buffer[index] = create_entry(' ', g_terminal.color);
 		}
 	}
+	set_cursor_pos(0, 0);
+}
+
+void init_terminal()
+{
+	g_terminal.x = 0;
+	g_terminal.y = 0;
+	g_terminal.color = make_entry_color(VGA_COLOR_DEFAULT, VGA_COLOR_BLACK);
+	g_terminal.buffer = TERMINAL_BUFFER_START;
+	clear_terminal();
 	enable_cursor(0, VGA_HEIGHT - 1);
 }
 
