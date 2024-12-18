@@ -1,7 +1,7 @@
 #include "types.h"
 
-// Copy `size` of memory from `source` to `destination`.
-uint8* memcpy(uint8* dest, uint8* source, size_t size)
+// Copy `size` of memory from `source` to `destination`. (8-bit)
+void* memcpy(void* dest, void* source, size_t size)
 {
 	uint8*		 p_dest = (uint8*)dest;
 	const uint8* p_source = (uint8*)source;

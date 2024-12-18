@@ -12,7 +12,7 @@ mkdir build
 mkdir -p build/boot/grub
 
 # Run Makefile 
-(cd source && $MAKE kernel)
+(cd source && $MAKE -d kernel)
 
 # Construct the grub config file
 cat > build/boot/grub/grub.cfg << EOF
