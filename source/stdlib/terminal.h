@@ -83,6 +83,15 @@ uint32 get_cursor_pos()
 	return (g_terminal.x * VGA_WIDTH) + g_terminal.y;
 }
 
+void set_cursor_pos(int8 x, int8 y)
+{
+	uint16 pos = y * VGA_WIDTH + x;
+	outb(0x3D4, 0x0F);
+	outb(0x3D5, (uint8)(pos & 0xFF));
+	outb(0x3D4, 0x0E);
+	outb(0x3D5, (uint8)((pos >> 8) & 0xFF));
+}
+
 void enable_cursor(uint8 start, uint8 end)
 {
 	outb(0x3D4, 0x0A);
@@ -96,15 +105,6 @@ void disable_cursor()
 {
 	outb(0x3D4, 0x0A);
 	outb(0x3D5, 0x20);
-}
-
-void set_cursor(int8 x, int8 y)
-{
-	uint16 pos = y * VGA_WIDTH + x;
-	outb(0x3D4, 0x0F);
-	outb(0x3D5, (uint8)(pos & 0xFF));
-	outb(0x3D4, 0x0E);
-	outb(0x3D5, (uint8)((pos >> 8) & 0xFF));
 }
 
 void init_terminal()
@@ -202,8 +202,8 @@ typedef enum format_spec format_spec_t;
 
 void print(const char* str)
 {
-	write_terminal(str, str_length(str));
-	set_cursor(g_terminal.y, g_terminal.x);
+	write_terminal(str, strlen(str));
+	set_cursor_pos(g_terminal.y, g_terminal.x);
 }
 
 void println(const char* fmt, ...)
@@ -213,10 +213,10 @@ void println(const char* fmt, ...)
 
 	size_t i = 0; // Track current position in 'fmt'
 
-	while (i < str_length(fmt))
+	while (i < strlen(fmt))
 	{
 		char c = fmt[i]; // Get the current character
-		if (!is_ascii(c))
+		if (!isascii(c))
 		{
 			char* msg = "Invalid token [%].";
 			//------------------------- ^ INDEX 16
@@ -262,5 +262,5 @@ void println(const char* fmt, ...)
 	va_end(args);
 
 	put_terminal('\n');
-	set_cursor(g_terminal.y, g_terminal.x);
+	set_cursor_pos(g_terminal.y, g_terminal.x);
 }

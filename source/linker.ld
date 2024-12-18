@@ -28,27 +28,3 @@ SECTIONS
 		*(.bss)
 	}
 }
-
-/*
-	.text BLOCK(4K) : ALIGN(4K)
-	{
-		*(.multiboot)
-		*(.text)
-	}
-
-	.rodata BLOCK(4K) : ALIGN(4K)
-	{
-		*(.rodata)
-	}
-
-	.data BLOCK(4K) : ALIGN(4K)
-	{
-		*(.data)
-	}
-
-	.stack BLOCK(4K) : ALIGN(4K)
-	{
-		*(COMMON)
-		*(.stack)
-	}
-*/

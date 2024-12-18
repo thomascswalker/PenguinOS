@@ -4,7 +4,8 @@
 #include "stdmem.h"
 #include "types.h"
 
-size_t str_length(const char* string)
+// Returns the length of `string`.
+size_t strlen(const char* string)
 {
 	size_t length = 0;
 	while (string[length])
@@ -14,14 +15,15 @@ size_t str_length(const char* string)
 	return length;
 }
 
-bool str_equal(const char* lhs, const char* rhs)
+// Returns true if both strings are equal. False otherwise.
+bool strcmp(const char* lhs, const char* rhs)
 {
-	if (str_length(lhs) != str_length(rhs))
+	if (strlen(lhs) != strlen(rhs))
 	{
 		return false;
 	}
 
-	for (size_t i = 0; i < str_length(lhs); i++)
+	for (size_t i = 0; i < strlen(lhs); i++)
 	{
 		if (lhs[i] != rhs[i])
 		{
@@ -32,15 +34,16 @@ bool str_equal(const char* lhs, const char* rhs)
 	return true;
 }
 
-void str_reverse(char* str)
+// Reverses, in-place, the specified `string`.
+void strrev(char* string)
 {
 	int start = 0;
-	int end = str_length(str) - 1;
+	int end = strlen(string) - 1;
 	while (start < end)
 	{
-		char c = str[start];
-		str[start] = str[end];
-		str[end] = c;
+		char c = string[start];
+		string[start] = string[end];
+		string[end] = c;
 
 		start++;
 		end--;
@@ -103,7 +106,7 @@ char* itos(int32 value)
 
 	// Reverse the string (since it was built in reverse
 	// order).
-	str_reverse(buffer);
+	strrev(buffer);
 
 	// Terminate
 	buffer[size] = '\0';
