@@ -7,15 +7,12 @@ C_FLAGS	:= $(C_FLAGS) -ffreestanding -Wall -Wextra
 # Include directories
 INCLUDE_DIRS ?= stdlib kernel
 
-kernel:
+main:
 # Bootstrap assembly
 	$(AS) boot.s -o ../build/boot.o
 
 # Compile the kernel
-	$(GCC) -c kernel.c -o ../build/kernel.o -std=$(C_VERSION) $(C_FLAGS) -nostdlib -I $(foreach dir, $(INCLUDE_DIRS), -I$(dir))
-
-# # Compile other source files
-# 	$(GCC) -c stdlib/terminal.h -o ../build/terminal.o -std=$(C_VERSION) $(C_FLAGS) -Wall -Wextra
+	$(GCC) -c main.c -o ../build/main.o -std=$(C_VERSION) $(C_FLAGS) -nostdlib -I $(foreach dir, $(INCLUDE_DIRS), -I$(dir))
 
 # Link the kernel and all source files
-	$(GCC) -T linker.ld -o ../build/boot/PengOS.bin $(C_FLAGS) -nostdlib ../build/boot.o ../build/kernel.o
+	$(GCC) -T linker.ld -o ../build/boot/PengOS.bin $(C_FLAGS) -nostdlib ../build/boot.o ../build/main.o
