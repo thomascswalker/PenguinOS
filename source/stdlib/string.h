@@ -1,8 +1,8 @@
 #pragma once
 
-#include "stdarg.h"
-#include "stdmem.h"
-#include "types.h"
+#include <arg.h>
+#include <memory.h>
+#include <types.h>
 
 // Returns the length of `string`.
 size_t strlen(const char* string)
