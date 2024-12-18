@@ -1,5 +1,6 @@
 #include "stdlib/terminal.h"
 
+// Entry point
 void kernel_main(void)
 {
 	init_terminal();
