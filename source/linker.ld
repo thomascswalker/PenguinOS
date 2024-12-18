@@ -6,6 +6,8 @@ ENTRY(_start)
    kernel image. */
 SECTIONS
 {
+	. = 1M; /* Start at 1MB */
+
 	.text BLOCK(4K) : ALIGN(4K)
 	{
 		*(.multiboot)

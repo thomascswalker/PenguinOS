@@ -8,8 +8,8 @@
 // #error "This needs to be compiled with ix86-elf."
 #endif
 
-#include "string.h"
-#include "system.h"
+#include <string.h>
+#include <system.h>
 
 // VGA
 

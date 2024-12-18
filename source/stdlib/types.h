@@ -1,6 +1,6 @@
 #pragma once
 
-#include "stdbool.h"
+#include <bool.h>
 
 typedef signed char		   int8;
 typedef signed short	   int16;
