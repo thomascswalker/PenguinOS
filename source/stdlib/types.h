@@ -9,3 +9,13 @@ typedef unsigned char	   uint8;
 typedef unsigned short	   uint16;
 typedef unsigned int	   uint32;
 typedef unsigned long long size_t;
+
+bool is_ascii(char c)
+{
+	return ((c >= 0) && (c <= 127));
+}
+
+bool is_number(char c)
+{
+	return ((c >= 48) && (c <= 57));
+}

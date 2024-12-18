@@ -84,6 +84,11 @@ void set_terminal_color(uint8 color)
 	g_terminal.color = color;
 }
 
+void reset_terminal_color()
+{
+	g_terminal.color = VGA_COLOR_WHITE;
+}
+
 void put_terminal(char c)
 {
 	// Handle special characters
@@ -124,19 +129,74 @@ void write_terminal(const char* data, size_t size)
 	}
 }
 
-void println(const char* data)
+// Printing
+
+enum format_spec
 {
-	write_terminal(data, strlen(data));
+	FMT_STRING = 's',
+	FMT_INT = 'i'
+};
+typedef enum format_spec format_spec_t;
+
+void print(const char* str)
+{
+	write_terminal(str, str_length(str));
 }
 
-void printlnc(const char* data, vga_color_t color)
+void println(const char* fmt, ...)
 {
-	// Store the current color as previous.
-	vga_color_t prev_color = g_terminal.color;
-	// Temporarily set the terminal color to the specified color.
-	set_terminal_color(color);
-	// Write the text to the terminal.
-	write_terminal(data, strlen(data));
-	// Reset the terminal color back to the previous color.
-	set_terminal_color(prev_color);
+	va_list args;
+	va_start(args, fmt);
+
+	size_t i = 0; // Track current position in 'fmt'
+
+	while (i < str_length(fmt))
+	{
+		char c = fmt[i]; // Get the current character
+		if (!is_ascii(c))
+		{
+			char* msg = "Invalid token [%].";
+			//------------------------- ^ INDEX 16
+			msg[16] = c;
+			print(msg);
+			return;
+		}
+
+		// If the current character is not the start of
+		// a format token, display it and continue.
+		if (c != '%')
+		{
+			put_terminal(c);
+			i++;
+			continue;
+		}
+
+		// Go to next char (%x, where x is the next)
+		i++;
+		// Get the format specifier.
+		format_spec_t specifier = fmt[i];
+
+		switch (specifier)
+		{
+			case FMT_STRING: // Strings
+				{
+					print(va_arg(args, char*));
+					break;
+				}
+			case FMT_INT:
+				{
+					const char* string = itos(va_arg(args, int));
+					print(string);
+					break;
+				}
+			default:
+				print("Invalid specifier.");
+				break;
+		}
+		i++; // Go to next token after the format specifier
+	}
+
+	va_end(args);
+
+	put_terminal('\n');
 }

@@ -2,6 +2,6 @@
 
 typedef int* va_list;
 
-#define va_start(ap, last) ((ap) = (int*)&(last) + 1)
-#define va_arg(ap, type) (*(type*)(ap)++)
-#define va_end(ap)
+#define va_start(args, last) ((args) = (int*)&(last) + 1)
+#define va_arg(args, type) (*(type*)(args)++)
+#define va_end(args)
