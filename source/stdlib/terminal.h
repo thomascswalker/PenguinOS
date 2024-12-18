@@ -190,9 +190,7 @@ void println(const char* fmt, ...)
 					break;
 				}
 			default:
-				print("Invalid specifier [");
-				print(specifier);
-				print("].");
+				print("Invalid specifier.");
 				break;
 		}
 		i++; // Go to next token after the format specifier
