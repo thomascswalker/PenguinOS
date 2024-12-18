@@ -1,13 +1,15 @@
 #pragma once
 
-extern unsigned char inportb(unsigned short _port)
+#include "types.h"
+
+static inline uint8 inb(uint16 _port)
 {
 	unsigned char rv;
-	asm("inb %1, %0" : "=a"(rv) : "dN"(_port));
+	__asm__ volatile("inb %w1, %b0" : "=a"(rv) : "Nd"(_port) : "memory");
 	return rv;
 };
 
-extern void outportb(unsigned short _port, unsigned char _data)
+static inline void outb(uint16 _port, uint8 _data)
 {
-	asm("outb %1, %0" : : "dN"(_port), "a"(_data));
+	__asm__ volatile("outb %b0, %w1" : : "a"(_data), "Nd"(_port) : "memory");
 }

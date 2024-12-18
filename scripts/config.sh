@@ -1,4 +1,4 @@
-export C_VERSION=gnu99
+export C_VERSION=c23
 
 export MAKE=${MAKE:-make}
 

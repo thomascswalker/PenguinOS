@@ -10,12 +10,12 @@ typedef unsigned short	   uint16;
 typedef unsigned int	   uint32;
 typedef unsigned long long size_t;
 
-bool is_ascii(char c)
+bool is_ascii(int32 c)
 {
 	return ((c >= 0) && (c <= 127));
 }
 
-bool is_number(char c)
+bool is_number(int32 c)
 {
 	return ((c >= 48) && (c <= 57));
 }

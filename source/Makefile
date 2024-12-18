@@ -2,14 +2,14 @@ include ../scripts/config.sh
 
 # Flags
 C_FLAGS	?= -O2 -g
-C_FLAGS	:= $(C_FLAGS) -ffreestanding
+C_FLAGS	:= $(C_FLAGS) -ffreestanding -Wall -Wextra
 
 kernel:
 # Bootstrap assembly
 	$(AS) boot.s -o ../build/boot.o
 
 # Compile the kernel
-	$(GCC) -c kernel.c -o ../build/kernel.o -std=$(C_VERSION) $(C_FLAGS) -nostdlib -lgcc
+	$(GCC) -c kernel.c -o ../build/kernel.o -std=$(C_VERSION) $(C_FLAGS) -nostdlib 
 
 # # Compile other source files
 # 	$(GCC) -c stdlib/terminal.h -o ../build/terminal.o -std=$(C_VERSION) $(C_FLAGS) -Wall -Wextra

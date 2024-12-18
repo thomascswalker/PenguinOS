@@ -1,18 +1,18 @@
-.set ALIGN,    1<<0             							# Align loaded modules on page boundaries
-.set MEMINFO,  1<<1             							# Provide memory map
-.set FLAGS,    ALIGN | MEMINFO  							# This is the Multiboot 'flag' field
-.set MAGIC,    0x1BADB002       							# 'Magic number' lets bootloader find the header
-.set CHECKSUM, -(MAGIC + FLAGS) 							# Checksum of above, to prove we are multiboot
+.set MULTIBOOT_PAGE_ALIGN,   1<<0             								# Align loaded modules on page boundaries
+.set MULTIBOOT_MEMORY_INFO,  1<<1             								# Provide memory map
+.set MULTIBOOT_HEADER_FLAGS, MULTIBOOT_PAGE_ALIGN | MULTIBOOT_MEMORY_INFO	# Multiboot flags
+.set MULTIBOOT_HEADER_MAGIC, 0x1BADB002       								# 'Magic number' lets bootloader find the header
+.set MULTIBOOT_CHECKSUM, -(MULTIBOOT_HEADER_MAGIC + MULTIBOOT_HEADER_FLAGS) # Checksum of above, to prove we are multiboot
 
 # Declare a multiboot header that marks the program as a kernel
 .section .multiboot											# Declare multiboot header
 .align 4													# Align to byte 4
-.long MAGIC													# 4 bytes (8)
-.long FLAGS													# 4 bytes (12)
-.long CHECKSUM												# 4 bytes (16)
+.long MULTIBOOT_HEADER_MAGIC								# 4 bytes (8)
+.long MULTIBOOT_HEADER_FLAGS								# 4 bytes (12)
+.long MULTIBOOT_CHECKSUM									# 4 bytes (16)
 
 # Define
-.section .stack												# Declare stack header
+.section .bss												# Declare stack header
 .align 16													# Align to byte 32
 stack_bottom:												# Function to skip to the bottom of the stack (16384)
 .skip 16384 												# 16 KiB
