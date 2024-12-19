@@ -10,7 +10,7 @@ INCLUDE_DIRS ?= stdlib kernel
 main:
 # Bootstrap assembly
 	@printf "[ Bootstrapping... ]\n"
-	$(AS) boot.s -o ../build/boot.o
+	nasm -felf32 boot.asm -o ../build/boot.o
 
 # Compile the kernel
 	@printf "[ Generating kernel symbols... ]\n"
