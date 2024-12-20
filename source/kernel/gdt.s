@@ -1,9 +1,19 @@
-global gdt_flush                                            ; Makes 'gdt_flush' accesible from C
 extern gp                                                   ; Declares 'gp' is defined in C.
 
+section .text
+global gdt_flush
 gdt_flush:
-    lgdt [gp]                                               ; Loads the GDT descriptor from memory at 'gp'
-    
+    lgdt [gp]
+    ret
+
+global gdt_reload
+gdt_reload:
+    push 0x08
+    lea eax, [rel reload_cs]
+    push eax                                                ; Crashes here for some reason
+    ret
+
+reload_cs:
     ; Reload segment registers
     mov ax, 0x10                                            ; Load 0x10 into 'ax'. 0x10 is the selector for the data segment in the GDT.
     mov ds, ax                                              ; Load the data segment register
@@ -11,11 +21,4 @@ gdt_flush:
     mov fs, ax                                              ; Load the extra segment register
     mov gs, ax                                              ; Load the extra segment register
     mov ss, ax                                              ; Load the stack segment register
-    
-    ; Perform a far jump to reload the code segment register (cs) with the code segment selector.
-    ; 0x08 is the selector for the code segment, which is the first entry in the GDT.
-    jmp 0x08:flush2
-
-flush2:
-    ; Return from the function
     ret

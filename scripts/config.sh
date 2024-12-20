@@ -8,7 +8,17 @@ export HOST=i686-elf
 export GCC=${HOST}-gcc
 export AS=nasm
 
-INCLUDE_DIRS=("kernel" "stdlib")
+export SOURCE_DIR="./source"
+export BUILD_DIR="./build"
+export BOOT_DIR="$BUILD_DIR/boot"
+
+export CFLAGS="-O2 -g -ffreestanding -Wall -Wextra"
+export ASFLAGS="-f elf32 -g"
+
+export KERNEL="PengOS.bin"
+export ISO="PengOS.iso"
+
+INCLUDE_DIRS=(kernel stdlib)
 build_include_args() {
     result=""
     for dir in "${INCLUDE_DIRS[@]}"; do
@@ -17,16 +27,6 @@ build_include_args() {
     
     echo "-I.source/ ${result# }"
 }
-
-export SOURCE_DIR="./source"
-export BUILD_DIR="./build"
-export BOOT_DIR="$BUILD_DIR/boot"
-
-export CFLAGS="-O2 -g -ffreestanding -Wall -Wextra"
-export ASFLAGS="-f elf32"
-
-export KERNEL="PengOS.bin"
-export ISO="PengOS.iso"
 
 error_exit() {
     printf "ERROR: $1\n"

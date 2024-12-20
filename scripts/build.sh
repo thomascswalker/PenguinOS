@@ -28,5 +28,7 @@ EOF
 # Run grub
 printf "[ Building ISO... ]\n"
 grub-mkrescue -o build/${ISO} build
+
+# Run QEMU
 printf "[ Running QEMU-i386. ]\n"
-qemu-system-i386 -cdrom build/${ISO}
+setsid qemu-system-i386 -cdrom build/${ISO} # -S -s 
