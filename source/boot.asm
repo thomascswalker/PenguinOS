@@ -23,7 +23,6 @@ main:
 	mov esp, stack_top										; Set the esp register to the top of our stack.
 	extern kernel_main										; Indicate we are calling an external C function.
 	call kernel_main										; Call 'kernel_main' in C.
-
 	cli														; Disable interrupts
 .hang: hlt													; Wait until the next 'hlt' instruction
 	jmp .hang												; Jump to the 'hlt' instruction (infinite loop).

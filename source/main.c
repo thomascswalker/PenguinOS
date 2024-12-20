@@ -1,3 +1,7 @@
+/*
+Main entry point into PengOS. Inializes the kernel.
+*/
+
 #include <io.h>
 
 // Entry point
