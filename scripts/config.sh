@@ -13,7 +13,7 @@ export BUILD_DIR="./build"
 export BOOT_DIR="$BUILD_DIR/boot"
 
 export CFLAGS="-O2 -g -ffreestanding -Wall -Wextra"
-export ASFLAGS="-f elf32 -g"
+export ASFLAGS="-felf32 -g"
 
 export KERNEL="PengOS.bin"
 export ISO="PengOS.iso"

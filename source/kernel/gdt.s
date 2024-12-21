@@ -1,24 +1,30 @@
-extern gp                                                   ; Declares 'gp' is defined in C.
+[bits 32]
 
-section .text
 global gdt_flush
 gdt_flush:
-    lgdt [gp]
-    ret
+    push ebp                ; Save old call frame
+    mov ebp, esp            ; Initialize new call frame
 
-global gdt_reload
-gdt_reload:
-    push 0x08
-    lea eax, [rel reload_cs]
-    push eax                                                ; Crashes here for some reason
-    ret
+    mov eax, [ebp + 8]      ; *(uint32*)(ebp + 8);
+    lgdt [eax]              ; Load GDT with 'lgdt'
+
+    mov eax, [ebp + 12]     ; *(uint32*)(ebp + 12);
+    push eax
+
+    jmp 0x08:reload_cs
+    retf
 
 reload_cs:
-    ; Reload segment registers
-    mov ax, 0x10                                            ; Load 0x10 into 'ax'. 0x10 is the selector for the data segment in the GDT.
-    mov ds, ax                                              ; Load the data segment register
-    mov es, ax                                              ; Load the extra segment register
-    mov fs, ax                                              ; Load the extra segment register
-    mov gs, ax                                              ; Load the extra segment register
-    mov ss, ax                                              ; Load the stack segment register
+    ; reload data segments
+    mov ax, [ebp + 16]
+    mov ds, ax
+    mov es, ax
+    mov fs, ax
+    mov gs, ax
+    mov ss, ax
+
+    ; restore old call frame
+    mov esp, ebp
+    pop ebp
+
     ret
