@@ -56,43 +56,43 @@ Each text element is 16-bits (little endian).
 	| Backcolor | Forecolor | Character |
 	15        12|11        8|7          0
 */
-static inline uint16 create_entry(unsigned char character, uint8 color)
+static inline uint16_t create_entry(unsigned char character, uint8_t color)
 {
-	return (uint16)character | (uint16)color << 8;
+	return (uint16_t)character | (uint16_t)color << 8;
 }
 
 // Terminal containing a 16-bit text buffer.
 typedef struct terminal
 {
-	uint16*		buffer; // Buffer of all terminal text.
+	uint16_t*	buffer; // Buffer of all terminal text.
 	vga_color_t color;	// The current cursor color.
-	uint32		x;		// The current cursor row.
-	uint32		y;		// The current cursor column.
+	uint32_t	x;		// The current cursor row.
+	uint32_t	y;		// The current cursor column.
 } terminal_t;
 // Global terminal object.
 static terminal_t g_terminal;
 
 // The starting point of the terminal's text buffer in memory.
-#define TERMINAL_BUFFER_START (uint16*)0xB8000
+#define TERMINAL_BUFFER_START (uint16_t*)0xB8000
 
 // Returns the current cursor position in the terminal.
-uint32 get_cursor_pos()
+uint32_t get_cursor_pos()
 {
 	return (g_terminal.x * VGA_WIDTH) + g_terminal.y;
 }
 
 // Sets the current cursor position in the terminal to
 // `[x,y]`.
-void set_cursor_pos(int8 x, int8 y)
+void set_cursor_pos(int8_t x, int8_t y)
 {
-	uint16 pos = y * VGA_WIDTH + x;
+	uint16_t pos = y * VGA_WIDTH + x;
 	outb(0x3D4, 0x0F);
-	outb(0x3D5, (uint8)(pos & 0xFF));
+	outb(0x3D5, (uint8_t)(pos & 0xFF));
 	outb(0x3D4, 0x0E);
-	outb(0x3D5, (uint8)((pos >> 8) & 0xFF));
+	outb(0x3D5, (uint8_t)((pos >> 8) & 0xFF));
 }
 
-void enable_cursor(uint8 start, uint8 end)
+void enable_cursor(uint8_t start, uint8_t end)
 {
 	outb(0x3D4, 0x0A);
 	outb(0x3D5, (inb(0x3D5) & 0xC0) | start);
@@ -109,11 +109,11 @@ void disable_cursor()
 
 void clear_terminal()
 {
-	for (uint32 y = 0; y < VGA_HEIGHT; y++)
+	for (uint32_t y = 0; y < VGA_HEIGHT; y++)
 	{
-		for (uint32 x = 0; x < VGA_WIDTH; x++)
+		for (uint32_t x = 0; x < VGA_WIDTH; x++)
 		{
-			const uint32 index = y * VGA_WIDTH + x;
+			const uint32_t index = y * VGA_WIDTH + x;
 			g_terminal.buffer[index] = create_entry(' ', g_terminal.color);
 		}
 	}
@@ -130,7 +130,7 @@ void init_terminal()
 	enable_cursor(0, VGA_HEIGHT - 1);
 }
 
-void set_terminal_color(uint8 color)
+void set_terminal_color(uint8_t color)
 {
 	g_terminal.color = color;
 }
@@ -153,14 +153,14 @@ void put_terminal(char c)
 			}
 		case '\t':
 			{
-				uint32 remainder = g_terminal.y % 4;
+				uint32_t remainder = g_terminal.y % 4;
 				g_terminal.y += remainder != 0 ? remainder : 4;
 				return;
 			}
 	}
 
 	// Display standard characters
-	const uint32 pos = get_cursor_pos();
+	const uint32_t pos = get_cursor_pos();
 	g_terminal.buffer[pos] = create_entry(c, g_terminal.color);
 	if (++g_terminal.y == VGA_WIDTH)
 	{
@@ -174,7 +174,7 @@ void put_terminal(char c)
 
 void scroll_terminal()
 {
-	uint32 blank, temp;
+	uint32_t blank, temp;
 
 	// Space
 	blank = 0x20 | (g_terminal.color << 8);

@@ -18,6 +18,13 @@ export ASFLAGS="-felf32 -g"
 export KERNEL="PengOS.bin"
 export ISO="PengOS.iso"
 
+# Colors
+RED='\e[0;31m'
+BLUE='\e[0;34m'
+GREEN='\e[0;32m'
+YELLOW='\e[0;33m'
+NC='\e[0m' # No Color
+
 INCLUDE_DIRS=(kernel stdlib)
 build_include_args() {
     result=""
@@ -25,18 +32,34 @@ build_include_args() {
         result+=" -I./source/${dir}"
     done
     
-    echo "-I.source/ ${result# }"
+    echo -e "-I.source/ ${result# }"
 }
 
-error_exit() {
-    printf "ERROR: $1\n"
+debug() {
+    echo -e "${BLUE}[ DEBUG   ] ${1}${NC}"
+}
+
+info() {
+    echo -e "[ INFO    ] ${1}"
+}
+
+error() {
+    echo -e "${RED}[ ERROR   ] ${1}${NC}"
     exit 1
+}
+
+warning() {
+    echo -e "${YELLOW}[ WARNING ] ${1}${NC}"
+}
+
+success() {
+    echo -e "${GREEN}[ SUCCESS ] ${1}${NC}"
 }
 
 verify_file() {
     if [ -f $1 ]; then
-        printf "Compiled to '$1'.\n"
+        debug "Compiled to '${1}'."
     else
-        error_exit "Failed to compile '$1'."
+        error "Failed to compile '${1}'."
     fi
 }

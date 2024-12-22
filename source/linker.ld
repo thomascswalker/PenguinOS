@@ -12,19 +12,18 @@ SECTIONS
 
 	.text BLOCK(4K) : ALIGN(4K)
 	{
-	text = .;
 		stext = .;
 		*(.multiboot);
 		*(.text);
 		etext = .;
 	}
 
-	.rodata ALIGN (1K) :
+	.rodata BLOCK(4K) : ALIGN(4K)
 	{
 		*(.rodata);
 	}
 
-	.data ALIGN (1K) :
+	.data BLOCK(4K) : ALIGN(4K)
 	{
 		sdata = .;
 		*(.data); 
