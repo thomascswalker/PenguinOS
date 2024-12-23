@@ -3,8 +3,8 @@
 // Copy `size` of memory from `source` to `destination`. (8-bit)
 void* memcpy(void* dest, void* source, size_t size)
 {
-	uint8*		 p_dest = (uint8*)dest;
-	const uint8* p_source = (uint8*)source;
+	uint8_t*	   p_dest = (uint8_t*)dest;
+	const uint8_t* p_source = (uint8_t*)source;
 
 	while (size--)
 	{
@@ -14,9 +14,9 @@ void* memcpy(void* dest, void* source, size_t size)
 }
 
 // Set `size` bytes in `dest` to `val`. (8-bit)
-uint8* memset(uint8* dest, uint8 value, int32 size)
+uint8_t* memset(uint8_t* dest, uint8_t value, int32_t size)
 {
-	for (int32 i = 0; i < size; i++)
+	for (int32_t i = 0; i < size; i++)
 	{
 		dest[i] = value;
 	}
@@ -24,9 +24,9 @@ uint8* memset(uint8* dest, uint8 value, int32 size)
 }
 
 // Set `size` bytes in `dest` to `val`. (16-bit)
-uint16* memsetw(uint16* dest, uint16 value, int32 size)
+uint16_t* memsetw(uint16_t* dest, uint16_t value, int32_t size)
 {
-	for (int32 i = 0; i < size; i++)
+	for (int32_t i = 0; i < size; i++)
 	{
 		dest[i] = value;
 	}

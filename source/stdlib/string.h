@@ -52,7 +52,7 @@ void strrev(char* string)
 
 // Returns the number of decimals in the specified value.
 // e.g. `12345` would return `5`.
-int8 decimal_count(int32 value)
+int8_t decimal_count(int32_t value)
 {
 	// If the value is between 0 and 9, there's only 1 digit.
 	if (value >= 0 && value <= 9)
@@ -62,7 +62,7 @@ int8 decimal_count(int32 value)
 
 	// Increment i while dividing the value by 10 until it's
 	// equal to 0.
-	int8 i = 0;
+	int8_t i = 0;
 	do
 	{
 		i++;
@@ -73,7 +73,7 @@ int8 decimal_count(int32 value)
 }
 
 // Converts the specified integer to a string.
-char* itos(int32 value)
+char* itos(int32_t value)
 {
 	// If the value is 0, just simply return 0 as a string.
 	if (value == 0)
