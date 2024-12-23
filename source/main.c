@@ -1,6 +1,6 @@
 // Main entry point into PengOS. Inializes the kernel.
 
-#include <gdt.h>
+#include <gdt.c>
 #include <io.h>
 
 // Entry point
