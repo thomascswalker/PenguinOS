@@ -34,6 +34,7 @@ assemble_source_file "${SOURCE_DIR}/kernel/crti.s"
 assemble_source_file "${SOURCE_DIR}/kernel/crtn.s"
 assemble_source_file "${SOURCE_DIR}/kernel/gdt.s"
 assemble_source_file "${SOURCE_DIR}/kernel/idt.s"
+assemble_source_file "${SOURCE_DIR}/kernel/isr.s"
 
 # Compile the kernel
 info "Generating kernel symbols..."

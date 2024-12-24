@@ -1,5 +1,6 @@
 #pragma once
 
+#include <stdarg.h>
 #include <terminal.h>
 
 // Printing
@@ -54,13 +55,22 @@ void println(const char* fmt, ...)
 		{
 			case FMT_STRING: // Strings
 				{
-					print(va_arg(args, char*));
+					// print("Formatting string...\n");
+					const char* s = va_arg(args, char*);
+					const int	l = strlen(s);
+					for (int x = 0; x < l; x++)
+					{
+						put_terminal(s[x]);
+					}
+					// print(s);
 					break;
 				}
-			case FMT_INT:
+			case FMT_INT: // Integers
 				{
-					const char* string = itos(va_arg(args, int));
-					print(string);
+					char	buffer[16];
+					int32_t v = va_arg(args, int);
+					itos(v, (char*)buffer);
+					print(buffer);
 					break;
 				}
 			default:
