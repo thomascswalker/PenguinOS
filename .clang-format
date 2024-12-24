@@ -3,6 +3,7 @@ BasedOnStyle: LLVM
 
 AccessModifierOffset: -4
 AlignAfterOpenBracket: DontAlign
+AlignArrayOfStructures: Left
 AlignConsecutiveDeclarations: true
 AlignEscapedNewlines: Left
 AlignOperands: DontAlign
@@ -27,7 +28,7 @@ BreakBeforeBraces: Custom
 BreakInheritanceList: AfterColon
 BreakBeforeTernaryOperators: true
 BreakStringLiterals: false
-ColumnLimit: 250
+ColumnLimit: 100
 Cpp11BracedListStyle: false
 EmptyLineBeforeAccessModifier: LogicalBlock
 IndentCaseBlocks: true

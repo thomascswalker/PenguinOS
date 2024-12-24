@@ -32,3 +32,13 @@ uint16_t* memsetw(uint16_t* dest, uint16_t value, int32_t size)
 	}
 	return dest;
 }
+
+// Set `size` bytes in `dest` to `val`. (32-bit)
+uint32_t* memsetl(uint32_t* dest, uint32_t value, int32_t size)
+{
+	for (int32_t i = 0; i < size; i++)
+	{
+		dest[i] = value;
+	}
+	return dest;
+}

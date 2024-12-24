@@ -1,6 +1,7 @@
 #pragma once
 
-#include <terminal.h>
+#include <stdarg.h>
+#include <terminal.c>
 
 // Printing
 
@@ -11,13 +12,22 @@ enum format_spec
 };
 typedef enum format_spec format_spec_t;
 
-void print(const char* str)
+// Prints the specified character array to the terminal view.
+static void print(const char* str)
 {
 	write_terminal(str, strlen(str));
-	set_cursor_pos(g_terminal.y, g_terminal.x);
+	set_cursor_pos(g_terminal.column, g_terminal.row);
 }
 
-void println(const char* fmt, ...)
+/*
+Prints the specified character array and formats any arguments
+to the terminal view. Once printed, adds a new line.
+
+Specifiers:
+	- `%s` : `const char*`
+	- `%i` : `uint<8|16|32>_t | int<8|16|32>_t`
+*/
+static void println(const char* fmt, ...)
 {
 	va_list args;
 	va_start(args, fmt);
@@ -54,13 +64,16 @@ void println(const char* fmt, ...)
 		{
 			case FMT_STRING: // Strings
 				{
-					print(va_arg(args, char*));
+					const char* s = va_arg(args, char*);
+					print(s);
 					break;
 				}
-			case FMT_INT:
+			case FMT_INT: // Integers
 				{
-					const char* string = itos(va_arg(args, int));
-					print(string);
+					char	buffer[16];
+					int32_t v = va_arg(args, int);
+					itos(v, (char*)buffer);
+					print(buffer);
 					break;
 				}
 			default:
@@ -73,5 +86,5 @@ void println(const char* fmt, ...)
 	va_end(args);
 
 	put_terminal('\n');
-	set_cursor_pos(g_terminal.y, g_terminal.x);
+	set_cursor_pos(g_terminal.column, g_terminal.row);
 }

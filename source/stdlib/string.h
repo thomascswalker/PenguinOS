@@ -1,7 +1,7 @@
 #pragma once
 
-#include <arg.h>
 #include <memory.h>
+#include <stdarg.h>
 #include <types.h>
 
 // Returns the length of `string`.
@@ -73,17 +73,18 @@ int8_t decimal_count(int32_t value)
 }
 
 // Converts the specified integer to a string.
-char* itos(int32_t value)
+void itos(int32_t value, char* buffer)
 {
 	// If the value is 0, just simply return 0 as a string.
 	if (value == 0)
 	{
-		return "0";
+		buffer[0] = '0';
+		buffer[1] = '\0';
+		return;
 	}
 
-	static char buffer[21];	  // The output string
-	char*		ptr = buffer; // Pointer to the current char
-	size_t		size = 0;	  // Accumulate final string size
+	char*  ptr = buffer; // Pointer to the current char
+	size_t size = 0;	 // Accumulate final string size
 
 	// Loop through the number until it's equal to 0. Each
 	// iteration divide by 10 and the remainder will be the
@@ -110,5 +111,4 @@ char* itos(int32_t value)
 
 	// Terminate
 	buffer[size] = '\0';
-	return buffer;
 }
