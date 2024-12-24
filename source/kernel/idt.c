@@ -1,4 +1,4 @@
-#include <io.h>
+#include <io.c>
 
 #define IDT_ENTRY_COUNT 256
 
@@ -23,7 +23,8 @@ idt_entry_t idt[IDT_ENTRY_COUNT];
 idt_ptr_t	idtp;
 
 extern void idt_load();
-void		idt_set_gate(uint8_t index, uint32_t base, uint16_t sel, uint8_t flags)
+
+void idt_set_gate(uint8_t index, uint32_t base, uint16_t sel, uint8_t flags)
 {
 	println("\t[Base=%i, Sel=%i, Flags=%i]", base, sel, flags);
 	idt[index].base_low = (uint16_t)(base >> 8);
@@ -32,6 +33,7 @@ void		idt_set_gate(uint8_t index, uint32_t base, uint16_t sel, uint8_t flags)
 	idt[index].sel = sel;
 	idt[index].flags = flags;
 }
+
 void init_idt()
 {
 	idtp.limit = (sizeof(idt_entry_t) * IDT_ENTRY_COUNT) - 1;

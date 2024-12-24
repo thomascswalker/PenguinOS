@@ -1,14 +1,21 @@
 #include <terminal.h>
 
-static vga_color_t make_entry_color(vga_color_t fore_color, vga_color_t back_color)
+/*
+Constructs a new `vga_color_t` where the first 4 bytes
+are the forecolor and the other 4 bytes are the backcolor.
+	| Backcolor | Forecolor |
+	7          4|3          0
+*/
+static vga_color_t make_entry_color(vga_color_t forecolor, vga_color_t backcolor)
 {
-	// Backcolor is shifted four bytes to match the correct
+	// Backcolor is shifted 4 bytes to match the correct
 	// memory alignment.
-	return fore_color | (back_color << 4);
+	return forecolor | (backcolor << 4);
 }
 
 /*
-Each text element is 16-bits (little endian).
+Returns a new text element with the specified color. Each
+text element is 16-bits (little endian).
 - The first 8 bits are the character itself.
 - The next 4 bits are the forecolor.
 - The last 4 bits are the backcolor.
@@ -21,13 +28,13 @@ static uint16_t create_entry(unsigned char character, uint8_t color)
 	return (uint16_t)character | (uint16_t)color << 8;
 }
 
-// Returns the current cursor position in the terminal.
+// Returns the current cursor position in the terminal view.
 static uint32_t get_cursor_pos()
 {
 	return (g_terminal.row * VGA_WIDTH) + g_terminal.column;
 }
 
-// Sets the current cursor position in the terminal to
+// Sets the current cursor position in the terminal view to
 // `[x,y]`.
 static void set_cursor_pos(int8_t x, int8_t y)
 {
@@ -55,7 +62,7 @@ static void disable_cursor()
 	outb(0x3D5, 0x20);
 }
 
-// Clears all text in the terminal.
+// Clears all text in the terminal buffer.
 static void clear_terminal()
 {
 	for (uint32_t y = 0; y < VGA_HEIGHT; y++)
@@ -69,7 +76,7 @@ static void clear_terminal()
 	set_cursor_pos(0, 0);
 }
 
-// Initializes the global terminal object, clears the terminal,
+// Initializes the global terminal object, clears the text buffer,
 // and enables the cursor.
 static void init_terminal()
 {
@@ -93,19 +100,19 @@ static void reset_terminal_color()
 	g_terminal.color = VGA_COLOR_DEFAULT;
 }
 
-// Writes char `c` to the terminal screen. This is written
+// Writes char `c` to the text buffer. This is written
 // at the current cursor position.
 static void put_terminal(char c)
 {
 	// Handle special characters
 	switch (c)
 	{
-		case '\n':
+		case '\n': // New lines
 			{
 				terminal_new_line();
 				return;
 			}
-		case '\t':
+		case '\t': // Tabs
 			{
 				uint32_t remainder = g_terminal.column % 4;
 				g_terminal.column += remainder != 0 ? remainder : 4;
@@ -126,6 +133,8 @@ static void put_terminal(char c)
 	}
 }
 
+// Insert a new line into the text buffer, scrolling the
+// terminal view as needed.
 static void terminal_new_line()
 {
 	g_terminal.column = 0;
@@ -137,6 +146,8 @@ static void terminal_new_line()
 	set_cursor_pos(g_terminal.column, g_terminal.row);
 }
 
+// Shift the terminal view down one row. This moves all entries
+// up one row and clears the last row.
 static void scroll_terminal()
 {
 	uint16_t blank = create_entry(' ', VGA_COLOR_DEFAULT);
@@ -155,6 +166,7 @@ static void scroll_terminal()
 	}
 }
 
+// Writes the specified string to the text buffer.
 static void write_terminal(const char* data, size_t size)
 {
 	for (size_t i = 0; i < size; i++)

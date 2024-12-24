@@ -2,7 +2,7 @@
 
 // If on a normal desktop platform, define i386 as to not
 // throw an error.
-#ifdef _WIN32
+#if defined(_WIN32) || defined(_WIN64) || defined(__linux__) || defined(__apple__)
 #define __i386__
 #endif
 

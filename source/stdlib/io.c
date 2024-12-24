@@ -12,13 +12,22 @@ enum format_spec
 };
 typedef enum format_spec format_spec_t;
 
-void print(const char* str)
+// Prints the specified character array to the terminal view.
+static void print(const char* str)
 {
 	write_terminal(str, strlen(str));
 	set_cursor_pos(g_terminal.column, g_terminal.row);
 }
 
-void println(const char* fmt, ...)
+/*
+Prints the specified character array and formats any arguments
+to the terminal view. Once printed, adds a new line.
+
+Specifiers:
+	- `%s` : `const char*`
+	- `%i` : `uint<8|16|32>_t | int<8|16|32>_t`
+*/
+static void println(const char* fmt, ...)
 {
 	va_list args;
 	va_start(args, fmt);
@@ -55,14 +64,8 @@ void println(const char* fmt, ...)
 		{
 			case FMT_STRING: // Strings
 				{
-					// print("Formatting string...\n");
 					const char* s = va_arg(args, char*);
-					const int	l = strlen(s);
-					for (int x = 0; x < l; x++)
-					{
-						put_terminal(s[x]);
-					}
-					// print(s);
+					print(s);
 					break;
 				}
 			case FMT_INT: // Integers
