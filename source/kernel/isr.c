@@ -60,24 +60,68 @@ const char* exception_messages[32] = {
 	"Stack segment fault",
 	"General protection fault",
 	"Page fault",
-	"Reserved",
+	"Unknown",
 	"x87 floating point exception",
 	"Alignment check",
 	"Machine check",
 	"SIMD floating point exception",
 	"Virtualization exception",
 	"Control protection exception",
-	"reserved",
-	"IRQ 0-7",
-	"IRQ 8-15",
+	"Reserved",
+	"Reserved",
+	"Reserved",
+	"Reserved",
+	"Reserved",
+	"Reserved",
+	"Reserved",
+	"Reserved",
+	"Reserved",
+	"Reserved",
 };
+
+#define _INTERRUPT_FUNC(x, y) x##y
+#define DECLARE_INTERRUPT(index)                                        \
+	println("Set %s, interrupt %i.", exception_messages[index], index); \
+	idt_set_gate(index, (uint32_t) & _INTERRUPT_FUNC(isr, index), 0x08, 0x8E);
 
 void init_isr()
 {
 	println("Intializing interrupts...");
 
-	idt_set_gate(0, (uint32_t)&isr0, 0x08, 0x8E);
-	println("Set %s (%i) interrupt.", exception_messages[0], 0);
+	DECLARE_INTERRUPT(0);  // Division by zero
+	DECLARE_INTERRUPT(1);  // Single-step Interrupt
+	DECLARE_INTERRUPT(2);  // NMI
+	DECLARE_INTERRUPT(3);  // Breakpoint
+	DECLARE_INTERRUPT(4);  // Overflow
+	DECLARE_INTERRUPT(5);  // Bound Range Exceeded
+	DECLARE_INTERRUPT(6);  // Invalid Opcode
+	DECLARE_INTERRUPT(7);  // Coprocessor not available
+	DECLARE_INTERRUPT(8);  // Double fault
+	DECLARE_INTERRUPT(9);  // Coprocessor segment overrun
+	DECLARE_INTERRUPT(10); // Invalid task state segment
+	DECLARE_INTERRUPT(11); // Segment not present
+	DECLARE_INTERRUPT(12); // Stack segment fault
+	DECLARE_INTERRUPT(13); // General protection fault
+	DECLARE_INTERRUPT(14); // Page fault
+	DECLARE_INTERRUPT(15); // Unknown
+	DECLARE_INTERRUPT(16); // x87 floating point exception
+	DECLARE_INTERRUPT(17); // Alignment check
+	DECLARE_INTERRUPT(18); // Machine check
+	DECLARE_INTERRUPT(19); // SIMD floating point exception
+	DECLARE_INTERRUPT(20); // Virtualization exception
+	DECLARE_INTERRUPT(21); // Control protection exception
+	// DECLARE_INTERRUPT(22); // Reserved
+	// DECLARE_INTERRUPT(23); // Reserved
+	// DECLARE_INTERRUPT(24); // Reserved
+	// DECLARE_INTERRUPT(25); // Reserved
+	// DECLARE_INTERRUPT(26); // Reserved
+	// DECLARE_INTERRUPT(27); // Reserved
+	// DECLARE_INTERRUPT(28); // Reserved
+	// DECLARE_INTERRUPT(29); // Reserved
+	// DECLARE_INTERRUPT(30); // Reserved
+	// DECLARE_INTERRUPT(31); // Reserved
+
+	println("Interrupts created.");
 }
 
 /* All of our Exception handling Interrupt Service Routines will

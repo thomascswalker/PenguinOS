@@ -1,7 +1,7 @@
 #pragma once
 
 #include <stdarg.h>
-#include <terminal.h>
+#include <terminal.c>
 
 // Printing
 
@@ -15,7 +15,7 @@ typedef enum format_spec format_spec_t;
 void print(const char* str)
 {
 	write_terminal(str, strlen(str));
-	set_cursor_pos(g_terminal.y, g_terminal.x);
+	set_cursor_pos(g_terminal.column, g_terminal.row);
 }
 
 void println(const char* fmt, ...)
@@ -83,5 +83,5 @@ void println(const char* fmt, ...)
 	va_end(args);
 
 	put_terminal('\n');
-	set_cursor_pos(g_terminal.y, g_terminal.x);
+	set_cursor_pos(g_terminal.column, g_terminal.row);
 }

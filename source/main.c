@@ -8,7 +8,7 @@
 void kernel_main(void)
 {
 	init_terminal();
-	println("Welcome to %s PengOS!", "test");
+	println("Welcome to PengOS!");
 	init_gdt();
 	init_idt();
 	init_isr();

@@ -25,7 +25,7 @@ idt_ptr_t	idtp;
 extern void idt_load();
 void		idt_set_gate(uint8_t index, uint32_t base, uint16_t sel, uint8_t flags)
 {
-	println("Setting IDT Gate ISR%i: [Base=%i, Sel=%i, Flags=%i]", index, base, sel, flags);
+	println("\t[Base=%i, Sel=%i, Flags=%i]", base, sel, flags);
 	idt[index].base_low = (uint16_t)(base >> 8);
 	idt[index].base_high = (uint16_t)(base >> 16);
 	idt[index].always0 = 0;
