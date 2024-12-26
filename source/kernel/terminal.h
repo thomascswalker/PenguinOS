@@ -55,8 +55,8 @@ static terminal_t g_terminal;
 
 // VGA
 
-static vga_color_t make_entry_color(vga_color_t fore_color, vga_color_t back_color);
-static uint16_t	   create_entry(unsigned char character, uint8_t color);
+static uint16_t make_entry_color(vga_color_t fore_color, vga_color_t back_color);
+static uint16_t create_entry(uint8_t character, vga_color_t color);
 
 // Cursor
 

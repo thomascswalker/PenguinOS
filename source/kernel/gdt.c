@@ -1,4 +1,5 @@
 // https://www.thejat.in/learn/implement-gdt-in-multiboot-bootloader
+#pragma once
 
 #include <io.c>
 

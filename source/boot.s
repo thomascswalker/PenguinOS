@@ -1,3 +1,5 @@
+[bits 32]
+
 ; Constants for multiboot header
 MB_ALIGN		equ  1<<0             						; Align loaded modules on page boundaries.
 MB_MEMORY_INFO	equ  1<<1             						; Provide memory map.
@@ -11,7 +13,7 @@ align 4
 	dd MB_FLAGS
 	dd MB_CHECKSUM
 
-section .bss												; Setup the stack.
+section .bss nobits write align=16											; Setup the stack.
 align 16
 stack_bottom:
 resb 16384													; Allocate 16KB for the stack.
@@ -22,10 +24,24 @@ global main:function (main.end - main)
 main:
 	mov esp, stack_top										; Set the esp register to the top of our stack.
 	extern kernel_main	
-	
-	cli														; Indicate we are calling an external C function.
 	call kernel_main										; Call 'kernel_main' in C.
-															; Disable interrupts
-.hang: hlt													; Wait until the next 'hlt' instruction
-	jmp .hang												; Jump to the 'hlt' instruction (infinite loop).
 .end:
+global halt
+halt:
+    cli
+    hlt
+.Lhang:
+    jmp halt
+.end
+
+section .text
+global sys_cli
+sys_cli:
+    hlt
+    ret
+
+section .text
+global sys_sti
+sys_sti:
+    hlt
+    ret

@@ -32,4 +32,4 @@ success "ISO built at './build/${ISO}'."
 
 # Run QEMU
 info "Running QEMU-i386."
-setsid qemu-system-i386 -cdrom build/${ISO} # -S -s  -d int -no-shutdown -no-reboot
+setsid qemu-system-i386 -cdrom build/${ISO} -d int -no-shutdown -no-reboot  # -S -s #  

@@ -9,6 +9,8 @@ void kernel_main(void)
 	init_terminal();
 	println("Welcome to PengOS!");
 	init_gdt();
+	remap_pic();
 	init_idt();
-	init_isr();
+
+	__asm__("div %0" ::"r"(0));
 }
