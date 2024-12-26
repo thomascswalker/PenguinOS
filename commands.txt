@@ -1,0 +1,5 @@
+# Add to permanent PATH
+export PATH="$HOME/opt/cross/bin:$PATH"
+
+# Dump symbols to file
+objdump -drS ./build/boot/pengos.bin > symbols.txt

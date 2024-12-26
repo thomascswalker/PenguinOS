@@ -6,11 +6,11 @@ are the forecolor and the other 4 bytes are the backcolor.
 	| Backcolor | Forecolor |
 	7          4|3          0
 */
-static vga_color_t make_entry_color(vga_color_t forecolor, vga_color_t backcolor)
+static uint16_t make_entry_color(vga_color_t forecolor, vga_color_t backcolor)
 {
 	// Backcolor is shifted 4 bytes to match the correct
 	// memory alignment.
-	return forecolor | (backcolor << 4);
+	return (uint16_t)forecolor | (uint16_t)backcolor << 4;
 }
 
 /*
@@ -23,7 +23,7 @@ text element is 16-bits (little endian).
 	| Backcolor | Forecolor | Character |
 	15        12|11        8|7          0
 */
-static uint16_t create_entry(unsigned char character, uint8_t color)
+static uint16_t create_entry(uint8_t character, vga_color_t color)
 {
 	return (uint16_t)character | (uint16_t)color << 8;
 }
