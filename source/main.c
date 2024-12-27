@@ -1,7 +1,9 @@
 // Main entry point into PengOS. Inializes the kernel.
 
 #include <gdt.c>
-#include <timer.c>
+#include <idt.c>
+
+#define _DEBUG
 
 // Entry point
 void kernel_main(void)
@@ -9,9 +11,9 @@ void kernel_main(void)
 	init_terminal();
 	println("Welcome to PengOS!");
 	init_gdt();
-	remap_pic();
 	init_idt();
-	init_timer(100);
 
-	// __asm__("div %0" ::"r"(0));
+#ifdef _DEBUG
+	println("%i", 1 / 0);
+#endif
 }

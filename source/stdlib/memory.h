@@ -14,13 +14,14 @@ void* memcpy(void* dest, void* source, size_t size)
 }
 
 // Set `size` bytes in `dest` to `val`. (8-bit)
-uint8_t* memset(uint8_t* dest, uint8_t value, int32_t size)
+void* memset(void* dest, uint8_t value, int32_t size)
 {
+	char* tmp = (char*)dest;
 	for (int32_t i = 0; i < size; i++)
 	{
-		dest[i] = value;
+		tmp[i] = value;
 	}
-	return dest;
+	return tmp;
 }
 
 // Set `size` bytes in `dest` to `val`. (16-bit)

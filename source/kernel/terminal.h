@@ -44,10 +44,10 @@ typedef enum vga_color
 // Terminal containing a 16-bit text buffer.
 typedef struct terminal
 {
-	uint16_t*	buffer; // Buffer of all terminal text.
-	vga_color_t color;	// The current cursor color.
-	uint32_t	row;	// The current cursor row.
-	uint32_t	column; // The current cursor column.
+	uint16_t* buffer; // Buffer of all terminal text.
+	uint16_t  color;  // The current cursor color.
+	uint32_t  row;	  // The current cursor row.
+	uint32_t  column; // The current cursor column.
 } terminal_t;
 
 // Global terminal object.
@@ -56,7 +56,7 @@ static terminal_t g_terminal;
 // VGA
 
 static uint16_t make_entry_color(vga_color_t fore_color, vga_color_t back_color);
-static uint16_t create_entry(uint8_t character, vga_color_t color);
+static uint16_t create_entry(uint8_t character, uint8_t color);
 
 // Cursor
 
