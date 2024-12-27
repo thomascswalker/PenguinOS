@@ -58,7 +58,7 @@ static void println(const char* fmt, ...)
 		// Go to next char (%x, where x is the next)
 		i++;
 		// Get the format specifier.
-		format_spec_t specifier = fmt[i];
+		format_spec_t specifier = (format_spec_t)fmt[i];
 
 		switch (specifier)
 		{

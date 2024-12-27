@@ -10,7 +10,7 @@ static uint16_t make_entry_color(vga_color_t forecolor, vga_color_t backcolor)
 {
 	// Backcolor is shifted 4 bytes to match the correct
 	// memory alignment.
-	return (uint16_t)forecolor | (uint16_t)backcolor << 4;
+	return (uint16_t)(forecolor | backcolor << 4);
 }
 
 /*
@@ -23,7 +23,7 @@ text element is 16-bits (little endian).
 	| Backcolor | Forecolor | Character |
 	15        12|11        8|7          0
 */
-static uint16_t create_entry(uint8_t character, vga_color_t color)
+static uint16_t create_entry(uint8_t character, uint8_t color)
 {
 	return (uint16_t)character | (uint16_t)color << 8;
 }
@@ -91,7 +91,7 @@ static void init_terminal()
 // Sets the current color to write with.
 static void set_terminal_color(uint8_t color)
 {
-	g_terminal.color = color;
+	g_terminal.color = (vga_color_t)color;
 }
 
 // Resets the current color to the default.

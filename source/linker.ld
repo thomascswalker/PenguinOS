@@ -6,7 +6,7 @@ ENTRY(start)
    kernel image. */
 SECTIONS
 {
-	. = 1M; /* Start at 2MB */
+	. = 1M; /* Start at 1MB */
 
 	start = .;
 
