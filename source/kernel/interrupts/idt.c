@@ -147,7 +147,9 @@ void isr_handler(registers_t regs)
 	if (regs.int_no < 32)
 	{
 		const char* msg = exception_messages[regs.int_no];
+		set_terminal_color(VGA_COLOR_LIGHT_RED);
 		println("%s exception thrown.", msg);
+		reset_terminal_color();
 		while (true)
 		{
 			halt();
@@ -157,22 +159,20 @@ void isr_handler(registers_t regs)
 
 void irq_install_handler(uint32_t irq, handler_t handler)
 {
-	println("Installing IRQ%i handler.", irq);
+	println("Installing IRQ%i handler...", irq);
 	irq_routines[irq] = handler;
 }
 
 void irq_uninstall_handler(uint32_t irq)
 {
-	println("Uninstalling IRQ%i handler.", irq);
+	println("Uninstalling IRQ%i handler...", irq);
 	irq_routines[irq] = 0;
 }
 
 // Interrupt request
 void irq_handler(registers_t regs)
 {
-	println("IRQ handler called!");
-	handler_t handler;
-	handler = irq_routines[regs.int_no - 32];
+	handler_t handler = irq_routines[regs.int_no - 32];
 	if (handler)
 	{
 		handler(regs);

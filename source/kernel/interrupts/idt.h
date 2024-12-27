@@ -35,7 +35,7 @@ struct idt_ptr
 } __attribute__((packed));
 typedef struct idt_ptr idt_ptr_t;
 
-static void* irq_routines[IRQ_ENTRY_COUNT] = {
+static handler_t irq_routines[IRQ_ENTRY_COUNT] = {
 	0,
 	0,
 	0,
