@@ -52,7 +52,7 @@ static void sprintf(char* stream, const char* format, va_list args)
 			{
 				case FMT_CHAR: // Characters
 					{
-						*stream = (char)va_arg(args, int);
+						*stream++ = (char)va_arg(args, int);
 						break;
 					}
 				case FMT_STRING: // Strings
@@ -89,7 +89,7 @@ static void sprintf(char* stream, const char* format, va_list args)
 
 static void debug(const char* format, ...)
 {
-#ifdef DEBUG
+	// #ifdef DEBUG
 	set_terminal_color(VGA_COLOR_LIGHT_GREY);
 	va_list args;
 	va_start(args, format);
@@ -99,7 +99,7 @@ static void debug(const char* format, ...)
 	println(buffer);
 	va_end(args);
 	reset_terminal_color();
-#endif
+	// #endif
 }
 
 static void info(const char* format, ...)

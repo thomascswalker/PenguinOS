@@ -150,3 +150,20 @@ void irq_handler(registers_t regs)
 	pic_send_eoi(irq_no);
 	enable_interrupts();
 }
+
+void dump_registers(registers_t* reg)
+{
+	debug("Dumping registers:");
+	debug("\tcr2: %i", reg->cr2);
+	debug("\tds: %i", reg->ds);
+	debug("\tedi: %i", reg->edi);
+	debug("\tesi: %i", reg->esi);
+	debug("\tebp: %i", reg->ebp);
+	debug("\tesp: %i", reg->esp);
+	debug("\tebx: %i", reg->ebx);
+	debug("\tedx: %i", reg->edx);
+	debug("\tecx: %i", reg->ecx);
+	debug("\teax: %i", reg->eax);
+	debug("\tint_no: %i", reg->int_no);
+	debug("\terr_code: %i", reg->err_code);
+}
