@@ -33,7 +33,7 @@ assemble_source_file "${SOURCE_DIR}/boot.s"
 assemble_source_file "${SOURCE_DIR}/kernel/crti.s"
 assemble_source_file "${SOURCE_DIR}/kernel/crtn.s"
 assemble_source_file "${SOURCE_DIR}/kernel/gdt.s"
-assemble_source_file "${SOURCE_DIR}/kernel/interrupts/idt.s"
+assemble_source_file "${SOURCE_DIR}/kernel/idt.s"
 
 
 # Compile the kernel

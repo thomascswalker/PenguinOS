@@ -102,7 +102,7 @@ static void reset_terminal_color()
 
 // Writes char `c` to the text buffer. This is written
 // at the current cursor position.
-static void put_terminal(char c)
+static void putchar(char c)
 {
 	// Handle special characters
 	switch (c)
@@ -171,6 +171,6 @@ static void write_terminal(const char* data, size_t size)
 {
 	for (size_t i = 0; i < size; i++)
 	{
-		put_terminal(data[i]);
+		putchar(data[i]);
 	}
 }

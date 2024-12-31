@@ -36,7 +36,7 @@ typedef enum vga_color
 	VGA_COLOR_LIGHT_CYAN = 11,
 	VGA_COLOR_LIGHT_RED = 12,
 	VGA_COLOR_LIGHT_MAGENTA = 13,
-	VGA_COLOR_LIGHT_BROWN = 14,
+	VGA_COLOR_YELLOW = 14,
 	VGA_COLOR_WHITE = 15,
 	VGA_COLOR_DEFAULT = VGA_COLOR_LIGHT_GREY,
 } vga_color_t;
@@ -69,7 +69,7 @@ static void		disable_cursor();
 
 static void clear_terminal();
 static void init_terminal();
-static void put_terminal(char c);
+static void putchar(char c);
 static void terminal_new_line();
 static void write_terminal(const char* data, size_t size);
 static void scroll_terminal();
