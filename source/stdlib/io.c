@@ -7,6 +7,7 @@
 
 enum format_spec
 {
+	FMT_CHAR = 'c',
 	FMT_STRING = 's',
 	FMT_INT = 'i'
 };
@@ -19,72 +20,150 @@ static void print(const char* str)
 	set_cursor_pos(g_terminal.column, g_terminal.row);
 }
 
+// Prints the specified character array to the terminal view.
+static void println(const char* str)
+{
+	write_terminal(str, strlen(str));
+	putchar('\n');
+	set_cursor_pos(g_terminal.column, g_terminal.row);
+}
+
 /*
-Prints the specified character array and formats any arguments
-to the terminal view. Once printed, adds a new line.
+Print to the specified stream.
 
 Specifiers:
+	- `%c` : `char`
 	- `%s` : `const char*`
 	- `%i` : `uint<8|16|32>_t | int<8|16|32>_t`
 */
-static void println(const char* fmt, ...)
+static void sprintf(char* stream, const char* format, va_list args)
 {
-	va_list args;
-	va_start(args, fmt);
+	char	 c;
+	uint32_t i = 0;
 
-	size_t i = 0; // Track current position in 'fmt'
-
-	while (i < strlen(fmt))
+	while ((c = format[i]) != 0)
 	{
-		char c = fmt[i]; // Get the current character
-		if (!isascii(c))
+		char buffer[512];
+		if (c == '%')
 		{
-			char* msg = "Invalid token [%].";
-			//------------------------- ^ INDEX 16
-			msg[16] = c;
-			print(msg);
-			return;
+			i++;		   // Skip the %
+			c = format[i]; // Get the format specifier
+			switch (c)
+			{
+				case FMT_CHAR: // Characters
+					{
+						*stream = (char)va_arg(args, int);
+						break;
+					}
+				case FMT_STRING: // Strings
+					{
+						char* text = (char*)va_arg(args, char*);
+						strcpy(stream, text);
+						break;
+					}
+				case FMT_INT: // Integers
+					{
+						int32_t value = va_arg(args, int);
+						itoa((char*)buffer, value, 10);
+						strcpy(stream, (char*)buffer);
+						stream += strlen(buffer);
+						break;
+					}
+				default:
+					{
+						set_terminal_color(VGA_COLOR_RED);
+						print("Invalid specifier!");
+						halt();
+					}
+			}
 		}
-
-		// If the current character is not the start of
-		// a format token, display it and continue.
-		if (c != '%')
+		else
 		{
-			put_terminal(c);
-			i++;
-			continue;
+			*stream++ = c;
 		}
-
-		// Go to next char (%x, where x is the next)
 		i++;
-		// Get the format specifier.
-		format_spec_t specifier = (format_spec_t)fmt[i];
-
-		switch (specifier)
-		{
-			case FMT_STRING: // Strings
-				{
-					const char* s = va_arg(args, char*);
-					print(s);
-					break;
-				}
-			case FMT_INT: // Integers
-				{
-					char	buffer[16];
-					int32_t v = va_arg(args, int);
-					itos(v, (char*)buffer);
-					print(buffer);
-					break;
-				}
-			default:
-				print("Invalid specifier.");
-				break;
-		}
-		i++; // Go to next token after the format specifier
 	}
 
-	va_end(args);
+	*stream = '\0';
+}
 
-	put_terminal('\n');
-	set_cursor_pos(g_terminal.column, g_terminal.row);
+static void debug(const char* format, ...)
+{
+#ifdef DEBUG
+	set_terminal_color(VGA_COLOR_LIGHT_GREY);
+	va_list args;
+	va_start(args, format);
+	print("[DEBUG] ");
+	char buffer[512];
+	sprintf(buffer, format, args);
+	println(buffer);
+	va_end(args);
+	reset_terminal_color();
+#endif
+}
+
+static void info(const char* format, ...)
+{
+	set_terminal_color(VGA_COLOR_WHITE);
+	va_list args;
+	va_start(args, format);
+	print("[INFO] ");
+	char buffer[512];
+	sprintf(buffer, format, args);
+	println(buffer);
+	va_end(args);
+	reset_terminal_color();
+}
+
+static void warning(const char* format, ...)
+{
+	set_terminal_color(VGA_COLOR_YELLOW);
+	va_list args;
+	va_start(args, format);
+	print("[WARNING] ");
+	char buffer[512];
+	sprintf(buffer, format, args);
+	println(buffer);
+	va_end(args);
+	reset_terminal_color();
+}
+
+static void error(const char* format, ...)
+{
+	set_terminal_color(VGA_COLOR_LIGHT_RED);
+	va_list args;
+	va_start(args, format);
+	print("[ERROR] ");
+	char buffer[512];
+	sprintf(buffer, format, args);
+	println(buffer);
+	va_end(args);
+	reset_terminal_color();
+}
+
+static void success(const char* format, ...)
+{
+	set_terminal_color(VGA_COLOR_LIGHT_GREEN);
+	va_list args;
+	va_start(args, format);
+	print("[SUCCESS] ");
+	char buffer[512];
+	sprintf(buffer, format, args);
+	println(buffer);
+	va_end(args);
+	reset_terminal_color();
+}
+
+static void panic(const char* format, ...)
+{
+	set_terminal_color(VGA_COLOR_LIGHT_RED);
+	va_list args;
+	va_start(args, format);
+	print("[PANIC] ");
+	char buffer[512];
+	sprintf(buffer, format, args);
+	println(buffer);
+	println("System halted.\n");
+	va_end(args);
+	halt();
 }

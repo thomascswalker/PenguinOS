@@ -34,6 +34,15 @@ bool strcmp(const char* lhs, const char* rhs)
 	return true;
 }
 
+char* strcpy(char* dest, const char* source)
+{
+	char* temp = dest;
+	while (*dest++ = *source++)
+	{
+	}
+	return temp;
+}
+
 // Reverses, in-place, the specified `string`.
 void strrev(char* string)
 {
@@ -73,7 +82,7 @@ int8_t decimal_count(int32_t value)
 }
 
 // Converts the specified integer to a string.
-void itos(int32_t value, char* buffer)
+void itos(uint32_t value, char buffer[])
 {
 	// If the value is 0, just simply return 0 as a string.
 	if (value == 0)
@@ -111,4 +120,26 @@ void itos(int32_t value, char* buffer)
 
 	// Terminate
 	buffer[size] = '\0';
+}
+
+void itoa(char* buffer, uint32_t value, uint32_t base)
+{
+	uint32_t temp = value;
+	uint32_t i = 0;
+
+	do
+	{
+		temp = value % base;
+		buffer[i++] = (temp < 10) ? (temp + '0') : (temp + 'a' - 10);
+	}
+	while (value /= base);
+
+	buffer[i--] = 0;
+
+	for (int j = 0; j < i; j++, i--)
+	{
+		temp = buffer[j];
+		buffer[j] = buffer[i];
+		buffer[i] = temp;
+	}
 }

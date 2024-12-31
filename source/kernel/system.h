@@ -2,7 +2,7 @@
 
 #include <types.h>
 
-#define ASM __asm__
+#define asm __asm__ volatile
 
 struct registers
 {
@@ -10,7 +10,8 @@ struct registers
 	uint32_t ds;
 	uint32_t edi, esi, ebp, esp, ebx, edx, ecx, eax;
 	uint32_t int_no, err_code;
-	uint32_t eip, csm, eflags, useresp, ss;
+	uint32_t iret_rip, iret_cs, iret_flags, iret_rsp,
+		iret_ss; // Automatically popped from the stack when IRET is called
 };
 typedef struct registers registers_t;
 typedef void (*handler_t)(registers_t);
@@ -27,27 +28,27 @@ enum privelege_level
 static inline uint8_t inb(uint16_t port)
 {
 	uint8_t ret;
-	ASM volatile("inb %w1, %b0" : "=a"(ret) : "Nd"(port) : "memory");
+	asm("inb %1, %0" : "=a"(ret) : "Nd"(port));
 	return ret;
 };
 
 // Outputs a byte of data to a specified IO port
 static inline void outb(uint16_t port, uint8_t data)
 {
-	ASM volatile("outb %1, %0" : : "Nd"(port), "a"(data));
+	asm("outb %1, %0" : : "Nd"(port), "a"(data));
 }
 
 static inline void disable_interrupts()
 {
-	ASM volatile("cli");
+	asm("cli");
 }
 
 static inline void enable_interrupts()
 {
-	ASM volatile("sti");
+	asm("sti");
 }
 
 static inline void halt()
 {
-	ASM volatile("hlt");
+	asm("hlt");
 }

@@ -8,7 +8,7 @@ typedef unsigned long long size_t;
 
 bool isascii(int32_t c)
 {
-	return ((c >= 0) && (c <= 127));
+	return ((c >= 0) && (c <= 255));
 }
 
 bool isintegral(int32_t c)
