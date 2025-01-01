@@ -1,4 +1,4 @@
-#include <terminal.h>
+#include <vga.h>
 
 /*
 Constructs a new `vga_color_t` where the first 4 bytes
@@ -136,6 +136,22 @@ static void putchar(char c)
 		{
 			g_terminal.row = 0;
 		}
+	}
+}
+
+// Removes the current character from the text buffer.
+static void remchar()
+{
+	const uint32_t pos = get_cursor_pos();
+	for (uint32_t i = pos - 1; i < VGA_WIDTH * VGA_HEIGHT; i++)
+	{
+		g_terminal.buffer[i] = g_terminal.buffer[i + 1];
+	}
+	g_terminal.buffer[VGA_WIDTH * VGA_HEIGHT] = ' ';
+	if (--g_terminal.column < 0)
+	{
+		g_terminal.column = VGA_WIDTH;
+		g_terminal.row--;
 	}
 }
 

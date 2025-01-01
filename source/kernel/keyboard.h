@@ -82,7 +82,7 @@ struct keycode
 };
 typedef struct keycode keycode_t;
 
-static keycode_t keycodes[] = {
+static keycode_t keymap[] = {
 	{ SC_1,			'1',	 '!' },
 	{ SC_2,			'2',	 '@' },
 	{ SC_3,			'3',	 '#' },
@@ -132,10 +132,10 @@ static keycode_t keycodes[] = {
 
 enum modifier_key
 {
-	SHIFT,
-	CONTROL,
-	ALT,
-	COMMAND,
+	MOD_SHIFT = 1,
+	MOD_CONTROL = 2,
+	MOD_ALT = 4,
+	MOD_COMMAND = 8,
 };
 typedef enum modifier_key modifier_key_t;
 

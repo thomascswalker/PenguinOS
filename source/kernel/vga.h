@@ -11,7 +11,7 @@
 #endif
 
 #include <string.h>
-#include <system.h>
+#include <sys.h>
 
 #define VGA_WIDTH 80
 #define VGA_HEIGHT 25
@@ -46,8 +46,8 @@ typedef struct terminal
 {
 	uint16_t* buffer; // Buffer of all terminal text.
 	uint16_t  color;  // The current cursor color.
-	uint32_t  row;	  // The current cursor row.
-	uint32_t  column; // The current cursor column.
+	int32_t	  row;	  // The current cursor row.
+	int32_t	  column; // The current cursor column.
 } terminal_t;
 
 // Global terminal object.

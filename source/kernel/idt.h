@@ -1,6 +1,6 @@
 #pragma once
 
-#include <system.h>
+#include <sys.h>
 
 #define IDT_ENTRY_COUNT 256
 
