@@ -1,7 +1,7 @@
 #pragma once
 
 #include <stdarg.h>
-#include <terminal.c>
+#include <vga.c>
 
 // Printing
 
@@ -17,7 +17,7 @@ typedef enum format_spec format_spec_t;
 static void print(const char* str)
 {
 	write_terminal(str, strlen(str));
-	set_cursor_pos(g_terminal.column, g_terminal.row);
+	update_cursor_pos();
 }
 
 // Prints the specified character array to the terminal view.
@@ -25,7 +25,7 @@ static void println(const char* str)
 {
 	write_terminal(str, strlen(str));
 	putchar('\n');
-	set_cursor_pos(g_terminal.column, g_terminal.row);
+	update_cursor_pos();
 }
 
 /*
@@ -52,7 +52,7 @@ static void sprintf(char* stream, const char* format, va_list args)
 			{
 				case FMT_CHAR: // Characters
 					{
-						*stream = (char)va_arg(args, int);
+						*stream++ = (char)va_arg(args, int);
 						break;
 					}
 				case FMT_STRING: // Strings
@@ -89,7 +89,7 @@ static void sprintf(char* stream, const char* format, va_list args)
 
 static void debug(const char* format, ...)
 {
-#ifdef DEBUG
+	// #ifdef DEBUG
 	set_terminal_color(VGA_COLOR_LIGHT_GREY);
 	va_list args;
 	va_start(args, format);
@@ -99,7 +99,7 @@ static void debug(const char* format, ...)
 	println(buffer);
 	va_end(args);
 	reset_terminal_color();
-#endif
+	// #endif
 }
 
 static void info(const char* format, ...)

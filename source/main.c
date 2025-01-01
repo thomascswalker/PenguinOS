@@ -1,6 +1,7 @@
 // Main entry point into PengOS. Inializes the kernel.
 
 #include <gdt.c>
+#include <keyboard.c>
 #include <timer.c>
 
 // Entry point
@@ -12,6 +13,7 @@ void kernel_main(void)
 	init_gdt();
 	init_idt();
 	init_timer();
+	init_keyboard();
 	enable_interrupts();
 
 	while (true)

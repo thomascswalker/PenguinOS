@@ -14,6 +14,8 @@ struct registers
 		iret_ss; // Automatically popped from the stack when IRET is called
 };
 typedef struct registers registers_t;
+
+// Function pointer to an IRQ callback
 typedef void (*handler_t)(registers_t);
 
 enum privelege_level
@@ -38,6 +40,11 @@ static inline void outb(uint16_t port, uint8_t data)
 	asm("outb %1, %0" : : "Nd"(port), "a"(data));
 }
 
+static inline void outw(uint16_t port, uint16_t data)
+{
+	asm("outw %1, %0" : : "Nd"(port), "a"(data));
+}
+
 static inline void disable_interrupts()
 {
 	asm("cli");
@@ -51,4 +58,9 @@ static inline void enable_interrupts()
 static inline void halt()
 {
 	asm("hlt");
+}
+
+static inline void exit()
+{
+	outw(0x604, 0x2000); // QEMU
 }

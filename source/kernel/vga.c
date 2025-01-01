@@ -1,4 +1,4 @@
-#include <terminal.h>
+#include <vga.h>
 
 /*
 Constructs a new `vga_color_t` where the first 4 bytes
@@ -43,6 +43,12 @@ static void set_cursor_pos(int8_t x, int8_t y)
 	outb(0x3D5, (uint8_t)(pos & 0xFF));
 	outb(0x3D4, 0x0E);
 	outb(0x3D5, (uint8_t)((pos >> 8) & 0xFF));
+}
+
+// Update the cursor with the current terminal row and column
+static void update_cursor_pos()
+{
+	set_cursor_pos(g_terminal.column, g_terminal.row);
 }
 
 // Enables visual of the cursor.
@@ -133,6 +139,22 @@ static void putchar(char c)
 	}
 }
 
+// Removes the current character from the text buffer.
+static void remchar()
+{
+	const uint32_t pos = get_cursor_pos();
+	for (uint32_t i = pos - 1; i < VGA_WIDTH * VGA_HEIGHT; i++)
+	{
+		g_terminal.buffer[i] = g_terminal.buffer[i + 1];
+	}
+	g_terminal.buffer[VGA_WIDTH * VGA_HEIGHT] = ' ';
+	if (--g_terminal.column < 0)
+	{
+		g_terminal.column = VGA_WIDTH;
+		g_terminal.row--;
+	}
+}
+
 // Insert a new line into the text buffer, scrolling the
 // terminal view as needed.
 static void terminal_new_line()
@@ -143,7 +165,7 @@ static void terminal_new_line()
 		g_terminal.row--;
 		scroll_terminal();
 	}
-	set_cursor_pos(g_terminal.column, g_terminal.row);
+	update_cursor_pos();
 }
 
 // Shift the terminal view down one row. This moves all entries

@@ -18,6 +18,7 @@ void init_timer()
 	// data port 0 (64).
 	uint8_t low = (uint8_t)(divisor & 0xFF);
 	uint8_t high = (uint8_t)((divisor >> 8) & 0xFF);
+
 	debug("Outputting low value %i at %i.", low, PIT_DATA0);
 	outb(PIT_DATA0, low);
 	debug("Outputting high value %i at %i.", high, PIT_DATA0);
@@ -32,7 +33,6 @@ void timer_callback(registers_t regs)
 	if ((ticks % 18) == 0)
 	{
 		seconds++;
-		info("Timer ticked (%i).", seconds);
 	}
 }
 
