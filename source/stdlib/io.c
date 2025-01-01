@@ -17,7 +17,7 @@ typedef enum format_spec format_spec_t;
 static void print(const char* str)
 {
 	write_terminal(str, strlen(str));
-	set_cursor_pos(g_terminal.column, g_terminal.row);
+	update_cursor_pos();
 }
 
 // Prints the specified character array to the terminal view.
@@ -25,7 +25,7 @@ static void println(const char* str)
 {
 	write_terminal(str, strlen(str));
 	putchar('\n');
-	set_cursor_pos(g_terminal.column, g_terminal.row);
+	update_cursor_pos();
 }
 
 /*

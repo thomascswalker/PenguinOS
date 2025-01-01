@@ -45,6 +45,12 @@ static void set_cursor_pos(int8_t x, int8_t y)
 	outb(0x3D5, (uint8_t)((pos >> 8) & 0xFF));
 }
 
+// Update the cursor with the current terminal row and column
+static void update_cursor_pos()
+{
+	set_cursor_pos(g_terminal.column, g_terminal.row);
+}
+
 // Enables visual of the cursor.
 static void enable_cursor(uint8_t start, uint8_t end)
 {
@@ -143,7 +149,7 @@ static void terminal_new_line()
 		g_terminal.row--;
 		scroll_terminal();
 	}
-	set_cursor_pos(g_terminal.column, g_terminal.row);
+	update_cursor_pos();
 }
 
 // Shift the terminal view down one row. This moves all entries
