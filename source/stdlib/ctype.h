@@ -1,6 +1,6 @@
 #pragma once
 
-#include <bool.h>
+#include <stdbool.h>
 #include <stdint.h>
 
 typedef unsigned long long size_t;

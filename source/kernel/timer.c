@@ -25,6 +25,7 @@ void init_timer()
 	outb(PIT_DATA0, high);
 
 	success("Timer initialized.");
+	enable_interrupts();
 }
 
 void timer_callback(registers_t regs)

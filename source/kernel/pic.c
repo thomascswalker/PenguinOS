@@ -1,5 +1,5 @@
-#include <io.c>
 #include <pic.h>
+#include <stdio.c>
 
 static void pic_irq_mask(uint8_t index)
 {

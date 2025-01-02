@@ -1,10 +1,43 @@
 #pragma once
 
-#include <memory.h>
+#include <ctype.h>
 #include <stdarg.h>
-#include <types.h>
 
-// Returns the length of `string`.
+// 	Copies one buffer to another.
+void* memcpy(void* dest, void* source, size_t size)
+{
+	uint8_t*	   p_dest = (uint8_t*)dest;
+	const uint8_t* p_source = (uint8_t*)source;
+
+	while (size--)
+	{
+		*p_dest++ = *p_source++;
+	}
+	return dest;
+}
+
+// Fills a buffer with a repeated byte.
+void* memset(void* dest, uint8_t value, int32_t size)
+{
+	char* tmp = (char*)dest;
+	for (int32_t i = 0; i < size; i++)
+	{
+		tmp[i] = value;
+	}
+	return tmp;
+}
+
+// Fills a buffer with a repeated byte.
+uint16_t* wmemset(uint16_t* dest, uint16_t value, int32_t size)
+{
+	for (int32_t i = 0; i < size; i++)
+	{
+		dest[i] = value;
+	}
+	return dest;
+}
+
+// Returns the length of the string.
 size_t strlen(const char* string)
 {
 	size_t length = 0;
@@ -15,7 +48,7 @@ size_t strlen(const char* string)
 	return length;
 }
 
-// Returns true if both strings are equal. False otherwise.
+// Compares two strings.
 bool strcmp(const char* lhs, const char* rhs)
 {
 	if (strlen(lhs) != strlen(rhs))
@@ -34,6 +67,7 @@ bool strcmp(const char* lhs, const char* rhs)
 	return true;
 }
 
+// Copies one string to another
 char* strcpy(char* dest, const char* source)
 {
 	char* temp = dest;
@@ -43,8 +77,25 @@ char* strcpy(char* dest, const char* source)
 	return temp;
 }
 
+// Appends one string to another
+char* strcat(char* dest, const char* source)
+{
+	size_t i, j;
+	while (dest[i] != '\0')
+	{
+		i++;
+	}
+	while (dest[j] != '\0')
+	{
+		dest[i + j] = source[j];
+	}
+	dest[i + j] = '\0';
+
+	return dest;
+}
+
 // Reverses, in-place, the specified `string`.
-void strrev(char* string)
+void reverse(char* string)
 {
 	int start = 0;
 	int end = strlen(string) - 1;
@@ -56,90 +107,5 @@ void strrev(char* string)
 
 		start++;
 		end--;
-	}
-}
-
-// Returns the number of decimals in the specified value.
-// e.g. `12345` would return `5`.
-int8_t decimal_count(int32_t value)
-{
-	// If the value is between 0 and 9, there's only 1 digit.
-	if (value >= 0 && value <= 9)
-	{
-		return 1;
-	}
-
-	// Increment i while dividing the value by 10 until it's
-	// equal to 0.
-	int8_t i = 0;
-	do
-	{
-		i++;
-	}
-	while (value /= 10 > 0);
-
-	return i;
-}
-
-// Converts the specified integer to a string.
-void itos(uint32_t value, char buffer[])
-{
-	// If the value is 0, just simply return 0 as a string.
-	if (value == 0)
-	{
-		buffer[0] = '0';
-		buffer[1] = '\0';
-		return;
-	}
-
-	char*  ptr = buffer; // Pointer to the current char
-	size_t size = 0;	 // Accumulate final string size
-
-	// Loop through the number until it's equal to 0. Each
-	// iteration divide by 10 and the remainder will be the
-	// current digit.
-	do
-	{
-		// Get the remainder of the current value / 10.
-		// Add to the char '0' to get the correct ASCII
-		// char value.
-		*ptr = (char)('0' + (value % 10));
-
-		// Actually divide `value` by 10.
-		value /= 10;
-
-		// Move to the next character and increment size.
-		ptr++;
-		size++;
-	}
-	while (value != 0);
-
-	// Reverse the string (since it was built in reverse
-	// order).
-	strrev(buffer);
-
-	// Terminate
-	buffer[size] = '\0';
-}
-
-void itoa(char* buffer, uint32_t value, uint32_t base)
-{
-	uint32_t temp = value;
-	uint32_t i = 0;
-
-	do
-	{
-		temp = value % base;
-		buffer[i++] = (temp < 10) ? (temp + '0') : (temp + 'a' - 10);
-	}
-	while (value /= base);
-
-	buffer[i--] = 0;
-
-	for (int j = 0; j < i; j++, i--)
-	{
-		temp = buffer[j];
-		buffer[j] = buffer[i];
-		buffer[i] = temp;
 	}
 }

@@ -1,5 +1,5 @@
-#include <io.c>
 #include <keyboard.h>
+#include <stdio.c>
 
 static modifier_key_t g_modifier_key;
 static bool			  g_left_shift_down = false;

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <stdarg.h>
+#include <stdlib.h>
 #include <vga.c>
 
 // Printing
