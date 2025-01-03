@@ -128,25 +128,16 @@ void isr_handler(registers_t regs)
 // Interrupt request
 void irq_handler(registers_t regs)
 {
-	// dump_registers(&regs);
 	uint8_t irq_no = regs.int_no;
-	// debug("IRQ%i handler called.", irq_no);
 
 	// Get the handler for this interrupt and execute it.
 	handler_t handler = interrupt_handlers[irq_no];
 	if (handler)
 	{
-		// debug("Executing handler.");
 		handler(regs);
-	}
-	else
-	{
-		set_terminal_color(VGA_COLOR_LIGHT_RED);
-		panic("Invalid handler for IRQ%i", irq_no);
 	}
 
 	// EOI = End of Interrupt
-	// debug("Sending EOI...");
 	pic_send_eoi(irq_no);
 	enable_interrupts();
 }

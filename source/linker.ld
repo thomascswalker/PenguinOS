@@ -1,6 +1,6 @@
 /* The bootloader will look at this image and start execution at the symbol
    designated as the entry point. */
-ENTRY(start)
+ENTRY(_start)
 
 /* Tell where the various sections of the object files will be put in the final
    kernel image. */
@@ -8,35 +8,48 @@ SECTIONS
 {
 	. = 1M; /* Start at 1MB */
 
-	start = .;
-
-	.text BLOCK(4K) : ALIGN(4K)
+	.multiboot ALIGN(4K) :
 	{
-		stext = .;
-		*(.multiboot);
-		*(.text);
-		etext = .;
+		*(.multiboot)
 	}
 
-	.rodata BLOCK(4K) : ALIGN(4K)
+	.note.gnu.build-id ALIGN(4K) :
 	{
-		*(.rodata);
+		*(.note.gnu.build-id)
 	}
 
-	.data BLOCK(4K) : ALIGN(4K)
+	.boot ALIGN(4K) :
 	{
-		sdata = .;
-		*(.data); 
-		edata = .;
+		*(.boot)
 	}
 
-	.bss :
+	/* Start kernel */
+	. += 0xC0000000;
+
+	/* Align relative to 0xC0000000) */
+	.text ALIGN(4K) : AT(ADDR(.text) - 0xC0000000)
 	{
-		sbss = .;
-		*(COMMON);
-		*(.bss);
-		ebss = .;
+		*(.text)
 	}
 
-	end = .;
+		/* Align relative to 0xC0000000) */
+	.data ALIGN(4K) : AT(ADDR(.data) - 0xC0000000)
+	{
+		*(.data)
+	}
+
+		/* Align relative to 0xC0000000) */
+	.rodata ALIGN(4K) : AT(ADDR(.rodata) - 0xC0000000)
+	{
+		*(.rodata)
+	}
+
+		/* Align relative to 0xC0000000) */
+	.bss ALIGN(4K) : AT(ADDR(.bss) - 0xC0000000)
+	{
+		*(COMMON)
+		*(.bss)
+	}
+
+	_kernel_end = .;
 }

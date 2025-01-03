@@ -30,6 +30,10 @@ info "Building ISO..."
 grub-mkrescue -o build/${ISO} --rom-directory=build/${ISO} build
 success "ISO built at './build/${ISO}'."
 
+# Run Bochs
+info "Running Bochs"
+bochs -f bochs
+
 # Run QEMU
-info "Running QEMU-i386."
-setsid qemu-system-i386 -cdrom build/${ISO} # -d int -no-shutdown -no-reboot -S -s  
+# info "Running QEMU-i386."
+# setsid qemu-system-i386 -cdrom build/${ISO} # -d int -no-shutdown -no-reboot -S -s  
