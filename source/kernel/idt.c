@@ -1,6 +1,6 @@
 #include <idt.h>
-#include <io.c>
 #include <pic.c>
+#include <stdio.c>
 
 idt_entry_t idt_entries[IDT_ENTRY_COUNT];
 idt_ptr_t	idtp;
