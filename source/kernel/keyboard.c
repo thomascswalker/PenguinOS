@@ -7,7 +7,12 @@ static bool			  g_right_shift_down = false;
 
 void init_keyboard()
 {
+	debug("Initializing keyboard...");
+	while (inb(KEYBOARD_STATUS_PORT) & KEYBOARD_INPUT_FULL)
+	{
+	}
 	register_interrupt_handler(IRQ1, keyboard_callback);
+	success("Keyboard initialized.");
 }
 
 bool get_keycode(scancode_t sc, keycode_t* kc)
@@ -25,8 +30,8 @@ bool get_keycode(scancode_t sc, keycode_t* kc)
 
 void keyboard_callback(registers_t regs)
 {
-	uint8_t	  sc = inb(0x60); // Incoming scancode
-	keycode_t kc;			  // Converted keyboard code struct
+	uint8_t	  sc = inb(KEYBOARD_DATA_PORT); // Incoming scancode
+	keycode_t kc;							// Converted keyboard code struct
 
 	if (get_keycode(sc, &kc))
 	{

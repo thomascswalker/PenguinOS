@@ -9,13 +9,13 @@
 void kernel_main(void)
 {
 	init_terminal();
-	info("Welcome to PengOS!");
+	info("Welcome to PengOS! %s");
+	print_cpuid();
 	disable_interrupts();
+	init_keyboard();
 	init_gdt();
 	init_idt();
 	init_timer();
-	init_keyboard();
-
 	while (true)
 	{
 	}

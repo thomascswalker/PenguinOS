@@ -1,24 +1,59 @@
-#define cpuid(in, a, b, c, d) __asm__("cpuid" : "=a"(a), "=b"(b), "=c"(c), "=d"(d) : "a"(in));
+#pragma once
 
-#include <string.h>
+#include <stdio.c>
 
-void detect_cpu(char* str)
-{ /* or main() if your trying to port this as an independant application */
-	unsigned long ebx, unused;
-	cpuid(0, unused, ebx, unused, unused);
-	const char* intel = "Intel";
-	const char* amd = "amd";
-	const char* unknown = "unknown";
-	switch (ebx)
-	{
-		case 0x756e6547: /* Intel Magic Code */
-			strcpy(str, intel);
-			break;
-		case 0x68747541: /* AMD Magic Code */
-			strcpy(str, amd);
-			break;
-		default:
-			strcpy(str, unknown);
-			break;
-	}
+typedef struct cpuid
+{
+	char	 manufacturer_id[12];
+	uint32_t family_id;
+	uint32_t model;
+	uint32_t processor_type;
+} cpuid_t;
+
+typedef enum cpuid_requests
+{
+	CPUID_MANUFACTURER_ID,
+	CPUID_FEATURES,
+} cpuid_requests_t;
+
+void cpuid(cpuid_requests_t code, uint8_t subcode, uint32_t* out)
+{
+	__asm__("cpuid"
+			: "=a"(out[0]), "=b"(out[1]), "=c"(out[2]), "=d"(out[3]) // Output operands
+			: "a"(code), "c"(subcode)								 // Input operands
+	);
+}
+
+void get_manufacturer(cpuid_t* cpu)
+{
+	uint32_t buffer[12];
+	uint32_t regs[4];
+	cpuid(CPUID_MANUFACTURER_ID, 0, regs);
+	buffer[0] = regs[1]; // ebx
+	buffer[1] = regs[3]; // edx
+	buffer[2] = regs[2]; // ecs
+	strcpy(cpu->manufacturer_id, (char*)buffer);
+}
+
+void get_processor_info(cpuid_t* cpu)
+{
+	uint32_t regs[4];
+	cpuid(CPUID_FEATURES, 0, regs);
+}
+
+void get_cpuid(cpuid_t* cpu)
+{
+	// EAX 0
+	get_manufacturer(cpu);
+
+	// EAX 1
+	get_processor_info(cpu);
+}
+
+void print_cpuid()
+{
+	cpuid_t cpu;
+	get_cpuid(&cpu);
+
+	printf("Processor: %s\n", cpu.manufacturer_id);
 }

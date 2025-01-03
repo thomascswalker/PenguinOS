@@ -2,6 +2,14 @@
 
 #include <idt.h>
 
+// Keyboard ports
+#define KEYBOARD_DATA_PORT 0x60
+#define KEYBOARD_STATUS_PORT 0x64
+#define KEYBOARD_COMMAND_PORT 0x64
+// Keyboard status
+#define KEYBOARD_OUTPUT_FULL 0x01
+#define KEYBOARD_INPUT_FULL 0x02
+
 enum scancode
 {
 	SC_ESC = 0X01,			// Esc

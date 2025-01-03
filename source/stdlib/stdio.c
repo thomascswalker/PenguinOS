@@ -37,29 +37,35 @@ Specifiers:
 	- `%s` : `const char*`
 	- `%i` : `uint<8|16|32>_t | int<8|16|32>_t`
 */
-static void sprintf(char* stream, const char* format, va_list args)
+static uint32_t sprintf(char* stream, const char* format, va_list args)
 {
-	char	 c;
-	uint32_t i = 0;
+	char		c;
+	const char* begin = stream;
 
-	while ((c = format[i]) != 0)
+	while ((c = *format++) != '\0')
 	{
 		char buffer[512];
 		if (c == '%')
 		{
-			i++;		   // Skip the %
-			c = format[i]; // Get the format specifier
+			c = *format++; // Get the format specifier
 			switch (c)
 			{
 				case FMT_CHAR: // Characters
 					{
-						*stream++ = (char)va_arg(args, int);
+						*(stream++) = va_arg(args, int);
 						break;
 					}
 				case FMT_STRING: // Strings
 					{
-						char* text = (char*)va_arg(args, char*);
-						strcpy(stream, text);
+						const char* text = va_arg(args, const char*);
+						if (!text)
+						{
+							break;
+						}
+						while (*text)
+						{
+							*(stream++) = *(text++);
+						}
 						break;
 					}
 				case FMT_INT: // Integers
@@ -82,10 +88,21 @@ static void sprintf(char* stream, const char* format, va_list args)
 		{
 			*stream++ = c;
 		}
-		i++;
 	}
 
 	*stream = '\0';
+	return stream - begin;
+}
+
+static void printf(const char* format, ...)
+{
+	set_terminal_color(VGA_COLOR_DEFAULT);
+	va_list args;
+	va_start(args, format);
+	char buffer[512];
+	sprintf(buffer, format, args);
+	print(buffer);
+	va_end(args);
 }
 
 static void debug(const char* format, ...)
