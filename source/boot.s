@@ -31,26 +31,29 @@ section .boot
 global _start
 _start:
     mov eax, (initial_page_dir - 0xC0000000)
-    mov cr3, eax        ; Move into control register CR3, tells the processor where the location of the page directory and page tables is
+    mov cr3, eax                                            ; Move into control register CR3, tells the processor where 
+                                                            ; the location of the page directory and page tables is.
 
     mov ecx, cr4
-    or ecx, 0x10        ; Set physical address extension
+    or ecx, 0x10                                            ; Set physical address extension
     mov cr4, ecx
 
     mov ecx, cr0
-    or ecx, 0x80000000  ; Enables paging on our system
+    or ecx, 0x80000000                                      ; Enables paging on our system
     mov cr0, ecx
 
     jmp higher_half
 
 section .text
 higher_half:
-    mov esp, stack_top
-    xor ebp, ebp    ; reset value
-    extern kernel_main
-    call kernel_main
+    mov esp, stack_top                                      ; Move stack pointer into esp
+    push ebx                                                ; Push ebx onto the stack
+    xor ebp, ebp                                            ; Reset ebp
+    extern kernel_main                                      ; External reference to kernel_main
+    call kernel_main                                        ; Call kernel_main in main.c
+    cli                                                     ; Disable interrupts
+    hlt                                                     ; Halt the next interrupt
 halt:
-    hlt
     jmp halt
 
 ; Initialize paging table

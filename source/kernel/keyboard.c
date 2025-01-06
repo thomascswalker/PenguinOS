@@ -1,5 +1,6 @@
 #include <keyboard.h>
-#include <stdio.c>
+#include <pic.h>
+#include <stdio.h>
 
 static modifier_key_t g_modifier_key;
 static bool			  g_left_shift_down = false;
@@ -45,6 +46,7 @@ void keyboard_callback(registers_t regs)
 			on_key_pressed(&kc);
 		}
 	}
+	pic_send_eoi(IRQ1);
 }
 
 void on_key_released(keycode_t* kc)

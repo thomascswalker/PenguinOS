@@ -25,7 +25,7 @@ GREEN='\e[0;32m'
 YELLOW='\e[0;33m'
 NC='\e[0m' # No Color
 
-INCLUDE_DIRS=(kernel stdlib kernel/interrupts)
+INCLUDE_DIRS=(kernel stdlib)
 build_include_args() {
     result=""
     for dir in "${INCLUDE_DIRS[@]}"; do

@@ -5,7 +5,7 @@
 #define NULL 0
 #define nullptr ((void*)0)
 
-void itoa(char* buffer, uint32_t value, uint32_t base)
+static void itoa(char* buffer, uint32_t value, uint32_t base)
 {
 	uint32_t temp = value;
 	uint32_t i = 0;

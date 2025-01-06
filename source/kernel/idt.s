@@ -1,4 +1,3 @@
-[bits 32]
 section .text
 
 global load_idt
@@ -92,6 +91,18 @@ irq%1:
     jmp irq_common_stub
 %endmacro
 
+; global irq0
+; irq0:
+;     cli
+;     push 0
+;     push 32
+;     pusha
+;     call irq_handler
+;     popa
+;     add esp, 8
+;     sti
+;     iret
+    
 IRQ 0, 32
 IRQ 1, 33
 IRQ 2, 34
@@ -111,26 +122,29 @@ IRQ 15, 47
 
 extern irq_handler
 irq_common_stub:
-    pusha                                                   ; Pushes edi,esi,ebp,esp,ebx,edx,ecx,eax
+    pusha
 
-    mov ax, ds                                              ; Lower 16-bits of eax = ds.
-    push eax                                                ; save the data segment descriptor
+    mov	    ax, ds
+    push	eax
+    mov 	esi, eax
 
-    mov ax, 0x10                                            ; load the kernel data segment descriptor
-    mov ds, ax
-    mov es, ax
-    mov fs, ax
-    mov gs, ax
+    mov 	ax, 10h
+    mov 	ds, ax
+    mov 	es, ax
+    mov 	fs, ax
+    mov 	gs, ax
 
-    call irq_handler
+    call	irq_handler
 
-    pop ebx                                                 ; reload the original data segment descriptor
-    mov ds, bx
-    mov es, bx
-    mov fs, bx
-    mov gs, bx
+    pop	    ebx
+    mov 	ebx, esi
 
-    popa                                                    ; Pops edi,esi,ebp...
-    add esp, 8                                             ; Cleans up the pushed error code and pushed ISR number
+    mov 	ds, bx
+    mov 	es, bx
+    mov 	fs, bx
+    mov 	gs, bx
+
+    popa
+    add     esp, 8
     sti
-    iret                                                    ; pops 5 things at once: CS, EIP, EFLAGS, SS, and ESP
+    iret

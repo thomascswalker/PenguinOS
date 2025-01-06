@@ -2,7 +2,7 @@
 
 #include <stdarg.h>
 #include <stdlib.h>
-#include <vga.c>
+#include <vga.h>
 
 // Printing
 
@@ -10,7 +10,8 @@ enum format_spec
 {
 	FMT_CHAR = 'c',
 	FMT_STRING = 's',
-	FMT_INT = 'i'
+	FMT_INT = 'd',
+	FMT_HEX = 'x'
 };
 typedef enum format_spec format_spec_t;
 
@@ -35,12 +36,14 @@ Print to the specified stream.
 Specifiers:
 	- `%c` : `char`
 	- `%s` : `const char*`
-	- `%i` : `uint<8|16|32>_t | int<8|16|32>_t`
+	- `%d` : `uint<8|16|32>_t | int<8|16|32>_t`
 */
 static uint32_t sprintf(char* stream, const char* format, va_list args)
 {
+	uint8_t		base;
 	char		c;
 	const char* begin = stream;
+	const char* hex_prefix = "0x";
 
 	while ((c = *format++) != '\0')
 	{
@@ -69,9 +72,22 @@ static uint32_t sprintf(char* stream, const char* format, va_list args)
 						break;
 					}
 				case FMT_INT: // Integers
+				case FMT_HEX: // Hexaadecimal
 					{
+						if (c == 'd')
+						{
+							base = 10;
+						}
+						// If hexadecimal, add '0x' to the beginning
+						// of the output string.
+						else if (c == 'x')
+						{
+							base = 16;
+							strcpy(stream, hex_prefix);
+							stream += 2;
+						}
 						int32_t value = va_arg(args, int);
-						itoa((char*)buffer, value, 10);
+						itoa((char*)buffer, value, base);
 						strcpy(stream, (char*)buffer);
 						stream += strlen(buffer);
 						break;
@@ -107,7 +123,6 @@ static void printf(const char* format, ...)
 
 static void debug(const char* format, ...)
 {
-	// #ifdef DEBUG
 	set_terminal_color(VGA_COLOR_LIGHT_GREY);
 	va_list args;
 	va_start(args, format);
@@ -117,7 +132,6 @@ static void debug(const char* format, ...)
 	println(buffer);
 	va_end(args);
 	reset_terminal_color();
-	// #endif
 }
 
 static void info(const char* format, ...)

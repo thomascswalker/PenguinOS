@@ -1,7 +1,7 @@
 #include <pic.h>
-#include <stdio.c>
+#include <stdio.h>
 
-static void pic_irq_mask(uint8_t index)
+void pic_irq_mask(uint8_t index)
 {
 	uint16_t port;
 	uint8_t	 mask;
@@ -21,7 +21,7 @@ static void pic_irq_mask(uint8_t index)
 	outb(port, mask);
 }
 
-static void pic_irq_unmask(uint8_t index)
+void pic_irq_unmask(uint8_t index)
 {
 	uint16_t port;
 	uint8_t	 mask;
@@ -41,7 +41,7 @@ static void pic_irq_unmask(uint8_t index)
 	outb(port, mask);
 }
 
-static void pic_remap()
+void pic_remap()
 {
 	uint8_t pic0_mask = inb(PIC0_DATA);
 	uint8_t pic1_mask = inb(PIC1_DATA);
@@ -62,9 +62,9 @@ static void pic_remap()
 	outb(PIC1_DATA, pic1_mask);
 }
 
-static void pic_send_eoi(uint8_t index)
+void pic_send_eoi(uint8_t index)
 {
-	if (index >= 8)
+	if (index >= 40)
 	{
 		outb(PIC1_COMMAND, PIC_EOI);
 	}

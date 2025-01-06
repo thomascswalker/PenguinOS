@@ -1,7 +1,7 @@
 // https://www.thejat.in/learn/implement-gdt-in-multiboot-bootloader
 #pragma once
 
-#include <stdio.c>
+#include <stdio.h>
 
 #define GDT_ENTRY_COUNT 5
 

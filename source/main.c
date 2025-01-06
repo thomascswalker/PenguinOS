@@ -14,22 +14,23 @@ Kernel is 8MB in total.
 */
 
 #include <cpuid.h>
-#include <gdt.c>
-#include <keyboard.c>
-// #include <paging.c>
-#include <timer.c>
+#include <gdt.h>
+#include <keyboard.h>
+#include <memory.h>
+#include <timer.h>
 
-void kernel_main(void)
+void kernel_main(multiboot_info_t* boot_info)
 {
 
 	init_terminal();
-	info("Welcome to PengOS! %s");
-	// print_cpuid();
+	println("Welcome to PengOS!");
 	disable_interrupts();
-	init_keyboard();
 	init_gdt();
 	init_idt();
 	init_timer();
+	init_keyboard();
+	enable_interrupts();
+	// init_memory(boot_info);
 
 	while (true)
 	{

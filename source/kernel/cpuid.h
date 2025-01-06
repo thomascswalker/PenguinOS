@@ -1,6 +1,6 @@
 #pragma once
 
-#include <stdio.c>
+#include <stdio.h>
 
 typedef struct cpuid
 {
