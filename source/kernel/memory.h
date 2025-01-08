@@ -1,48 +1,32 @@
+#pragma once
+
 #include <math.h>
 #include <multiboot.h>
 #include <stdio.h>
 
 #define KERNEL_START 0xC0000000
-#define PAGE_FLAG_PRESENT (1 << 0)
-#define PAGE_FLAG_WRITE (1 << 1)
-static uint32_t page_frame_min;
-static uint32_t page_frame_max;
-static uint32_t total_alloc;
+#define HEAP_START 0xD0000000
 
-// TODO: Refactor as bitarray
+#define REC_PAGEDIR ((uint32_t*)0xFFFFF000)
+#define REC_PAGETABLE(i) (0xFFC00000 + (i << 12))
+
+#define PAGE_SIZE 0x1000
+#define PAGE_ENTRY_COUNT 1024
 #define PAGE_DIR_COUNT 256
-#define PAGE_FRAME_COUNT (0x10000000 / 0x1000 / 8)
-static uint8_t phys_memory_bitmap[PAGE_FRAME_COUNT / 8];
+#define PAGE_FRAME_COUNT (0x10000000 / PAGE_SIZE / 8)
 
-static uint32_t page_dirs[PAGE_DIR_COUNT][1024] __attribute__((aligned(4096)));
-static uint8_t	page_dir_used[PAGE_DIR_COUNT];
-
-extern uint32_t initial_page_dir[1024];
-
-void invalidate(uint32_t vaddr)
+enum page_flag
 {
-	asm("invlpg %0" ::"m"(vaddr));
-}
+	PAGE_PRESENT = (1 << 0),
+	PAGE_WRITE = (1 << 1),
+	PAGE_OWNER = (1 << 9),
+};
+typedef enum page_flag page_flag_t;
 
-void pmm_init(uint32_t mem_low, uint32_t mem_high)
-{
-	page_frame_min = ceil(mem_low, 0x1000);
-	page_frame_max = mem_high / 0x1000;
-	total_alloc = 0;
-
-	memset(phys_memory_bitmap, 0, sizeof(phys_memory_bitmap));
-}
-
-void init_memory(uint32_t mem_high, uint32_t phys_alloc_start)
-{
-	initial_page_dir[0] = 0;
-	invalidate(0);
-
-	initial_page_dir[1023] =
-		((uint32_t)initial_page_dir - KERNEL_START) | PAGE_FLAG_PRESENT | PAGE_FLAG_WRITE;
-	invalidate(0xFFFF000);
-
-	pmm_init(phys_alloc_start, mem_high);
-	memset(page_dirs, 0, 0x1000 * PAGE_DIR_COUNT);
-	memset(page_dir_used, 0, PAGE_DIR_COUNT);
-}
+void	  init_memory(uint32_t mem_high, uint32_t phys_alloc_start);
+void	  pmb_init(uint32_t mem_low, uint32_t mem_high);
+uint32_t  pmb_alloc_page_frame();
+uint32_t* mem_get_current_page_dir();
+void	  mem_change_page_dir(uint32_t* pd);
+void	  mem_map_page(uint32_t vaddr, uint32_t paddr, uint32_t flags);
+void	  sync_page_dirs();
