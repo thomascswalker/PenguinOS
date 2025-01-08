@@ -113,7 +113,7 @@ void isr_handler(registers_t regs)
 			// Obtain the fault address from the CR2 register.
 			uint32_t addr;
 			asm("mov %%cr2, %0" : "=r"(addr));
-			panic("Page fault thrown at 0x%x.", addr);
+			panic("Page fault thrown at %x.", addr);
 			break;
 		default:
 			panic("%s exception thrown. Code: %d", idt_messages[regs.int_no], regs.int_no);

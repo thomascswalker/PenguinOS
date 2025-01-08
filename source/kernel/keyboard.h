@@ -6,6 +6,7 @@
 #define KEYBOARD_DATA_PORT 0x60
 #define KEYBOARD_STATUS_PORT 0x64
 #define KEYBOARD_COMMAND_PORT 0x64
+
 // Keyboard status
 #define KEYBOARD_OUTPUT_FULL 0x01
 #define KEYBOARD_INPUT_FULL 0x02
@@ -52,7 +53,7 @@ enum scancode
 	SC_L = 0x26,			// l
 	SC_SEMICOLON = 0x27,	// ;
 	SC_APOSTROPHE = 0x28,	// '
-	SC_GRAVE = 0x29,		// Return
+	SC_BACKQUOTE = 0x29,	// `
 	SC_SHIFTLEFT = 0x2A,	// Left Shift
 	SC_BACKSLASH = 0x2B,	// '\'
 	SC_Z = 0x2C,			// z
@@ -143,6 +144,9 @@ static keycode_t keymap[] = {
 	{ SC_BACKSLASH,	'\\', '|' },
 	{ SC_MINUS,		'-',	 '_' },
 	{ SC_EQUALS,		 '=',  '+' },
+	{ SC_BACKQUOTE,	'`',	 '~' },
+	{ SC_TAB,		  0,	 0   },
+	{ SC_CAPSLOCK,	   0,	  0	},
 };
 
 enum modifier_key

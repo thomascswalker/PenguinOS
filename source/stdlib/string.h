@@ -95,7 +95,7 @@ static char* strcat(char* dest, const char* source)
 }
 
 // Reverses, in-place, the specified `string`.
-static void reverse(char* string)
+static void strrev(char* string)
 {
 	int start = 0;
 	int end = strlen(string) - 1;
@@ -108,4 +108,17 @@ static void reverse(char* string)
 		start++;
 		end--;
 	}
+}
+
+static void strapp(char* source, const char* string, char* dest)
+{
+	strcpy(dest, source);
+	dest += sizeof(source);
+	strcpy(dest, string);
+}
+static void strprep(char* source, const char* string, char* dest)
+{
+	strcpy(dest, string);
+	dest += sizeof(string);
+	strcpy(dest, source);
 }
