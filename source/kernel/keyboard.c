@@ -2,9 +2,8 @@
 #include <pic.h>
 #include <stdio.h>
 
+// Tracks the state of any modifier keys (Shift, Alt, Ctrl)
 static modifier_key_t g_modifier_key;
-static bool			  g_left_shift_down = false;
-static bool			  g_right_shift_down = false;
 
 void init_keyboard()
 {
@@ -18,7 +17,7 @@ void init_keyboard()
 
 bool get_keycode(scancode_t sc, keycode_t* kc)
 {
-	for (int32_t i = 0; i < 128; i++)
+	for (int32_t i = 0; i < KEYMAP_COUNT; i++)
 	{
 		if (keymap[i].code == sc)
 		{
@@ -46,7 +45,6 @@ void keyboard_callback(registers_t regs)
 			on_key_pressed(&kc);
 		}
 	}
-	pic_send_eoi(IRQ1);
 }
 
 void on_key_released(keycode_t* kc)

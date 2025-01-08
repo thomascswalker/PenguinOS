@@ -4,7 +4,7 @@
 
 #define IDT_ENTRY_COUNT 256
 
-#define ISR0 0
+#define ISR0 0 // Divide by zero
 #define ISR1 1
 #define ISR2 2
 #define ISR3 3
@@ -37,8 +37,8 @@
 #define ISR30 30
 #define ISR31 31
 
-#define IRQ0 32
-#define IRQ1 33
+#define IRQ0 32 // Timer
+#define IRQ1 33 // Keyboard
 #define IRQ2 34
 #define IRQ3 35
 #define IRQ4 36
@@ -77,7 +77,7 @@ typedef struct idt_entry idt_entry_t;
 struct idt_ptr
 {
 	uint16_t limit; // Size - 1
-	uint32_t addr;	// Pointer to the address of our
+	uint32_t base;	// Pointer to the address of our
 					// interrupt handler array
 } __attribute__((packed));
 typedef struct idt_ptr idt_ptr_t;

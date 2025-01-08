@@ -18,7 +18,7 @@
 #define VGA_SIZE (VGA_WIDTH * VGA_HEIGHT)
 
 // The starting point of the terminal's text buffer in memory.
-#define TERMINAL_BUFFER_START (uint16_t*)0xB8000
+#define TERMINAL_BUFFER_START (uint16_t*)0xC00B8000
 
 /* Hardware text mode color constants. */
 typedef enum vga_color

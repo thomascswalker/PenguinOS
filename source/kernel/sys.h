@@ -6,12 +6,12 @@
 
 struct registers
 {
-	uint32_t cr2;
-	uint32_t ds;
-	uint32_t edi, esi, ebp, esp, ebx, edx, ecx, eax;
+	/* Pushed by common stub. */
+	uint32_t ds, edi, esi, ebp, esp, ebx, edx, ecx, eax;
+	/* Pushed by wrapper function. */
 	uint32_t int_no, err_code;
-	uint32_t iret_rip, iret_cs, iret_flags, iret_rsp,
-		iret_ss; // Automatically popped from the stack when IRET is called
+	/* Pushed by interrupt. */
+	uint32_t eip, cs, eflags, useresp, ss;
 };
 typedef struct registers registers_t;
 

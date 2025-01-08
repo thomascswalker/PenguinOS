@@ -1,5 +1,4 @@
-#ifndef CTYPE_H
-#define CTYPE_H
+#pragma once
 
 #include <stdbool.h>
 #include <stdint.h>
@@ -16,5 +15,3 @@ static bool isintegral(int32_t c)
 {
 	return ((c >= 48) && (c <= 57));
 }
-
-#endif

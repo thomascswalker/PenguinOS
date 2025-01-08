@@ -174,25 +174,18 @@ void scroll_terminal()
 {
 	uint16_t blank = create_entry(' ', VGA_COLOR_DEFAULT);
 
-	// Copy the text buffer to a temporary buffer so we can clear
-	// the actual VGA buffer
-	uint16_t temp[VGA_SIZE];
-	memcpy(temp, g_terminal.buffer, VGA_SIZE);
-
 	// Move the lines up
-	clear_terminal();
-	for (uint32_t i = 0; i < VGA_SIZE - VGA_WIDTH; i++)
+	for (uint32_t i = 0; i < VGA_WIDTH * VGA_HEIGHT; i++)
 	{
-		g_terminal.buffer[i] = temp[i + VGA_WIDTH];
+		g_terminal.buffer[i] = g_terminal.buffer[i + VGA_WIDTH];
 	}
 
 	// Clear the last line
-	for (uint32_t i = (VGA_HEIGHT - 1) * VGA_WIDTH; i < VGA_SIZE; i++)
+	for (uint32_t i = (VGA_HEIGHT - 1) * VGA_WIDTH; i < VGA_HEIGHT * VGA_WIDTH; i++)
 	{
 		g_terminal.buffer[i] = blank;
 		g_terminal.column = 0;
 	}
-
 	g_terminal.row = VGA_HEIGHT - 1;
 }
 

@@ -16,7 +16,7 @@ void init_idt()
 	info("Initializing IDT...");
 
 	idtp.limit = (sizeof(idt_entry_t) * IDT_ENTRY_COUNT) - 1;
-	idtp.addr = (uint32_t)&idt_entries;
+	idtp.base = (uint32_t)&idt_entries;
 
 	memset(&idt_entries, 0, sizeof(idt_entry_t) * IDT_ENTRY_COUNT);
 
@@ -104,16 +104,20 @@ void unregister_interrupt_handler(uint32_t index)
 void isr_handler(registers_t regs)
 {
 	uint8_t isr_no = regs.int_no;
-	if (isr_no == 13) // General protection fault
+	switch (isr_no)
 	{
-		error("General Protection Fault. Code: %d", regs.err_code);
-		panic("General Protection Fault.");
-	}
-
-	handler_t handler = interrupt_handlers[isr_no];
-	if (handler)
-	{
-		handler(regs);
+		case 13:
+			panic("General Protection Fault. Code: %d", regs.err_code);
+			break;
+		case 14:
+			// Obtain the fault address from the CR2 register.
+			uintptr_t addr;
+			asm("mov %%cr2, %0" : "=r"(addr));
+			panic("Page fault thrown at 0x%x.", addr);
+			break;
+		default:
+			panic("%s exception thrown. Code: %d", idt_messages[regs.int_no], regs.int_no);
+			break;
 	}
 }
 
@@ -128,13 +132,19 @@ void irq_handler(registers_t regs)
 	{
 		handler(regs);
 	}
+	else
+	{
+		dump_registers(&regs);
+		panic("IRQ handler %d not found!", irq_no);
+	}
+
+	pic_send_eoi(irq_no);
 }
 
 void dump_registers(registers_t* reg)
 {
-	debug("Dumping registers:");
-	debug("cr2: %d, ds: %d", reg->cr2, reg->ds);
-	debug("edi: %d, esi: %d, ebp: %d, esp: %d, ebx: %d, edx: %d, ecx: %d, eax: %d", reg->edi,
+	warning("Dumping registers:");
+	warning("edi: %d, esi: %d, ebp: %d, esp: %d, ebx: %d, edx: %d, ecx: %d, eax: %d", reg->edi,
 		reg->esi, reg->ebp, reg->esp, reg->ebx, reg->edx, reg->ecx, reg->eax);
-	debug("int_no: %d, err_code: %d", reg->int_no, reg->err_code);
+	warning("int_no: %d, err_code: %d", reg->int_no, reg->err_code);
 }

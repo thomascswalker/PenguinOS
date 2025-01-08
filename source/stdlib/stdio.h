@@ -126,7 +126,7 @@ static void debug(const char* format, ...)
 	set_terminal_color(VGA_COLOR_LIGHT_GREY);
 	va_list args;
 	va_start(args, format);
-	print("[DEBUG] ");
+	print("[DEBUG  ] ");
 	char buffer[512];
 	sprintf(buffer, format, args);
 	println(buffer);
@@ -139,7 +139,7 @@ static void info(const char* format, ...)
 	set_terminal_color(VGA_COLOR_WHITE);
 	va_list args;
 	va_start(args, format);
-	print("[INFO] ");
+	print("[INFO   ] ");
 	char buffer[512];
 	sprintf(buffer, format, args);
 	println(buffer);
@@ -165,7 +165,7 @@ static void error(const char* format, ...)
 	set_terminal_color(VGA_COLOR_LIGHT_RED);
 	va_list args;
 	va_start(args, format);
-	print("[ERROR] ");
+	print("[ERROR  ] ");
 	char buffer[512];
 	sprintf(buffer, format, args);
 	println(buffer);
@@ -186,16 +186,4 @@ static void success(const char* format, ...)
 	reset_terminal_color();
 }
 
-static void panic(const char* format, ...)
-{
-	set_terminal_color(VGA_COLOR_LIGHT_RED);
-	va_list args;
-	va_start(args, format);
-	print("[PANIC] ");
-	char buffer[512];
-	sprintf(buffer, format, args);
-	println(buffer);
-	println("System halted.\n");
-	va_end(args);
-	halt();
-}
+void panic(const char* format, ...);

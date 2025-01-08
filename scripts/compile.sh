@@ -39,9 +39,7 @@ assemble_source_file "${SOURCE_DIR}/kernel/idt.s"
 info "Generating C source code..."
 debug "Compiling with include directories: ${INCLUDE_ARGS}"
 c_files=$(find "./source/" -type f -name "*.c")
-info $c_files
 for c_file in ${c_files[@]}; do
-    warning $c_file
     compile_source_file $c_file
 done
 

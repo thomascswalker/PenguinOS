@@ -90,7 +90,8 @@ struct keycode
 };
 typedef struct keycode keycode_t;
 
-static keycode_t keymap[] = {
+#define KEYMAP_COUNT 45
+static keycode_t keymap[KEYMAP_COUNT] = {
 	{ SC_1,			'1',	 '!' },
 	{ SC_2,			'2',	 '@' },
 	{ SC_3,			'3',	 '#' },
