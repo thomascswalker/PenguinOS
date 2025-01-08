@@ -90,8 +90,7 @@ struct keycode
 };
 typedef struct keycode keycode_t;
 
-#define KEYMAP_COUNT 45
-static keycode_t keymap[KEYMAP_COUNT] = {
+static keycode_t keymap[] = {
 	{ SC_1,			'1',	 '!' },
 	{ SC_2,			'2',	 '@' },
 	{ SC_3,			'3',	 '#' },
@@ -128,7 +127,9 @@ static keycode_t keymap[KEYMAP_COUNT] = {
 	{ SC_X,			'x',	 'X' },
 	{ SC_Y,			'y',	 'Y' },
 	{ SC_Z,			'z',	 'Z' },
+	{ SC_BACKSPACE,	0,	   0	 },
 	{ SC_SPACEBAR,	   ' ',	' ' },
+	{ SC_ENTER,		0,	   0	 },
 	{ SC_SHIFTLEFT,	0,	   0	 },
 	{ SC_SHIFTRIGHT,	 0,	0	  },
 	{ SC_PERIOD,		 '.',  '>' },
@@ -137,14 +138,19 @@ static keycode_t keymap[KEYMAP_COUNT] = {
 	{ SC_APOSTROPHE,	 '\'', '"' },
 	{ SC_BRACKETLEFT,  '[',  '{' },
 	{ SC_BRACKETRIGHT, ']',	'}' },
+	{ SC_ESC,		  0,	 0   },
+	{ SC_SLASH,		'/',	 '?' },
+	{ SC_BACKSLASH,	'\\', '|' },
+	{ SC_MINUS,		'-',	 '_' },
+	{ SC_EQUALS,		 '=',  '+' },
 };
 
 enum modifier_key
 {
-	MOD_SHIFT = 1,
-	MOD_CONTROL = 2,
-	MOD_ALT = 4,
-	MOD_COMMAND = 8,
+	MOD_SHIFT = 1 << 0,
+	MOD_CONTROL = 1 << 1,
+	MOD_ALT = 1 << 2,
+	MOD_COMMAND = 1 << 3,
 };
 typedef enum modifier_key modifier_key_t;
 

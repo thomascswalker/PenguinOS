@@ -106,12 +106,12 @@ void isr_handler(registers_t regs)
 	uint8_t isr_no = regs.int_no;
 	switch (isr_no)
 	{
-		case 13:
+		case GENERAL_PROTECTION_FAULT:
 			panic("General Protection Fault. Code: %d", regs.err_code);
 			break;
-		case 14:
+		case PAGE_FAULT:
 			// Obtain the fault address from the CR2 register.
-			uintptr_t addr;
+			uint32_t addr;
 			asm("mov %%cr2, %0" : "=r"(addr));
 			panic("Page fault thrown at 0x%x.", addr);
 			break;

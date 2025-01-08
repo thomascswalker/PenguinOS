@@ -54,6 +54,9 @@
 #define IRQ14 46
 #define IRQ15 47
 
+#define GENERAL_PROTECTION_FAULT 13
+#define PAGE_FAULT 14
+
 enum idt_gate : uint8_t
 {
 	TASK_GATE = 0x05,

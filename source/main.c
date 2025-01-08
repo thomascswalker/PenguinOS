@@ -28,7 +28,7 @@ void kernel_main(multiboot_info_t* boot_info)
 	uint32_t mod1 = *(uint32_t*)(boot_info->mods_addr + 4);
 	uint32_t phys_alloc_start = (mod1 + 0xFFF) & ~0xFFF;
 	init_memory(boot_info->mem_upper * 1024, phys_alloc_start);
-	println("Memory allocation complete.");
+	success("Memory allocation complete.");
 
 	init_gdt();
 	init_idt();

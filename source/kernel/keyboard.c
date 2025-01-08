@@ -4,6 +4,7 @@
 
 // Tracks the state of any modifier keys (Shift, Alt, Ctrl)
 static modifier_key_t g_modifier_key;
+static bool			  g_shift_down = false;
 
 void init_keyboard()
 {
@@ -17,7 +18,8 @@ void init_keyboard()
 
 bool get_keycode(scancode_t sc, keycode_t* kc)
 {
-	for (int32_t i = 0; i < KEYMAP_COUNT; i++)
+	uint32_t keymap_count = sizeof(keymap) / sizeof(keycode_t);
+	for (uint32_t i = 0; i < keymap_count; i++)
 	{
 		if (keymap[i].code == sc)
 		{
@@ -33,17 +35,17 @@ void keyboard_callback(registers_t regs)
 	uint8_t	  sc = inb(KEYBOARD_DATA_PORT); // Incoming scancode
 	keycode_t kc;							// Converted keyboard code struct
 
-	if (get_keycode(sc, &kc))
+	if (sc & 0x80) // Released
 	{
-		if (sc & 0x80) // Released
+		sc -= 128; // Mask release bit
+		if (get_keycode(sc, &kc))
 		{
-			kc.code -= 128; // Remove the shift modifier
 			on_key_released(&kc);
 		}
-		else // Pressed
-		{
-			on_key_pressed(&kc);
-		}
+	}
+	else if (get_keycode(sc, &kc)) // Pressed
+	{
+		on_key_pressed(&kc);
 	}
 }
 
@@ -54,7 +56,7 @@ void on_key_released(keycode_t* kc)
 		case SC_SHIFTLEFT:
 		case SC_SHIFTRIGHT:
 			{
-				g_modifier_key &= ~(MOD_SHIFT);
+				g_shift_down = false;
 				return;
 			}
 		case SC_ESC:
@@ -72,12 +74,13 @@ void on_key_pressed(keycode_t* kc)
 	{
 		case SC_ESC:
 			{
+				exit();
 				return;
 			}
 		case SC_SHIFTLEFT:
 		case SC_SHIFTRIGHT:
 			{
-				g_modifier_key |= MOD_SHIFT;
+				g_shift_down = true;
 				return;
 			}
 		case SC_ENTER:
@@ -102,5 +105,5 @@ void on_key_pressed(keycode_t* kc)
 
 bool is_shift_down()
 {
-	return g_modifier_key & MOD_SHIFT;
+	return g_shift_down;
 }
