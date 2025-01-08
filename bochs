@@ -1,0 +1,5 @@
+romimage: file=/usr/share/bochs/BIOS-bochs-legacy
+vgaromimage: file=/usr/share/bochs/VGABIOS-lgpl-latest
+ata0-slave: type=cdrom, path=build/PengOS.iso, status=inserted
+boot:cdrom
+display_library: x, options = "gui_debug"

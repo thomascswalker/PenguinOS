@@ -6,6 +6,7 @@
 #define KEYBOARD_DATA_PORT 0x60
 #define KEYBOARD_STATUS_PORT 0x64
 #define KEYBOARD_COMMAND_PORT 0x64
+
 // Keyboard status
 #define KEYBOARD_OUTPUT_FULL 0x01
 #define KEYBOARD_INPUT_FULL 0x02
@@ -52,7 +53,7 @@ enum scancode
 	SC_L = 0x26,			// l
 	SC_SEMICOLON = 0x27,	// ;
 	SC_APOSTROPHE = 0x28,	// '
-	SC_GRAVE = 0x29,		// Return
+	SC_BACKQUOTE = 0x29,	// `
 	SC_SHIFTLEFT = 0x2A,	// Left Shift
 	SC_BACKSLASH = 0x2B,	// '\'
 	SC_Z = 0x2C,			// z
@@ -127,7 +128,9 @@ static keycode_t keymap[] = {
 	{ SC_X,			'x',	 'X' },
 	{ SC_Y,			'y',	 'Y' },
 	{ SC_Z,			'z',	 'Z' },
+	{ SC_BACKSPACE,	0,	   0	 },
 	{ SC_SPACEBAR,	   ' ',	' ' },
+	{ SC_ENTER,		0,	   0	 },
 	{ SC_SHIFTLEFT,	0,	   0	 },
 	{ SC_SHIFTRIGHT,	 0,	0	  },
 	{ SC_PERIOD,		 '.',  '>' },
@@ -136,14 +139,22 @@ static keycode_t keymap[] = {
 	{ SC_APOSTROPHE,	 '\'', '"' },
 	{ SC_BRACKETLEFT,  '[',  '{' },
 	{ SC_BRACKETRIGHT, ']',	'}' },
+	{ SC_ESC,		  0,	 0   },
+	{ SC_SLASH,		'/',	 '?' },
+	{ SC_BACKSLASH,	'\\', '|' },
+	{ SC_MINUS,		'-',	 '_' },
+	{ SC_EQUALS,		 '=',  '+' },
+	{ SC_BACKQUOTE,	'`',	 '~' },
+	{ SC_TAB,		  0,	 0   },
+	{ SC_CAPSLOCK,	   0,	  0	},
 };
 
 enum modifier_key
 {
-	MOD_SHIFT = 1,
-	MOD_CONTROL = 2,
-	MOD_ALT = 4,
-	MOD_COMMAND = 8,
+	MOD_SHIFT = 1 << 0,
+	MOD_CONTROL = 1 << 1,
+	MOD_ALT = 1 << 2,
+	MOD_COMMAND = 1 << 3,
 };
 typedef enum modifier_key modifier_key_t;
 

@@ -4,7 +4,7 @@
 
 #define IDT_ENTRY_COUNT 256
 
-#define ISR0 0
+#define ISR0 0 // Divide by zero
 #define ISR1 1
 #define ISR2 2
 #define ISR3 3
@@ -37,8 +37,8 @@
 #define ISR30 30
 #define ISR31 31
 
-#define IRQ0 32
-#define IRQ1 33
+#define IRQ0 32 // Timer
+#define IRQ1 33 // Keyboard
 #define IRQ2 34
 #define IRQ3 35
 #define IRQ4 36
@@ -53,6 +53,9 @@
 #define IRQ13 45
 #define IRQ14 46
 #define IRQ15 47
+
+#define GENERAL_PROTECTION_FAULT 13
+#define PAGE_FAULT 14
 
 enum idt_gate : uint8_t
 {
@@ -76,14 +79,13 @@ typedef struct idt_entry idt_entry_t;
 
 struct idt_ptr
 {
-	uint16_t size; // Size - 1
-	uint32_t addr; // Pointer to the address of our IDT array
+	uint16_t limit; // Size - 1
+	uint32_t base;	// Pointer to the address of our
+					// interrupt handler array
 } __attribute__((packed));
 typedef struct idt_ptr idt_ptr_t;
 
-handler_t interrupt_handlers[256];
-
-static const char* isr_messages[32] = {
+static const char* idt_messages[] = {
 	"Division by zero",				 // 0
 	"Single-step Interrupt",		 // 1
 	"NMI",							 // 2
@@ -116,11 +118,8 @@ static const char* isr_messages[32] = {
 	"Reserved",						 // 29
 	"Reserved",						 // 30
 	"Reserved",						 // 31
-};
-
-static const char* irq_messages[2] = {
-	"Timer",	// 32
-	"Keyboard", // 33
+	"Timer",						 // 32
+	"Keyboard",						 // 33
 };
 
 void init_idt();
@@ -129,6 +128,7 @@ void set_idt_gate(uint8_t num, uint32_t base, uint16_t sel, uint8_t flags);
 void register_interrupt_handler(uint32_t index, handler_t handler);
 void unregister_interrupt_handler(uint32_t index);
 
+extern void load_idt(uint32_t);
 extern void irq_handler(registers_t regs);
 extern void isr_handler(registers_t regs);
 

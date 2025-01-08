@@ -1,11 +1,10 @@
 #include <idt.h>
-#include <pic.c>
-#include <stdio.c>
+#include <pic.h>
+#include <stdio.h>
 
 idt_entry_t idt_entries[IDT_ENTRY_COUNT];
 idt_ptr_t	idtp;
-
-extern void load_idt(uint32_t);
+handler_t	interrupt_handlers[IDT_ENTRY_COUNT];
 
 void init_idt()
 {
@@ -16,8 +15,8 @@ void init_idt()
 
 	info("Initializing IDT...");
 
-	idtp.size = sizeof(idt_entry_t) * IDT_ENTRY_COUNT - 1;
-	idtp.addr = (uint32_t)&idt_entries;
+	idtp.limit = (sizeof(idt_entry_t) * IDT_ENTRY_COUNT) - 1;
+	idtp.base = (uint32_t)&idt_entries;
 
 	memset(&idt_entries, 0, sizeof(idt_entry_t) * IDT_ENTRY_COUNT);
 
@@ -90,80 +89,62 @@ void set_idt_gate(uint8_t num, uint32_t base, uint16_t sel, uint8_t flags)
 
 void register_interrupt_handler(uint32_t index, handler_t handler)
 {
-	info("Registering interrupt handler %i...", index);
+	info("Registering %s interrupt handler...", idt_messages[index], index);
 	interrupt_handlers[index] = handler;
+	debug("%s interrupt handler registered at: %x", idt_messages[index], handler);
 }
 
 void unregister_interrupt_handler(uint32_t index)
 {
-	info("Unregistering interrupt handler %i...", index);
+	info("Unregistering interrupt handler %d...", index);
 	interrupt_handlers[index] = 0;
 }
 
 // Interrupt service routines
 void isr_handler(registers_t regs)
 {
-	dump_registers(&regs);
-	uint8_t		isr_no = regs.int_no;
-	const char* handler_msg = isr_messages[isr_no];
-	if (isr_no == 13) // General protection fault
+	uint8_t isr_no = regs.int_no;
+	switch (isr_no)
 	{
-		error("General Protection Fault. Code: %i", regs.err_code);
-		panic("General Protection Fault.");
-	}
-
-	handler_t handler = interrupt_handlers[isr_no];
-	if (handler)
-	{
-		debug("Executing %s ISR handler.", handler_msg);
-		handler(regs);
-	}
-	else
-	{
-		set_terminal_color(VGA_COLOR_LIGHT_RED);
-		panic("Invalid handler for ISR%i", isr_no);
+		case GENERAL_PROTECTION_FAULT:
+			panic("General Protection Fault. Code: %d", regs.err_code);
+			break;
+		case PAGE_FAULT:
+			// Obtain the fault address from the CR2 register.
+			uint32_t addr;
+			asm("mov %%cr2, %0" : "=r"(addr));
+			panic("Page fault thrown at %x.", addr);
+			break;
+		default:
+			panic("%s exception thrown. Code: %d", idt_messages[regs.int_no], regs.int_no);
+			break;
 	}
 }
 
 // Interrupt request
 void irq_handler(registers_t regs)
 {
-	// dump_registers(&regs);
 	uint8_t irq_no = regs.int_no;
-	// debug("IRQ%i handler called.", irq_no);
 
 	// Get the handler for this interrupt and execute it.
 	handler_t handler = interrupt_handlers[irq_no];
 	if (handler)
 	{
-		// debug("Executing handler.");
 		handler(regs);
 	}
 	else
 	{
-		set_terminal_color(VGA_COLOR_LIGHT_RED);
-		panic("Invalid handler for IRQ%i", irq_no);
+		dump_registers(&regs);
+		panic("IRQ handler %d not found!", irq_no);
 	}
 
-	// EOI = End of Interrupt
-	// debug("Sending EOI...");
 	pic_send_eoi(irq_no);
-	enable_interrupts();
 }
 
 void dump_registers(registers_t* reg)
 {
-	debug("Dumping registers:");
-	debug("\tcr2: %i", reg->cr2);
-	debug("\tds: %i", reg->ds);
-	debug("\tedi: %i", reg->edi);
-	debug("\tesi: %i", reg->esi);
-	debug("\tebp: %i", reg->ebp);
-	debug("\tesp: %i", reg->esp);
-	debug("\tebx: %i", reg->ebx);
-	debug("\tedx: %i", reg->edx);
-	debug("\tecx: %i", reg->ecx);
-	debug("\teax: %i", reg->eax);
-	debug("\tint_no: %i", reg->int_no);
-	debug("\terr_code: %i", reg->err_code);
+	warning("Dumping registers:");
+	warning("edi: %d, esi: %d, ebp: %d, esp: %d, ebx: %d, edx: %d, ecx: %d, eax: %d", reg->edi,
+		reg->esi, reg->ebp, reg->esp, reg->ebx, reg->edx, reg->ecx, reg->eax);
+	warning("int_no: %d, err_code: %d", reg->int_no, reg->err_code);
 }

@@ -1,8 +1,8 @@
 #pragma once
 
-#include <idt.c>
+#include <idt.h>
 
-#define PIT_FREQ 10
+#define PIT_FREQ 100
 #define PIT_NATURAL_FREQ 1193180
 
 #define PIT_DATA0 0x40	 // Channel 0 data port (read/write)

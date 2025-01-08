@@ -4,7 +4,7 @@
 #include <stdarg.h>
 
 // 	Copies one buffer to another.
-void* memcpy(void* dest, void* source, size_t size)
+static void* memcpy(void* dest, void* source, size_t size)
 {
 	uint8_t*	   p_dest = (uint8_t*)dest;
 	const uint8_t* p_source = (uint8_t*)source;
@@ -17,7 +17,7 @@ void* memcpy(void* dest, void* source, size_t size)
 }
 
 // Fills a buffer with a repeated byte.
-void* memset(void* dest, uint8_t value, int32_t size)
+static void* memset(void* dest, uint8_t value, int32_t size)
 {
 	char* tmp = (char*)dest;
 	for (int32_t i = 0; i < size; i++)
@@ -28,7 +28,7 @@ void* memset(void* dest, uint8_t value, int32_t size)
 }
 
 // Fills a buffer with a repeated byte.
-uint16_t* wmemset(uint16_t* dest, uint16_t value, int32_t size)
+static uint16_t* wmemset(uint16_t* dest, uint16_t value, int32_t size)
 {
 	for (int32_t i = 0; i < size; i++)
 	{
@@ -38,7 +38,7 @@ uint16_t* wmemset(uint16_t* dest, uint16_t value, int32_t size)
 }
 
 // Returns the length of the string.
-size_t strlen(const char* string)
+static size_t strlen(const char* string)
 {
 	size_t length = 0;
 	while (string[length])
@@ -49,7 +49,7 @@ size_t strlen(const char* string)
 }
 
 // Compares two strings.
-bool strcmp(const char* lhs, const char* rhs)
+static bool strcmp(const char* lhs, const char* rhs)
 {
 	if (strlen(lhs) != strlen(rhs))
 	{
@@ -68,7 +68,7 @@ bool strcmp(const char* lhs, const char* rhs)
 }
 
 // Copies one string to another
-char* strcpy(char* dest, const char* source)
+static char* strcpy(char* dest, const char* source)
 {
 	char* temp = dest;
 	while (*dest++ = *source++)
@@ -78,7 +78,7 @@ char* strcpy(char* dest, const char* source)
 }
 
 // Appends one string to another
-char* strcat(char* dest, const char* source)
+static char* strcat(char* dest, const char* source)
 {
 	size_t i, j;
 	while (dest[i] != '\0')
@@ -95,7 +95,7 @@ char* strcat(char* dest, const char* source)
 }
 
 // Reverses, in-place, the specified `string`.
-void reverse(char* string)
+static void strrev(char* string)
 {
 	int start = 0;
 	int end = strlen(string) - 1;
@@ -108,4 +108,17 @@ void reverse(char* string)
 		start++;
 		end--;
 	}
+}
+
+static void strapp(char* source, const char* string, char* dest)
+{
+	strcpy(dest, source);
+	dest += sizeof(source);
+	strcpy(dest, string);
+}
+static void strprep(char* source, const char* string, char* dest)
+{
+	strcpy(dest, string);
+	dest += sizeof(string);
+	strcpy(dest, source);
 }

@@ -2,14 +2,14 @@
 
 . ./scripts/config.sh
 
-INCLUDE_DIRS=$(build_include_args)
+INCLUDE_ARGS=$(build_include_args)
 OBJ_FILES=()
 
 assemble_source_file() {
     debug "Assembling '$1'..."
     BASE_FILENAME=$(basename $1 | sed 's/\.[^.]*$//')
     OUT_FILENAME="${BUILD_DIR}/${BASE_FILENAME}.o"
-    $AS $ASFLAGS $INCLUDE_DIRS $1 -o $OUT_FILENAME
+    $AS $ASFLAGS $INCLUDE_ARGS $1 -o $OUT_FILENAME
     verify_file $OUT_FILENAME
     OBJ_FILES+=($OUT_FILENAME)
 }
@@ -17,8 +17,8 @@ assemble_source_file() {
 compile_source_file() {
     debug "Compiling '$1'..."
     BASE_FILENAME=$(basename $1 | sed 's/\.[^.]*$//')
-    OUT_FILENAME="${BUILD_DIR}/${BASE_FILENAME}.o"
-    $GCC -std=$C_VERSION $CFLAGS -nostdlib -fno-builtin $INCLUDE_DIRS -c -o $OUT_FILENAME $1
+    OUT_FILENAME="${BUILD_DIR}/${BASE_FILENAME}_c.o"
+    $GCC -std=$C_VERSION $CFLAGS -nostdlib -fno-builtin -Wno-unused-function -Wno-unused-parameter -Wno-unused-variable -Wno-parentheses $INCLUDE_ARGS -c -o $OUT_FILENAME $1
     verify_file $OUT_FILENAME
     OBJ_FILES+=($OUT_FILENAME)
 }
@@ -28,23 +28,25 @@ mkdir -p $BUILD_DIR
 mkdir -p $BOOT_DIR
 
 # Bootstrap assembly
-info "Bootstrapping..."
+info "Assembling NASM source code..."
 assemble_source_file "${SOURCE_DIR}/boot.s"
 assemble_source_file "${SOURCE_DIR}/kernel/crti.s"
 assemble_source_file "${SOURCE_DIR}/kernel/crtn.s"
 assemble_source_file "${SOURCE_DIR}/kernel/gdt.s"
 assemble_source_file "${SOURCE_DIR}/kernel/idt.s"
 
-
 # Compile the kernel
-info "Generating kernel symbols..."
-debug "Compiling with include directories: ${INCLUDE_DIRS}"
-compile_source_file "${SOURCE_DIR}/main.c"
+info "Generating C source code..."
+debug "Compiling with include directories: ${INCLUDE_ARGS}"
+c_files=$(find "./source/" -type f -name "*.c")
+for c_file in ${c_files[@]}; do
+    compile_source_file $c_file
+done
 
 # Link the kernel and all source files
 info "Linking kernel..."
 debug "Objects: [${OBJ_FILES[*]}]"
-$GCC -T "${SOURCE_DIR}/linker.ld" -g -o "${BOOT_DIR}/${KERNEL}" $CFLAGS -nostdlib $INCLUDE_DIRS -lgcc ${OBJ_FILES[*]}
+$GCC -T "${SOURCE_DIR}/linker.ld" -g -o "${BOOT_DIR}/${KERNEL}" $CFLAGS -nostdlib $INCLUDE_ARGS -lgcc ${OBJ_FILES[*]}
 verify_file "${BOOT_DIR}/${KERNEL}"
 
 success "Compiled and linked kernel."

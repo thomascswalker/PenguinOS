@@ -15,9 +15,10 @@
 
 #define VGA_WIDTH 80
 #define VGA_HEIGHT 25
+#define VGA_SIZE (VGA_WIDTH * VGA_HEIGHT)
 
 // The starting point of the terminal's text buffer in memory.
-#define TERMINAL_BUFFER_START (uint16_t*)0xB8000
+#define TERMINAL_BUFFER_START (uint16_t*)0xC00B8000
 
 /* Hardware text mode color constants. */
 typedef enum vga_color
@@ -55,26 +56,28 @@ static terminal_t g_terminal;
 
 // VGA
 
-static uint16_t make_entry_color(vga_color_t fore_color, vga_color_t back_color);
-static uint16_t create_entry(uint8_t character, uint8_t color);
+uint16_t make_entry_color(vga_color_t fore_color, vga_color_t back_color);
+uint16_t create_entry(uint8_t character, uint8_t color);
 
 // Cursor
 
-static uint32_t get_cursor_pos();
-static void		set_cursor_pos(int8_t x, int8_t y);
-static void		enable_cursor(uint8_t start, uint8_t end);
-static void		disable_cursor();
+uint32_t get_cursor_pos();
+void	 set_cursor_pos(int8_t x, int8_t y);
+void	 update_cursor_pos();
+void	 enable_cursor(uint8_t start, uint8_t end);
+void	 disable_cursor();
 
 // Terminal
 
-static void clear_terminal();
-static void init_terminal();
-static void putchar(char c);
-static void terminal_new_line();
-static void write_terminal(const char* data, size_t size);
-static void scroll_terminal();
+void clear_terminal();
+void init_terminal();
+void putchar(char c);
+void remchar();
+void terminal_new_line();
+void write_terminal(const char* data, size_t size);
+void scroll_terminal();
 
 // Terminal color
 
-static void set_terminal_color(uint8_t color);
-static void reset_terminal_color();
+void set_terminal_color(uint8_t color);
+void reset_terminal_color();
