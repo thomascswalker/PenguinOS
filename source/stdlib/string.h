@@ -94,6 +94,16 @@ static char* strcat(char* dest, const char* source)
 	return dest;
 }
 
+static char toupper(char c)
+{
+	return c + ('A' - 'a');
+}
+
+static char tolower(char c)
+{
+	return c - ('A' + 'a');
+}
+
 // Reverses, in-place, the specified `string`.
 static void strrev(char* string)
 {

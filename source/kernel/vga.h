@@ -40,6 +40,7 @@ typedef enum vga_color
 	VGA_COLOR_YELLOW = 14,
 	VGA_COLOR_WHITE = 15,
 	VGA_COLOR_DEFAULT = VGA_COLOR_LIGHT_GREY,
+	VGA_COLOR_BACKGROUND = VGA_COLOR_BLACK,
 } vga_color_t;
 
 // Terminal containing a 16-bit text buffer.

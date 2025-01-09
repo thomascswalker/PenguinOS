@@ -29,9 +29,9 @@ void change_heap_size(uint32_t new_size)
 	debug("Page top diff: %d", diff);
 	for (uint32_t i = 0; i < diff; i++)
 	{
-		uint32_t paddr = pmb_alloc_page_frame();
+		uint32_t paddr = alloc_page_frame();
 		uint32_t vaddr = HEAP_START + (old_page_top * PAGE_SIZE) + (i * PAGE_SIZE);
 		debug("Mapping page %d from PHYS:%x to VIRT:%x.", i, paddr, vaddr);
-		mem_map_page(vaddr, paddr, PAGE_WRITE);
+		map_page(vaddr, paddr, PAGE_WRITE);
 	}
 }

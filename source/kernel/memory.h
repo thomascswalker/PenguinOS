@@ -24,9 +24,9 @@ enum page_flag
 typedef enum page_flag page_flag_t;
 
 void	  init_memory(uint32_t mem_high, uint32_t phys_alloc_start);
-void	  pmb_init(uint32_t mem_low, uint32_t mem_high);
-uint32_t  pmb_alloc_page_frame();
-uint32_t* mem_get_current_page_dir();
-void	  mem_change_page_dir(uint32_t* pd);
-void	  mem_map_page(uint32_t vaddr, uint32_t paddr, uint32_t flags);
+void	  init_pmb(uint32_t mem_low, uint32_t mem_high);
+uint32_t  alloc_page_frame();
+uint32_t* get_current_page_dir();
+void	  change_page_dir(uint32_t* page_dir);
+void	  map_page(uint32_t vaddr, uint32_t paddr, uint32_t flags);
 void	  sync_page_dirs();
