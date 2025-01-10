@@ -31,27 +31,11 @@ void kernel_main(multiboot_info_t* boot_info)
 	init_keyboard();
 	enable_interrupts();
 
-	multiboot_mmap_t mmap;
-	mmap.count = boot_info->mmap_length / sizeof(multiboot_mmap_entry_t);
-	debug("MMAP count is %d.", mmap.count);
-	debug("Size of mmap_entry_t is %d.", sizeof(multiboot_mmap_entry_t));
-	multiboot_mmap_entry_t* entry = (multiboot_mmap_entry_t*)boot_info->mmap_addr;
-	for (uint32_t i = 0; i < mmap.count; i++)
-	{
-		mmap.entries[i] = *entry; // Store entry in array
-	}
-	// for (uint32_t i = 0; i < mmap.count; i += sizeof(multiboot_mmap_entry_t))
-	// {
-	// 	multiboot_mmap_entry_t* entry = (multiboot_mmap_entry_t*)&mmap.entries[i];
-	// 	entry = (multiboot_mmap_entry_t*)(boot_info->mmap_addr + i);
-	// }
-	dump_memory_map(&mmap);
-
-	uint32_t phys_alloc_start = boot_info->mmap_addr;
-	debug("Physical address start is %x.", phys_alloc_start);
-	uint32_t total_memory = boot_info->mem_lower + boot_info->mem_upper;
-	debug("Total memory is %dKB.", total_memory);
-	init_pmm(phys_alloc_start, total_memory);
+	uint32_t paddr = boot_info->mmap_addr;
+	debug("Physical address start is %x.", paddr);
+	uint32_t psize = boot_info->mem_lower + boot_info->mem_upper;
+	debug("Total memory is %dKB.", psize);
+	init_pmm(paddr, psize);
 	init_vmm();
 
 	while (true)

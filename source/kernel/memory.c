@@ -27,7 +27,6 @@ uint8_t test_block(uint32_t bit)
 
 int32_t find_first_free_blocks(uint32_t block_count)
 {
-	debug("Finding %d free blocks...", block_count);
 	if (!block_count)
 	{
 		panic("Block count is 0. Out of memory.");
@@ -37,7 +36,6 @@ int32_t find_first_free_blocks(uint32_t block_count)
 
 	// Test 32 blocks at a time
 	uint32_t test_blocks = ceildiv(max_blocks, BLOCK_TEST_COUNT);
-	debug("Testing %d blocks...", test_blocks);
 	for (uint32_t i = 0; i < test_blocks; i++)
 	{
 		// Continue if all memory in this block is filled.
@@ -48,7 +46,6 @@ int32_t find_first_free_blocks(uint32_t block_count)
 
 		// At least 1 bit is not set within this 32bit chunk of memory,
 		//   find that bit by testing each bit
-		debug("Block %d has at least 1 bit available.", i);
 		for (int32_t j = 0; j < BLOCK_TEST_COUNT; j++)
 		{
 			// Get current bit to test
@@ -93,11 +90,8 @@ void init_pmm(uint32_t start_address, uint32_t size)
 {
 	info("Initializing physical memory...");
 	memory_map = (uint32_t*)start_address;
-	debug("Memory map is at %x.", start_address);
 	max_blocks = size / BLOCK_SIZE;
-	debug("Max blocks: %d.", max_blocks);
 	used_blocks = size;
-	debug("Used blocks: %d.", used_blocks);
 
 	// memset(memory_map, 0xFF, max_blocks / BLOCKS_PER_BYTE);
 
@@ -142,8 +136,6 @@ void deinit_memory_region(uint32_t base_address, uint32_t size)
 
 uint32_t* allocate_blocks(uint32_t block_count)
 {
-	debug("Allocating %d blocks...", block_count);
-
 	// If # of free blocks left is not enough, we can't allocate any more, return
 	if ((max_blocks - used_blocks) <= block_count)
 	{
@@ -159,7 +151,6 @@ uint32_t* allocate_blocks(uint32_t block_count)
 		panic("Out of memory.");
 		return 0; // Couldn't find that many blocks in a row to allocate
 	}
-	debug("Starting block is %d.", starting_block);
 
 	// Found free blocks, set them as used
 	for (uint32_t i = 0; i < block_count; i++)
@@ -171,7 +162,6 @@ uint32_t* allocate_blocks(uint32_t block_count)
 
 	// Convert blocks to bytes to get start of actual RAM that is now allocated
 	uint32_t address = starting_block * BLOCK_SIZE;
-	warning("Found block address %x", address);
 	if (!address)
 	{
 		panic("Out of memory.");
