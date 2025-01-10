@@ -36,8 +36,9 @@ void kernel_main(multiboot_info_t* boot_info)
 	debug("Total memory is %dKB.", psize);
 	init_pmm(paddr, psize);
 	init_vmm();
+	enable_interrupts();
 
-	sleep(1);
+	sleep(5);
 
 	while (true)
 	{

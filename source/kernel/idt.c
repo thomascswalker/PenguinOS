@@ -109,18 +109,17 @@ void unregister_interrupt_handler(uint32_t index)
 void isr_handler(registers_t regs)
 {
 	uint8_t isr_no = regs.int_no;
-	warning("ISR%d called...", isr_no);
 	switch (isr_no)
 	{
 		case DOUBLE_FAULT:
 			{
 				panic("Double Fault. Code: %d", regs.err_code);
-				break;
+				return;
 			}
 		case GENERAL_PROTECTION_FAULT:
 			{
 				panic("General Protection Fault. Code: %d", regs.err_code);
-				break;
+				return;
 			}
 		case PAGE_FAULT:
 			{
@@ -128,17 +127,18 @@ void isr_handler(registers_t regs)
 				uint32_t addr;
 				asm("movl %%cr2, %0" : "=r"(addr));
 				panic("Page fault thrown at %x.", addr);
-				break;
+				return;
 			}
 		case SYS_CALL:
 			{
-				syscall_handler(regs);
-				break;
+				// Pass registers to the syscall handler.
+				syscall_dispatcher(regs);
+				return;
 			}
 		default:
 			{
 				panic("%s exception thrown. Code: %d", idt_messages[regs.int_no], regs.int_no);
-				break;
+				return;
 			}
 	}
 }

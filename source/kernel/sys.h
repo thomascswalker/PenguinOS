@@ -2,7 +2,7 @@
 
 #include <ctype.h>
 
-#define asm __asm__ volatile
+#define asm __asm__ __volatile__
 
 struct registers
 {

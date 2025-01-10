@@ -2,9 +2,6 @@
 #include <stdio.h>
 #include <timer.h>
 
-static uint64_t ticks = 0;
-static uint64_t seconds = 0;
-
 void init_timer()
 {
 	info("Initializing timer...");
@@ -33,10 +30,10 @@ void init_timer()
 
 void timer_callback(registers_t regs)
 {
-	ticks++;
-	if ((ticks % 18) == 0)
+	g_ticks++;
+	if (SLEEP_TICK > 0)
 	{
-		seconds++;
+		SLEEP_TICK--;
 	}
 }
 

@@ -48,6 +48,7 @@ __attribute__((packed)) struct syscall_registers
 };
 typedef struct syscall_registers syscall_registers_t;
 
+void	syscall_dispatcher(registers_t regs);
 int32_t sys_fork(syscall_registers_t regs);
 int32_t sys_exit(syscall_registers_t regs);
 int32_t sys_wait(syscall_registers_t regs);
@@ -95,5 +96,3 @@ static syscallf_t syscalls[] = {
 	sys_mkdir,
 	sys_close,
 };
-
-void syscall_handler(registers_t regs);
