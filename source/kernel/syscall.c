@@ -89,19 +89,29 @@ int32_t sys_sbrk(syscall_registers_t regs)
 }
 int32_t sys_sleep(syscall_registers_t regs)
 {
+	// Get the milliseconds to sleep for from the ecx
+	// register.
 	uint32_t ms = regs.ecx;
 
+	// Set the current SLEEP_TICK value to the milliseconds
+	// we're sleeping for.
 	SLEEP_TICK = ms;
+	// Track seconds that have passed.
 	uint32_t seconds = 0;
+
+	// Sleep while SLEEP_TICK is greater than 0.
 	while (SLEEP_TICK)
 	{
+		// Increment seconds.
 		if (SLEEP_TICK % PIT_FREQ == 0)
 		{
 			seconds++;
 		}
+		// Enable interrupts, halt, disable interrupts.
 		asm("sti\nhlt\ncli");
 	}
 	debug("Sleep complete.");
+
 	return 0;
 }
 int32_t sys_uptime(syscall_registers_t regs)
