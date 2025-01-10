@@ -58,6 +58,9 @@ static inline void enable_interrupts()
 static inline void halt()
 {
 	asm("hlt");
+	while (true)
+	{
+	}
 }
 
 static inline void exit()

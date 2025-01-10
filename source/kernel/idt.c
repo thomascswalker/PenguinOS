@@ -84,7 +84,7 @@ void set_idt_gate(uint8_t num, uint32_t base, uint16_t sel, uint8_t flags)
 	entry->base_high = (base >> 16) & 0xFFFF; // Top 16 bits
 	entry->sel = sel;
 	entry->always0 = 0;
-	entry->flags = flags; /*| 0x60; */
+	entry->flags = flags | 0x60;
 }
 
 void register_interrupt_handler(uint32_t index, handler_t handler)
@@ -106,13 +106,16 @@ void isr_handler(registers_t regs)
 	uint8_t isr_no = regs.int_no;
 	switch (isr_no)
 	{
+		case DOUBLE_FAULT:
+			panic("Double Fault. Code: %d", regs.err_code);
+			break;
 		case GENERAL_PROTECTION_FAULT:
 			panic("General Protection Fault. Code: %d", regs.err_code);
 			break;
 		case PAGE_FAULT:
 			// Obtain the fault address from the CR2 register.
 			uint32_t addr;
-			asm("mov %%cr2, %0" : "=r"(addr));
+			asm("movl %%cr2, %0" : "=r"(addr));
 			panic("Page fault thrown at %x.", addr);
 			break;
 		default:

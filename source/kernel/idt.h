@@ -54,8 +54,9 @@
 #define IRQ14 46
 #define IRQ15 47
 
-#define GENERAL_PROTECTION_FAULT 13
-#define PAGE_FAULT 14
+#define DOUBLE_FAULT 0x08
+#define GENERAL_PROTECTION_FAULT 0x0D
+#define PAGE_FAULT 0x0E
 
 enum idt_gate : uint8_t
 {

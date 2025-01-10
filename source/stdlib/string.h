@@ -80,7 +80,7 @@ static char* strcpy(char* dest, const char* source)
 // Appends one string to another
 static char* strcat(char* dest, const char* source)
 {
-	size_t i, j;
+	size_t i = 0, j = 0;
 	while (dest[i] != '\0')
 	{
 		i++;
