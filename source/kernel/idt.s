@@ -60,11 +60,11 @@ extern isr_handler
 isr_common_stub:
     pusha
 
-    mov     ax, ds
+    mov	    ax, ds
     push	eax
-    mov     esi, eax
+    mov 	esi, eax
 
-    mov 	ax, 10h
+    mov 	ax, 0x10
     mov 	ds, ax
     mov 	es, ax
     mov 	fs, ax
@@ -72,17 +72,16 @@ isr_common_stub:
 
     call	isr_handler
 
-    pop	    eax
-    mov		eax, esi
+    pop	    ebx
+    mov 	ebx, esi
 
-    mov	    ds, ax
-    mov 	ds, ax
-    mov 	es, ax
-    mov 	fs, ax
-    mov 	gs, ax
+    mov 	ds, bx
+    mov 	es, bx
+    mov 	fs, bx
+    mov 	gs, bx
 
     popa
-    add	    esp, 8
+    add     esp, 8
     sti
     iret
                                                             ; pops 5 things at once: CS, EIP, EFLAGS, SS, and ESP

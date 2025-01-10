@@ -1,23 +1,23 @@
 /*
 Main entry point into PengOS. Initializes the kernel.
-
-Kernel is 8MB in total.
-- The first 1MB is reserved.
-- The following 3MB (1..4) are for the heap.
-- The remaining 4MB (5..8) are for paging.
-
----------------------------------
-| 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | MB
----------------------------------
-|   |   Heap    |    Paging     |
----------------------------------
 */
 
 #include <cpuid.h>
 #include <gdt.h>
 #include <keyboard.h>
 #include <memory.h>
+#include <multiboot.h>
 #include <timer.h>
+
+void dump_memory_map(multiboot_mmap_t* mmap)
+{
+	for (uint32_t i = 0; i < mmap->count; i++)
+	{
+		multiboot_mmap_entry_t* mmmt = &mmap->entries[i];
+		const char*				fmt = "Start addr: %x | Length: %x | Size: %x | Type: %d";
+		debug(fmt, mmmt->addr_low, mmmt->len_low, mmmt->size, mmmt->type);
+	}
+}
 
 void kernel_main(multiboot_info_t* boot_info)
 {
@@ -25,17 +25,19 @@ void kernel_main(multiboot_info_t* boot_info)
 	init_terminal();
 	println("Welcome to PengOS!");
 
-	uint32_t mod1 = *(uint32_t*)(boot_info->mods_addr + 4);
-	uint32_t phys_alloc_start = (mod1 + 0xFFF) & ~0xFFF;
-	init_memory(boot_info->mem_upper * 1024, phys_alloc_start);
-	success("Memory allocation complete.");
-
 	init_gdt();
 	init_idt();
 	init_timer();
 	init_keyboard();
-
 	enable_interrupts();
+
+	uint32_t paddr = boot_info->mmap_addr;
+	debug("Physical address start is %x.", paddr);
+	uint32_t psize = boot_info->mem_lower + boot_info->mem_upper;
+	debug("Total memory is %dKB.", psize);
+	init_pmm(paddr, psize);
+	init_vmm();
+
 	while (true)
 	{
 	}
