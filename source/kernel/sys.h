@@ -57,9 +57,9 @@ static inline void enable_interrupts()
 
 static inline void halt()
 {
-	asm("hlt");
 	while (true)
 	{
+		asm("hlt");
 	}
 }
 
@@ -72,3 +72,5 @@ static inline void invalidate(uint32_t vaddr)
 {
 	asm("invlpg %0" ::"m"(vaddr));
 }
+
+void sleep(uint32_t seconds);

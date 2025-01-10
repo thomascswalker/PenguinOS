@@ -7,6 +7,7 @@ Main entry point into PengOS. Initializes the kernel.
 #include <keyboard.h>
 #include <memory.h>
 #include <multiboot.h>
+#include <syscall.h>
 #include <timer.h>
 
 void dump_memory_map(multiboot_mmap_t* mmap)
@@ -21,7 +22,6 @@ void dump_memory_map(multiboot_mmap_t* mmap)
 
 void kernel_main(multiboot_info_t* boot_info)
 {
-
 	init_terminal();
 	println("Welcome to PengOS!");
 
@@ -29,7 +29,6 @@ void kernel_main(multiboot_info_t* boot_info)
 	init_idt();
 	init_timer();
 	init_keyboard();
-	enable_interrupts();
 
 	uint32_t paddr = boot_info->mmap_addr;
 	debug("Physical address start is %x.", paddr);
@@ -37,6 +36,8 @@ void kernel_main(multiboot_info_t* boot_info)
 	debug("Total memory is %dKB.", psize);
 	init_pmm(paddr, psize);
 	init_vmm();
+
+	sleep(1);
 
 	while (true)
 	{

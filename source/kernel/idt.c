@@ -1,6 +1,7 @@
 #include <idt.h>
 #include <pic.h>
 #include <stdio.h>
+#include <syscall.h>
 
 idt_entry_t idt_entries[IDT_ENTRY_COUNT];
 idt_ptr_t	idtp;
@@ -54,6 +55,10 @@ void init_idt()
 	set_idt_gate(ISR30, (uint32_t)isr30, 0x08, 0x8E);
 	set_idt_gate(ISR31, (uint32_t)isr31, 0x08, 0x8E);
 
+	// System calls
+	info("Setting system calls...");
+	set_idt_gate(ISR128, (uint32_t)isr128, 0x08, 0x8E);
+
 	info("Setting IRQ gates...");
 	set_idt_gate(IRQ0, (uint32_t)irq0, 0x08, 0x8E);
 	set_idt_gate(IRQ1, (uint32_t)irq1, 0x08, 0x8E);
@@ -104,23 +109,37 @@ void unregister_interrupt_handler(uint32_t index)
 void isr_handler(registers_t regs)
 {
 	uint8_t isr_no = regs.int_no;
+	warning("ISR%d called...", isr_no);
 	switch (isr_no)
 	{
 		case DOUBLE_FAULT:
-			panic("Double Fault. Code: %d", regs.err_code);
-			break;
+			{
+				panic("Double Fault. Code: %d", regs.err_code);
+				break;
+			}
 		case GENERAL_PROTECTION_FAULT:
-			panic("General Protection Fault. Code: %d", regs.err_code);
-			break;
+			{
+				panic("General Protection Fault. Code: %d", regs.err_code);
+				break;
+			}
 		case PAGE_FAULT:
-			// Obtain the fault address from the CR2 register.
-			uint32_t addr;
-			asm("movl %%cr2, %0" : "=r"(addr));
-			panic("Page fault thrown at %x.", addr);
-			break;
+			{
+				// Obtain the fault address from the CR2 register.
+				uint32_t addr;
+				asm("movl %%cr2, %0" : "=r"(addr));
+				panic("Page fault thrown at %x.", addr);
+				break;
+			}
+		case SYS_CALL:
+			{
+				syscall_handler(regs);
+				break;
+			}
 		default:
-			panic("%s exception thrown. Code: %d", idt_messages[regs.int_no], regs.int_no);
-			break;
+			{
+				panic("%s exception thrown. Code: %d", idt_messages[regs.int_no], regs.int_no);
+				break;
+			}
 	}
 }
 

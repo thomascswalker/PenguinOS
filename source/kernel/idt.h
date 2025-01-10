@@ -37,6 +37,8 @@
 #define ISR30 30
 #define ISR31 31
 
+#define ISR128 128 // System calls
+
 #define IRQ0 32 // Timer
 #define IRQ1 33 // Keyboard
 #define IRQ2 34
@@ -57,6 +59,7 @@
 #define DOUBLE_FAULT 0x08
 #define GENERAL_PROTECTION_FAULT 0x0D
 #define PAGE_FAULT 0x0E
+#define SYS_CALL 0x80
 
 enum idt_gate : uint8_t
 {
@@ -130,8 +133,8 @@ void register_interrupt_handler(uint32_t index, handler_t handler);
 void unregister_interrupt_handler(uint32_t index);
 
 extern void load_idt(uint32_t);
-extern void irq_handler(registers_t regs);
 extern void isr_handler(registers_t regs);
+extern void irq_handler(registers_t regs);
 
 extern void isr0();
 extern void isr1();
@@ -165,6 +168,8 @@ extern void isr28();
 extern void isr29();
 extern void isr30();
 extern void isr31();
+
+extern void isr128();
 
 extern void irq0();
 extern void irq1();
