@@ -16,6 +16,7 @@
 #define VGA_WIDTH 80
 #define VGA_HEIGHT 25
 #define VGA_SIZE (VGA_WIDTH * VGA_HEIGHT)
+#define VGA_BLANK 1824 // 32 | 7 << 8
 
 // The starting point of the terminal's text buffer in memory.
 #define TERMINAL_BUFFER_START (uint16_t*)0xC00B8000

@@ -27,20 +27,5 @@ static void itoa(char* buffer, uint32_t value, uint32_t base)
 	}
 }
 
-// Allocate unitialized memory, uses syscall
-static void* malloc(const uint32_t size)
-{
-	void* ptr = 0;
-
-	// // Syscall 3
-	// asm("int $0x80" ::"a"(3), "b"(size)); // Create ptr to memory area
-	// asm("mov $0, %e%ax" : "=r"(ptr));	  // Return ptr to memory area
-
-	return ptr;
-}
-
-// Free memory, uses syscall
-static void free(const void* ptr)
-{
-	// asm("int $0x80" ::"a"(4), "b"(ptr)); // Free ptr in memory area
-}
+void* malloc(const uint32_t size);
+void  free(const void* ptr);

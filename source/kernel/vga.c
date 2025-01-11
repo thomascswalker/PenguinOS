@@ -38,7 +38,7 @@ uint32_t get_cursor_pos()
 // `[x,y]`.
 void set_cursor_pos(int8_t x, int8_t y)
 {
-	uint16_t pos = y * VGA_WIDTH + x;
+	uint16_t pos = (y * VGA_WIDTH) + x;
 	outb(0x3D4, 0x0F);
 	outb(0x3D5, (uint8_t)(pos & 0xFF));
 	outb(0x3D4, 0x0E);
@@ -75,11 +75,13 @@ void clear_terminal()
 	{
 		for (uint32_t x = 0; x < VGA_WIDTH; x++)
 		{
-			const uint32_t index = y * VGA_WIDTH + x;
-			g_terminal.buffer[index] = create_entry(' ', g_terminal.color);
+			const uint32_t index = (y * VGA_WIDTH) + x;
+			g_terminal.buffer[index] = VGA_BLANK;
 		}
 	}
-	set_cursor_pos(0, 0);
+	g_terminal.column = 0;
+	g_terminal.row = 0;
+	update_cursor_pos();
 }
 
 // Initializes the global terminal object, clears the text buffer,
@@ -147,7 +149,7 @@ void remchar()
 	{
 		g_terminal.buffer[i] = g_terminal.buffer[i + 1];
 	}
-	g_terminal.buffer[VGA_WIDTH * VGA_HEIGHT] = ' ';
+	g_terminal.buffer[VGA_WIDTH * VGA_HEIGHT] = VGA_BLANK;
 	if (--g_terminal.column < 0)
 	{
 		g_terminal.column = VGA_WIDTH;
@@ -172,8 +174,6 @@ void terminal_new_line()
 // up one row and clears the last row.
 void scroll_terminal()
 {
-	uint16_t blank = create_entry(' ', VGA_COLOR_DEFAULT);
-
 	// Move the lines up
 	for (uint32_t i = 0; i < VGA_WIDTH * VGA_HEIGHT; i++)
 	{
@@ -183,9 +183,9 @@ void scroll_terminal()
 	// Clear the last line
 	for (uint32_t i = (VGA_HEIGHT - 1) * VGA_WIDTH; i < VGA_HEIGHT * VGA_WIDTH; i++)
 	{
-		g_terminal.buffer[i] = blank;
-		g_terminal.column = 0;
+		g_terminal.buffer[i] = VGA_BLANK;
 	}
+	g_terminal.column = 0;
 	g_terminal.row = VGA_HEIGHT - 1;
 }
 

@@ -5,7 +5,7 @@
 #include <stdio.h>
 
 #define KERNEL_START 0xC0000000
-#define HEAP_START 0xD0000000
+#define PROGRAM_START 0xD0000000
 
 #define BLOCK_SIZE 0x1000
 #define BLOCKS_PER_BYTE 8

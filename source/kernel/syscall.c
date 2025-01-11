@@ -1,3 +1,4 @@
+#include <malloc.h>
 #include <stdio.h>
 #include <syscall.h>
 #include <timer.h>
@@ -144,5 +145,36 @@ int32_t sys_mkdir(syscall_registers_t regs)
 }
 int32_t sys_close(syscall_registers_t regs)
 {
+	return 0;
+}
+
+int32_t sys_malloc(syscall_registers_t regs)
+{
+	size_t bytes = regs.ecx;
+	debug("Allocating %d bytes of memory.", bytes);
+
+	if (!malloc_list_head)
+	{
+		init_malloc(bytes);
+	}
+
+	void* ptr = malloc_next_block(bytes);
+	if (!ptr)
+	{
+		panic("Unable to find free block. Out of memory.");
+	}
+	warning("Found free block at %x.", (uint32_t*)ptr);
+	merge_free_blocks();
+
+	asm("mov %%eax, %0" ::"g"(ptr));
+
+	return 0;
+}
+
+int32_t sys_free(syscall_registers_t regs)
+{
+	uint32_t ptr = regs.ecx;
+	void*	 mem = (void*)ptr;
+	malloc_free(mem);
 	return 0;
 }

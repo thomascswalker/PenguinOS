@@ -8,27 +8,31 @@ int 0x80        ; Trigger system call defined by value in EAX
 
 typedef enum
 {
-	SYSCALL_FORK,
-	SYSCALL_EXIT,
-	SYSCALL_WAIT,
-	SYSCALL_PIPE,
-	SYSCALL_READ,
-	SYSCALL_KILL,
-	SYSCALL_EXEC,
-	SYSCALL_FSTAT,
-	SYSCALL_CHDIR,
-	SYSCALL_DUP,
-	SYSCALL_GETPID,
-	SYSCALL_SBRK,
-	SYSCALL_SLEEP,
-	SYSCALL_UPTIME,
-	SYSCALL_OPEN,
-	SYSCALL_WRITE,
-	SYSCALL_MKNOD,
-	SYSCALL_UNLINK,
-	SYSCALL_LINK,
-	SYSCALL_MKDIR,
-	SYSCALL_CLOSE
+	// Standard
+	SYSCALL_FORK,	// Fork
+	SYSCALL_EXIT,	// Exit
+	SYSCALL_WAIT,	// Wait
+	SYSCALL_PIPE,	// Pipe
+	SYSCALL_READ,	// Read
+	SYSCALL_KILL,	// Kill
+	SYSCALL_EXEC,	// Exec
+	SYSCALL_FSTAT,	// Fstat
+	SYSCALL_CHDIR,	// Chdir
+	SYSCALL_DUP,	// Dup
+	SYSCALL_GETPID, // Getpid
+	SYSCALL_SBRK,	// Sbrk
+	SYSCALL_SLEEP,	// Sleep
+	SYSCALL_UPTIME, // Uptime
+	SYSCALL_OPEN,	// Open
+	SYSCALL_WRITE,	// Write
+	SYSCALL_MKNOD,	// Mknod
+	SYSCALL_UNLINK, // Unlink
+	SYSCALL_LINK,	// Link
+	SYSCALL_MKDIR,	// Mkdir
+	SYSCALL_CLOSE,	// Close
+	// Non-standard
+	SYSCALL_MALLOC, // Malloc
+	SYSCALL_FREE,	// Free
 } syscall_t;
 
 __attribute__((packed)) struct syscall_registers
@@ -70,6 +74,8 @@ int32_t sys_unlink(syscall_registers_t regs);
 int32_t sys_link(syscall_registers_t regs);
 int32_t sys_mkdir(syscall_registers_t regs);
 int32_t sys_close(syscall_registers_t regs);
+int32_t sys_malloc(syscall_registers_t regs);
+int32_t sys_free(syscall_registers_t regs);
 
 // Syscall table
 typedef int32_t (*syscallf_t)(syscall_registers_t);
@@ -95,4 +101,6 @@ static syscallf_t syscalls[] = {
 	sys_link,
 	sys_mkdir,
 	sys_close,
+	sys_malloc,
+	sys_free,
 };

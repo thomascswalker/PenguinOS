@@ -8,6 +8,7 @@ SECTIONS
 {
 	. = 1M; /* Start at 1MB */
 
+
 	.multiboot ALIGN(4K) :
 	{
 		*(.multiboot)
@@ -25,9 +26,10 @@ SECTIONS
 
 	/* Start kernel */
 	. += 0xC0000000;
+	kernel_end = .;
 
 	/* Align relative to 0xC0000000) */
-	.text ALIGN(4K) : AT(ADDR(.text) - 0xC0000000)
+	 .text ALIGN(4K) :  AT(ADDR(.text) - 0xC0000000)
 	{
 		*(.text)
 	}
@@ -51,5 +53,5 @@ SECTIONS
 		*(.bss)
 	}
 
-	_kernel_end = .;
+	kernel_start = .;
 }

@@ -36,11 +36,13 @@ int32_t find_first_free_blocks(uint32_t block_count)
 
 	// Test 32 blocks at a time
 	uint32_t test_blocks = ceildiv(max_blocks, BLOCK_TEST_COUNT);
+	debug("Testing %d blocks.", test_blocks);
 	for (uint32_t i = 0; i < test_blocks; i++)
 	{
 		// Continue if all memory in this block is filled.
 		if (memory_map[i] == 0xFFFFFFFF)
 		{
+			debug("Block %d is full; continuing...", i);
 			continue;
 		}
 
@@ -76,6 +78,7 @@ int32_t find_first_free_blocks(uint32_t block_count)
 
 				if (free_blocks == block_count)
 				{
+					debug("Found a free block at %x.", i * 32 + j);
 					return i * 32 + j;
 				}
 			}
@@ -88,12 +91,12 @@ int32_t find_first_free_blocks(uint32_t block_count)
 
 void init_pmm(uint32_t start_address, uint32_t size)
 {
-	info("Initializing physical memory...");
+	info("Initializing physical memory (%x -> %x)...", start_address, start_address + size);
 	memory_map = (uint32_t*)start_address;
 	max_blocks = size / BLOCK_SIZE;
 	used_blocks = size;
 
-	// memset(memory_map, 0xFF, max_blocks / BLOCKS_PER_BYTE);
+	memset(memory_map, 0xFF, max_blocks / BLOCKS_PER_BYTE);
 
 	uint32_t  region_size = max_blocks / BLOCKS_PER_BYTE;
 	uint32_t* base_address = &start_address;
@@ -175,7 +178,9 @@ void free_blocks(uint32_t* address, uint32_t block_count)
 	int32_t starting_block = (uint32_t)address / BLOCK_SIZE; // Convert address to blocks
 
 	for (uint32_t i = 0; i < block_count; i++)
+	{
 		unset_block(starting_block + i); // Unset bits/blocks in memory map, to free
+	}
 
 	used_blocks -= block_count; // Decrease used block count}
 }
@@ -267,6 +272,7 @@ void flush_tlb_entry(vaddr_t address)
 
 bool map_page(void* paddr, void* vaddr)
 {
+	debug("Mapping page from PHYS%x -> VIRT%x.", (uint32_t*)paddr, (uint32_t*)vaddr);
 	// Get page entry
 	page_directory_t* pd = current_page_directory;
 	pd_entry_t*		  entry = &pd->entries[PD_INDEX((uint32_t)vaddr)];

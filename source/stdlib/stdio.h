@@ -11,7 +11,7 @@ enum format_spec
 	FMT_CHAR = 'c',
 	FMT_STRING = 's',
 	FMT_INT = 'd',
-	FMT_HEX = 'x'
+	FMT_HEX = 'x',
 };
 typedef enum format_spec format_spec_t;
 
