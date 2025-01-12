@@ -4,8 +4,10 @@
 #include <multiboot.h>
 #include <stdio.h>
 
-#define KERNEL_START 0xC0000000
+#define PHYSICAL_START 0x100000
+#define VIRTUAL_START 0xC0000000
 #define PROGRAM_START 0xD0000000
+#define KERNEL_OFFSET 0x10000
 
 #define BLOCK_SIZE 0x1000
 #define BLOCKS_PER_BYTE 8
@@ -88,7 +90,7 @@ void	  set_block(uint32_t bit);
 void	  unset_block(uint32_t bit);
 uint8_t	  test_block(uint32_t bit);
 int32_t	  find_first_free_blocks(uint32_t block_count);
-void	  init_pmm(uint32_t start_address, uint32_t size);
+void	  init_pmm(void* start_address, uint32_t size);
 void	  init_memory_region(uint32_t base_address, uint32_t size);
 void	  deinit_memory_region(uint32_t base_address, uint32_t size);
 uint32_t* allocate_blocks(uint32_t block_count);
@@ -106,4 +108,3 @@ void		flush_tlb_entry(vaddr_t address);
 bool		map_page(void* paddr, void* vaddr);
 bool		unmap_page(void* vaddr);
 bool		init_vmm();
-extern void enable_paging(uint32_t* address); // Defined in boot.s

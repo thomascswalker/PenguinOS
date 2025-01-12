@@ -6,32 +6,22 @@ ENTRY(_start)
    kernel image. */
 SECTIONS
 {
-	. = 1M; /* Start at 1MB */
-
-
-	.multiboot ALIGN(4K) :
-	{
-		*(.multiboot)
-	}
-
-	.note.gnu.build-id ALIGN(4K) :
-	{
-		*(.note.gnu.build-id)
-	}
-
-	.boot ALIGN(4K) :
-	{
-		*(.boot)
-	}
+	. = 0xC0100000; /* Start at 3GB + 1MB */
 
 	/* Start kernel */
-	. += 0xC0000000;
-	kernel_end = .;
+	kernel_start = .;
 
 	/* Align relative to 0xC0000000) */
 	 .text ALIGN(4K) :  AT(ADDR(.text) - 0xC0000000)
 	{
+		*(.multiboot)
 		*(.text)
+	}
+
+	
+	.boot ALIGN(4K) :  AT(ADDR(.boot) - 0xC0000000)
+	{
+		*(.boot)
 	}
 
 		/* Align relative to 0xC0000000) */
@@ -53,5 +43,5 @@ SECTIONS
 		*(.bss)
 	}
 
-	kernel_start = .;
+	kernel_end = .;
 }

@@ -31,10 +31,12 @@ void init_timer()
 void timer_callback(registers_t regs)
 {
 	g_ticks++;
-	if (SLEEP_TICK > 0)
-	{
-		SLEEP_TICK--;
-	}
+
+	// TODO: Causes page fault
+	// if (SLEEP_TICK > 0)
+	// {
+	// 	SLEEP_TICK--;
+	// }
 }
 
 uint32_t read_pit_count()

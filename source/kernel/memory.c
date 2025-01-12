@@ -89,9 +89,10 @@ int32_t find_first_free_blocks(uint32_t block_count)
 	return ERR_MEMORY_UNAVAILABLE;
 }
 
-void init_pmm(uint32_t start_address, uint32_t size)
+void init_pmm(void* start_address, uint32_t size)
 {
-	info("Initializing physical memory (%x -> %x)...", start_address, start_address + size);
+	info("Initializing %dmb of physical memory (%x -> %x).", size / 0x400 / 0x400, start_address,
+		start_address + size);
 	memory_map = (uint32_t*)start_address;
 	max_blocks = size / BLOCK_SIZE;
 	used_blocks = size;
@@ -99,7 +100,7 @@ void init_pmm(uint32_t start_address, uint32_t size)
 	memset(memory_map, 0xFF, max_blocks / BLOCKS_PER_BYTE);
 
 	uint32_t  region_size = max_blocks / BLOCKS_PER_BYTE;
-	uint32_t* base_address = &start_address;
+	uint32_t* base_address = memory_map;
 	for (uint32_t i = 0; i < size; i++)
 	{
 		init_memory_region((uint32_t)base_address, region_size);
@@ -381,9 +382,9 @@ bool init_vmm()
 	}
 
 	// Map kernel to 3GB+ addresses (higher-half kernel)
-	{								   // Closed scope
-		uint32_t frame = 0x000FFFFF;   // Start at 1MB
-		uint32_t vaddr = KERNEL_START; // Start at the kernel offset (3GB)
+	{									// Closed scope
+		uint32_t frame = 0x000FFFFF;	// Start at 1MB
+		uint32_t vaddr = VIRTUAL_START; // Start at the kernel offset (3GB)
 		for (uint32_t i = 0; i < 1024; i++)
 		{
 			// Create a new page
@@ -401,7 +402,7 @@ bool init_vmm()
 		}
 	}
 
-	pd_entry_t* entry_high = &dir->entries[PD_INDEX(KERNEL_START)];
+	pd_entry_t* entry_high = &dir->entries[PD_INDEX(VIRTUAL_START)];
 	SET_ATTRIBUTE(entry_high, PDE_PRESENT);
 	SET_ATTRIBUTE(entry_high, PDE_READ_WRITE);
 	SET_FRAME(entry_high, (paddr_t)table_low); // High entry points to default (low) page table.
@@ -418,9 +419,6 @@ bool init_vmm()
 		return false;
 	}
 
-	// Enable paging. Set paging bit (31) and protection enable bit (0) of CR0
-	// From now on, any address referred to is now a virtual address.
-	enable_paging((uint32_t*)current_page_directory);
 	success("Virtual memory intialized.");
 
 	return true;

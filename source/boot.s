@@ -8,6 +8,20 @@ MB_FLAGS		equ  MB_ALIGN | MB_MEMORY_INFO | MB_GFX		; Multiboot flags.
 MB_MAGIC		equ  0x1BADB002       						; Multiboot MAGIC.
 MB_CHECKSUM		equ  -(MB_MAGIC + MB_FLAGS) 				; Checksum of the above.
 
+KERNEL_VIRTUAL_BASE equ 0xC0000000                          ; 3GB
+KERNEL_PAGE_COUNT equ (KERNEL_VIRTUAL_BASE >> 22)           ; 768
+
+; Initialize paging table
+section .data
+align 4096
+boot_page_directory:
+; 4MB lower-half kernel page
+    dd 0x83
+    times (KERNEL_PAGE_COUNT - 1) dd 0
+
+    dd 0x83
+    times (1024 - KERNEL_PAGE_COUNT - 1) dd 0
+
 section .multiboot											; Defines the multiboot header.
 align 4
 	dd MB_MAGIC
@@ -27,62 +41,44 @@ stack_bottom:
     resb 16384 * 8											; Allocate 131KB for the stack.
 stack_top:
 
-section .boot
-global _start
+section .text
+global _start:function (_start.end - _start)
 _start:
     ; Enable A20 line
     in al, 0x92
 	or al, 2
 	out 0x92, al
 
-    mov eax, (initial_page_dir - 0xC0000000)
-    mov cr3, eax                                            ; Move into control register CR3, tells the processor where 
+    mov ecx, (boot_page_directory - KERNEL_VIRTUAL_BASE)
+    mov cr3, ecx                                            ; Move into control register CR3, tells the processor where 
                                                             ; the location of the page directory and page tables is.
     mov ecx, cr4
-    or ecx, 0x10                                            ; Set physical address extension
+    or ecx, (1 << 4)                                        ; Set PSE bit in CR4 to enable 4MB pages.
     mov cr4, ecx
 
     mov ecx, cr0
-    or ecx, 0x80000000                                      ; Enables paging on our system
+    or ecx, (1 << 31)                                       ; Set PG bit in CR0 to enable pageing.
     mov cr0, ecx
 
-    jmp higher_half
+    lea ecx, [.higher_half]                                 ; Far jump
+    jmp ecx
+.higher_half:
+    ; Unmap lower-half kernel page
+    mov dword [boot_page_directory], 0
+    invlpg [0]
 
-section .text
-higher_half:
+    ; Setup stack
     mov esp, stack_top                                      ; Move stack pointer into esp
-    push ebx                                                ; Push ebx onto the stack
-    xor ebp, ebp                                            ; Reset ebp
+
+    ; Multiboot
+    push ebx                                                ; multiboot_info
+    push eax                                                ; multiboot_magic
 
     extern kernel_main                                      ; External reference to kernel_main
     call kernel_main                                        ; Call kernel_main in main.c
+
     cli                                                     ; Disable interrupts
+.hang:
     hlt                                                     ; Halt the next interrupt
-halt:
-    jmp halt
-
-section .text
-global enable_paging
-enable_paging:
-    push ebp
-    mov ebp, esp
-    mov eax, cr0
-    or eax, 0x80000000
-    mov cr0, eax
-    mov esp, ebp
-    pop ebp
-    ret
-
-; Initialize paging table
-section .data
-align 4096
-global initial_page_dir
-initial_page_dir:
-    dd 10000011b
-    times 768-1 dd 0
-
-    dd (0 << 22) | 10000011b
-    dd (1 << 22) | 10000011b
-    dd (2 << 22) | 10000011b
-    dd (3 << 22) | 10000011b
-    times 256-4 dd 0
+    jmp .hang
+.end:
