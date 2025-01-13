@@ -3,12 +3,15 @@ Main entry point into PengOS. Initializes the kernel.
 */
 
 #include <gdt.h>
+#include <heap.h>
 #include <keyboard.h>
+#include <memory.h>
+#include <multiboot.h>
 #include <pit.h>
 
-EXTERN void kmain() /*multiboot_info_t* boot_info*/
+EXTERN void kmain(multiboot_info_t* boot_info)
 {
-	Terminal::init();
+	VGA::init();
 	println("Welcome to PengOS!");
 
 	GDT::init();
@@ -19,12 +22,18 @@ EXTERN void kmain() /*multiboot_info_t* boot_info*/
 	// Once everything is initialized, enable interrupts.
 	enableInterrupts();
 
-		// uint32_t paddr = boot_info->mmap_addr;
-	// debug("Physical address start is %x.", paddr);
-	// uint32_t psize = boot_info->mem_lower + boot_info->mem_upper;
-	// debug("Total memory is %dKB.", psize);
-	// init_pmm(paddr, psize);
-	// init_vmm();
+	uint32_t memorySize = KHEAP_INITIAL_SIZE;
+	PMM::init(memorySize);
+
+	uint32_t freeCount = PMM::getFreeBlockCount();
+	debugi(freeCount);
+	void* ptr = Heap::kmalloc(KHEAP_MAX_SIZE);
+	debugx(ptr);
+	freeCount = PMM::getFreeBlockCount();
+	debugi(freeCount);
+	Heap::kfree(ptr);
+	freeCount = PMM::getFreeBlockCount();
+	debugi(freeCount);
 
 	while (1)
 	{

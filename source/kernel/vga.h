@@ -18,7 +18,7 @@
 #define VGA_SIZE (VGA_WIDTH * VGA_HEIGHT)
 
 // The starting point of the terminal's text buffer in memory.
-#define TERMINAL_BUFFER_START (uint16_t*)0xC00B8000
+#define VGA_BUFFER_START (uint16_t*)(0xB8000 + 0xC0000000)
 #define TEXT_BLANK 1824 // ' ' with black background
 
 /* Hardware text mode color constants. */
@@ -44,9 +44,9 @@ enum EVGAColor : uint8_t
 	VGA_COLOR_BACKGROUND = VGA_COLOR_BLACK,
 };
 
-namespace Terminal
+namespace VGA
 {
-	static uint16_t* buffer = TERMINAL_BUFFER_START;
+	static uint16_t* buffer = VGA_BUFFER_START;
 	static uint8_t	 color;
 	static int32_t	 row;
 	static int32_t	 column;
@@ -66,4 +66,4 @@ namespace Terminal
 	void	 remchar();
 	void	 insertNewLine();
 	void	 scroll();
-} // namespace Terminal
+} // namespace VGA

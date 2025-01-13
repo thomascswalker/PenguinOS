@@ -5,9 +5,9 @@
 namespace IDT
 {
 
-	IDTEntry  entries[IDT_ENTRY_COUNT];
-	IDTPtr	  ptr;
-	Handler handlers[IDT_ENTRY_COUNT];
+	IDTEntry entries[IDT_ENTRY_COUNT];
+	IDTPtr	 ptr;
+	Handler	 handlers[IDT_ENTRY_COUNT];
 
 	void init()
 	{
@@ -140,8 +140,8 @@ namespace IDT
 		}
 		else
 		{
-			dumpRegisters(&regs);
-			panic("IRQ handler %d not found!", irq_no);
+			// dumpRegisters(&regs);
+			panic("IRQ handler %d not found!", (irq_no - 32));
 		}
 
 		pic_send_eoi(irq_no);

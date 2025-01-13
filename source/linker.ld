@@ -13,18 +13,10 @@ SECTIONS
 		*(.multiboot)
 	}
 
-	.note.gnu.build-id ALIGN(4K) :
-	{
-		*(.note.gnu.build-id)
-	}
-
-	.boot ALIGN(4K) :
-	{
-		*(.boot)
-	}
-
 	/* Start kernel */
 	. += 0xC0000000;
+
+	kernelStart = .;
 
 	/* Align relative to 0xC0000000) */
 	.text ALIGN(4K) : AT(ADDR(.text) - 0xC0000000)
@@ -51,5 +43,5 @@ SECTIONS
 		*(.bss)
 	}
 
-	_kernel_end = .;
+	kernelEnd = .;
 }

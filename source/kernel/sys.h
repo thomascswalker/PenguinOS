@@ -2,6 +2,9 @@
 
 #include <ctype.h>
 
+#define KB 0x400
+#define MB 0x100000
+#define GB 0x40000000
 #define asm __asm__ volatile
 
 struct Registers
@@ -47,6 +50,13 @@ static inline void enableInterrupts()
 }
 
 static inline void pause()
+{
+	while (true)
+	{
+	}
+}
+
+static inline void halt()
 {
 	asm("hlt");
 	while (true)

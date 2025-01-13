@@ -10,7 +10,7 @@ AlignOperands: DontAlign
 AlignTrailingComments: true
 AllowShortBlocksOnASingleLine: Empty
 AllowShortEnumsOnASingleLine: false
-AllowShortFunctionsOnASingleLine: Inline
+AllowShortFunctionsOnASingleLine: None
 BraceWrapping:
   AfterClass: true
   AfterCaseLabel: true

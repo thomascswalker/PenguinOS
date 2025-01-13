@@ -27,7 +27,7 @@ stack_bottom:
     resb 16384 * 8											; Allocate 131KB for the stack.
 stack_top:
 
-section .boot
+section .text
 global _start
 _start:
     ; Enable A20 line
@@ -35,7 +35,7 @@ _start:
 	or al, 2
 	out 0x92, al
 
-    mov eax, (initial_page_dir - 0xC0000000)
+    mov eax, (initialPageDirectory - 0xC0000000)
     mov cr3, eax                                            ; Move into control register CR3, tells the processor where 
                                                             ; the location of the page directory and page tables is.
     mov ecx, cr4
@@ -47,8 +47,6 @@ _start:
     mov cr0, ecx
 
     jmp higher_half
-
-section .text
 higher_half:
     mov esp, stack_top                                      ; Move stack pointer into esp
     push ebx                                                ; Push ebx onto the stack
@@ -61,9 +59,8 @@ higher_half:
 halt:
     jmp halt
 
-section .text
-global enable_paging
-enable_paging:
+global enablePaging
+enablePaging:
     push ebp
     mov ebp, esp
     mov eax, cr0
@@ -76,13 +73,18 @@ enable_paging:
 ; Initialize paging table
 section .data
 align 4096
-global initial_page_dir
-initial_page_dir:
+global initialPageDirectory
+initialPageDirectory:
+    ; Set first entry to be [Present | ReadWrite | Supervisor]
     dd 10000011b
+    ; Set next 768 entries to 0
     times 768-1 dd 0
 
+    ; Set next 4 entries to be [Present | ReadWrite | Supervisor]
+    ; offset by the first four addresses.
     dd (0 << 22) | 10000011b
     dd (1 << 22) | 10000011b
     dd (2 << 22) | 10000011b
     dd (3 << 22) | 10000011b
+    ; Set remaining 252 entries to 0 (to equal 1024 pages)
     times 256-4 dd 0

@@ -2,7 +2,7 @@
 #include <pic.h>
 #include <stdio.h>
 
-using namespace Terminal;
+using namespace VGA;
 
 namespace Keyboard
 {
@@ -109,13 +109,13 @@ namespace Keyboard
 				}
 			case SC_ENTER:
 				{
-					Terminal::insertNewLine();
+					VGA::insertNewLine();
 					return;
 				}
 			case SC_BACKSPACE:
 				{
-					Terminal::remchar();
-					Terminal::updateCursorPosition();
+					VGA::remchar();
+					VGA::updateCursorPosition();
 					return;
 				}
 			default:
@@ -123,8 +123,8 @@ namespace Keyboard
 		}
 
 		char c = isShiftDown() ? kc->upper : kc->lower;
-		Terminal::put(c);
-		Terminal::updateCursorPosition();
+		VGA::put(c);
+		VGA::updateCursorPosition();
 	}
 
 	bool isShiftDown()

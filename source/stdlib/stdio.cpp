@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <vga.h>
 
-using namespace Terminal;
+using namespace VGA;
 
 // Prints the specified character array to the terminal view.
 void print(const char* str)
@@ -96,9 +96,9 @@ uint32_t sprintf(char* stream, const char* format, va_list args)
 					}
 				default:
 					{
-						Terminal::setForeColor(VGA_COLOR_RED);
+						VGA::setForeColor(VGA_COLOR_RED);
 						print("Invalid specifier!");
-						pause();
+						halt();
 					}
 			}
 		}
@@ -119,7 +119,7 @@ uint32_t sprintf(char* stream, const char* format, va_list args)
 
 void printf(const char* format, ...)
 {
-	Terminal::setForeColor(VGA_COLOR_DEFAULT);
+	VGA::setForeColor(VGA_COLOR_DEFAULT);
 	va_list args;
 	va_start(args, format);
 	char buffer[512];
@@ -130,7 +130,7 @@ void printf(const char* format, ...)
 
 void debug(const char* format, ...)
 {
-	Terminal::setForeColor(VGA_COLOR_LIGHT_GREY);
+	VGA::setForeColor(VGA_COLOR_LIGHT_GREY);
 	va_list args;
 	va_start(args, format);
 	print("[DEBUG  ] ");
@@ -138,12 +138,12 @@ void debug(const char* format, ...)
 	sprintf(buffer, format, args);
 	println(buffer);
 	va_end(args);
-	Terminal::resetColor();
+	VGA::resetColor();
 }
 
 void info(const char* format, ...)
 {
-	Terminal::setForeColor(VGA_COLOR_WHITE);
+	VGA::setForeColor(VGA_COLOR_WHITE);
 	va_list args;
 	va_start(args, format);
 	print("[INFO   ] ");
@@ -151,12 +151,12 @@ void info(const char* format, ...)
 	sprintf(buffer, format, args);
 	println(buffer);
 	va_end(args);
-	Terminal::resetColor();
+	VGA::resetColor();
 }
 
 void warning(const char* format, ...)
 {
-	Terminal::setForeColor(VGA_COLOR_YELLOW);
+	VGA::setForeColor(VGA_COLOR_YELLOW);
 	va_list args;
 	va_start(args, format);
 	print("[WARNING] ");
@@ -164,12 +164,12 @@ void warning(const char* format, ...)
 	sprintf(buffer, format, args);
 	println(buffer);
 	va_end(args);
-	Terminal::resetColor();
+	VGA::resetColor();
 }
 
 void error(const char* format, ...)
 {
-	Terminal::setForeColor(VGA_COLOR_LIGHT_RED);
+	VGA::setForeColor(VGA_COLOR_LIGHT_RED);
 	va_list args;
 	va_start(args, format);
 	print("[ERROR  ] ");
@@ -177,12 +177,12 @@ void error(const char* format, ...)
 	sprintf(buffer, format, args);
 	println(buffer);
 	va_end(args);
-	Terminal::resetColor();
+	VGA::resetColor();
 }
 
 void success(const char* format, ...)
 {
-	Terminal::setForeColor(VGA_COLOR_LIGHT_GREEN);
+	VGA::setForeColor(VGA_COLOR_LIGHT_GREEN);
 	va_list args;
 	va_start(args, format);
 	print("[SUCCESS] ");
@@ -190,12 +190,12 @@ void success(const char* format, ...)
 	sprintf(buffer, format, args);
 	println(buffer);
 	va_end(args);
-	Terminal::resetColor();
+	VGA::resetColor();
 }
 
 void panic(const char* format, ...)
 {
-	Terminal::setForeColor(VGA_COLOR_LIGHT_RED);
+	VGA::setForeColor(VGA_COLOR_LIGHT_RED);
 	va_list args;
 	va_start(args, format);
 	print("[PANIC  ] ");
@@ -204,5 +204,5 @@ void panic(const char* format, ...)
 	println(buffer);
 	println("System halted.\n");
 	va_end(args);
-	pause();
+	halt();
 }

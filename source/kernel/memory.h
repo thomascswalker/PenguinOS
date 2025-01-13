@@ -1,109 +1,71 @@
 #pragma once
 
-#include <math.h>
-#include <multiboot.h>
+#include <bitmask.h>
+#include <pmm.h>
+#include <stdint.h>
 #include <stdio.h>
+#include <string.h>
 
-#define KERNEL_START 0xC0000000
-#define HEAP_START 0xD0000000
+#define VIRTUAL_START 0xC0000000 // 3GB
+#define PHYSICAL_START 0X100000	 // 1MB
+#define PHYSICAL_SIZE 0x1000000	 // 16MB
 
-#define BLOCK_SIZE 0x1000
-#define BLOCKS_PER_BYTE 8
-#define BLOCK_TEST_COUNT 32
+#define PAGE_SIZE 4096 // 4KB
+#define PAGES_PER_TABLE 1024
+#define TABLES_PER_DIRECTORY 1024
 
-#define PAGE_SIZE 0x1000
-#define PAGES_PER_TABLE 0x0400
-#define TABLES_PER_DIRECTORY 0x0400
+#define IS_ALIGN(addr) ((((uint32_t)(addr)) | 0xFFFFF000) == 0)
+#define PAGE_ALIGN(addr) ((((uint32_t)(addr)) & 0xFFFFF000) + 0x1000)
 
-#define ERR_MEMORY_UNAVAILABLE -1
+struct PageTableEntry;
+struct PageDirectoryEntry;
 
-typedef uint32_t pt_entry_t; // Page table entry
-typedef uint32_t pd_entry_t; // Page directory entry
-typedef uint32_t paddr_t;	 // Physical address
-typedef uint32_t vaddr_t;	 // Virtual address
-
-// The first 22 bits of the virtual address specify the index of the page directory.
-#define PD_INDEX(addr) ((addr) >> 22)
-// The first 12 bits of the virtual address specify the index of the page table.
-// Max index within a page table is 1023, so we & with 0x3FF.
-#define PT_INDEX(addr) (((addr) >> 12) & 0x3FF)
-// Clear lowest 12 bits, only return frame/address.
-#define PAGE_PHYS_ADDRESS(dir_entry) ((*dir_entry) & ~0xFFFF)
-#define SET_ATTRIBUTE(entry, attr) (*entry |= attr)
-#define CLEAR_ATTRIBUTE(entry, attr) (*entry &= ~attr)
-#define TEST_ATTRIBUTE(entry, attr) (*entry & attr)
-// Only set address frame, not flags
-#define SET_FRAME(entry, addr) (*entry = (*entry & ~0x7FFFF000) | addr)
-
-// Page table entry
-enum pte
+enum PageFlag : uint8_t // Page Table Flags
 {
-	PTE_PRESENT = 0x01,
-	PTE_READ_WRITE = 0x02,
-	PTE_USER = 0x04,
-	PTE_WRITE_THROUGH = 0x08,
-	PTE_CACHE_DISABLE = 0x10,
-	PTE_ACCESSED = 0x20,
-	PTE_DIRTY = 0x40,
-	PTE_PAT = 0x80, // Page Attribute Table
-	PTE_GLOBAL = 0x100,
-	PTE_FRAME = 0x7FFFF000 // Bits 12+
+	Present = (1 << 0),		   // Page is actually in physical memory
+	ReadWrite = (1 << 1),	   // The page is read/write, otherwise read-only
+	UserSupervisor = (1 << 2), // Page can be accessed by all, otherwise only supervisor access
+	WriteThrough = (1 << 3),   // Write through caching is enabled
+	CacheDisable = (1 << 4),   // Page will not be cached
+	Accessed = (1 << 5),	   // Read during virtual address translation
+	Dirty = (1 << 6),		   // Whether the page has been written to
+	PageSize = (1 << 7)		   // 4MB in size, otherwise 4KB
 };
-// Page table entry
-typedef enum pte pte_t;
+DEFINE_BITMASK_OPERATORS(PageFlag);
 
-// Page directory entry
-enum pde
+static bool getFlag(uint32_t entry, PageFlag f)
 {
-	PDE_PRESENT = 0x01,
-	PDE_READ_WRITE = 0x02,
-	PDE_USER = 0x04,
-	PDE_WRITE_THROUGH = 0x08,
-	PDE_CACHE_DISABLE = 0x10,
-	PDE_ACCESSED = 0x20,
-	PDE_DIRTY = 0x40,	   // 4MB entries only
-	PDE_PAGE_SIZE = 0x80,  // 0 = 4KB PAGE, 1 = 4MB page
-	PDE_GLOBAL = 0x100,	   // 4MB entries only
-	PDE_PAT = 0x2000,	   // 4MB entries only
-	PDE_FRAME = 0x7FFFF000 // Bits 12+
-};
-// Page directory entry
-typedef enum pde pde_t;
-
-// Page table: handle 4MB each, 1024 entries * 4096
-typedef struct page_directory
+	return entry & f;
+}
+static void setFlag(uint32_t& entry, PageFlag f, bool state)
 {
-	pt_entry_t entries[PAGES_PER_TABLE];
-} page_directory_t;
+	state ? entry |= f : entry &= ~f;
+}
 
-// Page directory: handle 4GB each, 1024 tables * 4MB
-typedef struct page_table
+typedef uint32_t TPage;
+typedef uint32_t TPageTable;
+typedef uint32_t TPageDirectory;
+
+namespace Paging
 {
-	pd_entry_t entries[TABLES_PER_DIRECTORY];
-} page_table_t;
+	// PageDirectory  kernelDirectory;
+	// PageDirectory* currentDirectory;
+	// PageTable*	   firstTable = nullptr;
 
-// Physical memory
+	static TPageTable pageDirectory[TABLES_PER_DIRECTORY];
+	static TPage	  pageTable[PAGES_PER_TABLE];
 
-void	  set_block(uint32_t bit);
-void	  unset_block(uint32_t bit);
-uint8_t	  test_block(uint32_t bit);
-int32_t	  find_first_free_blocks(uint32_t block_count);
-void	  init_pmm(uint32_t start_address, uint32_t size);
-void	  init_memory_region(uint32_t base_address, uint32_t size);
-void	  deinit_memory_region(uint32_t base_address, uint32_t size);
-uint32_t* allocate_blocks(uint32_t block_count);
-void	  free_blocks(uint32_t* address, uint32_t block_count);
+	static TPageTable* currentTable;
+	static TPage*	   currentPage;
 
-// Virtual memory
+	static uint8_t* mallocMemory;
 
-pt_entry_t* get_pt_entry(page_table_t* t, const vaddr_t address);
-pd_entry_t* get_pd_entry(page_directory_t* d, const vaddr_t address);
-pt_entry_t* get_page(const vaddr_t address);
-void*		allocate_page(pt_entry_t* page);
-void		free_page(pt_entry_t* page);
-bool		set_page_directory(page_directory_t* pd);
-void		flush_tlb_entry(vaddr_t address);
-bool		map_page(void* paddr, void* vaddr);
-bool		unmap_page(void* vaddr);
-bool		init_vmm();
-EXTERN void enable_paging(uint32_t* address); // Defined in boot.s
+	EXTERN void enablePaging(); // Defined in boot.s
+
+	void init(uint32_t size);
+	void allocatePage(
+		TPageDirectory* dir, uint32_t vaddr, uint32_t frame, bool isKernel, bool isWritable);
+
+	void* _kmalloc(uint32_t size);
+
+} // namespace Paging
