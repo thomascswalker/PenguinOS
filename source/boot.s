@@ -54,8 +54,8 @@ higher_half:
     push ebx                                                ; Push ebx onto the stack
     xor ebp, ebp                                            ; Reset ebp
 
-    extern kernel_main                                      ; External reference to kernel_main
-    call kernel_main                                        ; Call kernel_main in main.c
+    extern kmain                                            ; External reference to kmain
+    call kmain                                              ; Call kmain in main.c
     cli                                                     ; Disable interrupts
     hlt                                                     ; Halt the next interrupt
 halt:

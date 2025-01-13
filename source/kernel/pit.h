@@ -10,6 +10,9 @@
 #define PIT_DATA2 0x42	 // Channel 2 data port (read/write)
 #define PIT_COMMAND 0x43 // Mode/Command register (write only, a read is ignored)
 
-void	 init_timer();
-void	 timer_callback(registers_t regs);
-uint32_t read_pit_count();
+namespace PIT
+{
+	void	 init();
+	void	 callback(Registers regs);
+	uint32_t getPITCount();
+} // namespace PIT

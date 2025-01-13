@@ -3,7 +3,6 @@
 #include <string.h>
 
 #define NULL 0
-#define nullptr ((void*)0)
 
 static void itoa(char* buffer, uint32_t value, uint32_t base)
 {

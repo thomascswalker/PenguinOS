@@ -6,14 +6,13 @@
 
 // Printing
 
-enum format_spec
+enum FormatSpec
 {
 	FMT_CHAR = 'c',
 	FMT_STRING = 's',
 	FMT_INT = 'd',
 	FMT_HEX = 'x'
 };
-typedef enum format_spec format_spec_t;
 
 void	 print(const char* str);
 void	 println(const char* str);

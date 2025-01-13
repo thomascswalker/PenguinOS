@@ -238,7 +238,7 @@ void free_page(pt_entry_t* page)
 	void* address = (void*)PAGE_PHYS_ADDRESS(page);
 	if (address)
 	{
-		free_blocks(address, 1);
+		free_blocks((uint32_t*)address, 1);
 	}
 	CLEAR_ATTRIBUTE(page, PTE_PRESENT);
 }

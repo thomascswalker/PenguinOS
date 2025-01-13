@@ -1,6 +1,6 @@
 section .text
-global load_gdt
-load_gdt:
+global loadGDT
+loadGDT:
     mov     eax,    DWORD [esp + 4]
     lgdt    [eax]
 

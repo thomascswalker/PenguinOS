@@ -106,4 +106,4 @@ void		flush_tlb_entry(vaddr_t address);
 bool		map_page(void* paddr, void* vaddr);
 bool		unmap_page(void* vaddr);
 bool		init_vmm();
-extern void enable_paging(uint32_t* address); // Defined in boot.s
+EXTERN void enable_paging(uint32_t* address); // Defined in boot.s
