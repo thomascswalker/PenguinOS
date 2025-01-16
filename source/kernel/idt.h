@@ -2,9 +2,17 @@
 
 #include <sys.h>
 
+#define DIVIDE_BY_ZERO 0x00
+#define DOUBLE_FAULT 0x08
+#define GENERAL_PROTECTION_FAULT 0x0D
+#define PAGE_FAULT 0x0E
+#define TIMER 0x20
+#define KEYBOARD 0x21
+#define SYSTEM_CALL 0X80
+
 #define IDT_ENTRY_COUNT 256
 
-#define ISR0 0 // Divide by zero
+#define ISR0 DIVIDE_BY_ZERO
 #define ISR1 1
 #define ISR2 2
 #define ISR3 3
@@ -12,13 +20,13 @@
 #define ISR5 5
 #define ISR6 6
 #define ISR7 7
-#define ISR8 8
+#define ISR8 DOUBLE_FAULT
 #define ISR9 9
 #define ISR10 10
 #define ISR11 11
 #define ISR12 12
-#define ISR13 13
-#define ISR14 14
+#define ISR13 GENERAL_PROTECTION_FAULT
+#define ISR14 PAGE_FAULT
 #define ISR15 15
 #define ISR16 16
 #define ISR17 17
@@ -37,8 +45,10 @@
 #define ISR30 30
 #define ISR31 31
 
-#define IRQ0 32 // Timer
-#define IRQ1 33 // Keyboard
+#define ISR128 SYSTEM_CALL
+
+#define IRQ0 TIMER
+#define IRQ1 KEYBOARD
 #define IRQ2 34
 #define IRQ3 35
 #define IRQ4 36
@@ -54,17 +64,13 @@
 #define IRQ14 46
 #define IRQ15 47
 
-#define DOUBLE_FAULT 0x08
-#define GENERAL_PROTECTION_FAULT 0x0D
-#define PAGE_FAULT 0x0E
-
 struct IDTEntry
 {
-	uint16_t base_low;
+	uint16_t baseLow;
 	uint16_t sel;
 	uint8_t	 always0;
 	uint8_t	 flags;
-	uint16_t base_high;
+	uint16_t baseHigh;
 } __attribute__((packed));
 
 struct IDTPtr
@@ -155,6 +161,8 @@ namespace IDT
 	EXTERN void isr29();
 	EXTERN void isr30();
 	EXTERN void isr31();
+
+	EXTERN void isr128();
 
 	EXTERN void irq0();
 	EXTERN void irq1();

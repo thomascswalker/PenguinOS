@@ -2,6 +2,7 @@
 
 void VGA::init()
 {
+	buffer = VGA_BUFFER_START;
 	setForeColor(VGA_COLOR_LIGHT_GREY);
 	clear();
 	enableCursor(0, VGA_HEIGHT - 1);
@@ -106,6 +107,7 @@ void VGA::put(char c)
 		if (++row == VGA_HEIGHT)
 		{
 			row = VGA_HEIGHT - 1;
+			scroll();
 		}
 	}
 	updateCursorPosition();

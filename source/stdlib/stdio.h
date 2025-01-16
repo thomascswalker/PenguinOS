@@ -26,7 +26,7 @@ void error(const char* format, ...);
 void success(const char* format, ...);
 void panic(const char* format, ...);
 
-#define debugi(v) debug("%s: %d", #v, v)
+#define debugd(v) debug("%s: %d", #v, v)
 #define debugx(v) debug("%s: %x", #v, v)
 #define debugs(v) debug("%s: %s", #v, v)
 #define debugc(v) debug("%s: %c", #v, v)

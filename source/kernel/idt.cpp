@@ -1,6 +1,7 @@
 #include <idt.h>
 #include <pic.h>
 #include <stdio.h>
+#include <syscall.h>
 
 namespace IDT
 {
@@ -57,6 +58,9 @@ namespace IDT
 		setGate(ISR30, (uint32_t)isr30, 0x08, 0x8E);
 		setGate(ISR31, (uint32_t)isr31, 0x08, 0x8E);
 
+		info("Setting system calls...");
+		setGate(ISR128, (uint32_t)isr128, 0x08, 0x8E);
+
 		info("Setting IRQ gates...");
 		setGate(IRQ0, (uint32_t)irq0, 0x08, 0x8E);
 		setGate(IRQ1, (uint32_t)irq1, 0x08, 0x8E);
@@ -83,8 +87,8 @@ namespace IDT
 	void setGate(uint8_t num, uint32_t base, uint16_t sel, uint8_t flags)
 	{
 		IDTEntry* entry = &entries[num];
-		entry->base_low = base & 0xFFFF;		  // Bottom 16 bits
-		entry->base_high = (base >> 16) & 0xFFFF; // Top 16 bits
+		entry->baseLow = base & 0xFFFF;			 // Bottom 16 bits
+		entry->baseHigh = (base >> 16) & 0xFFFF; // Top 16 bits
 		entry->sel = sel;
 		entry->always0 = 0;
 		entry->flags = flags | 0x60;
@@ -121,6 +125,12 @@ namespace IDT
 				asm("movl %%cr2, %0" : "=r"(addr));
 				panic("Page fault thrown at %x.", addr);
 				break;
+			case SYSTEM_CALL:
+				{
+					// Pass registers to the syscall handler.
+					sysCallDispatcher(regs);
+					return;
+				}
 			default:
 				panic("%s exception thrown. Code: %d", idt_messages[regs.int_no], regs.int_no);
 				break;
@@ -138,11 +148,11 @@ namespace IDT
 		{
 			handler(regs);
 		}
-		else
-		{
-			// dumpRegisters(&regs);
-			panic("IRQ handler %d not found!", (irq_no - 32));
-		}
+		// else
+		// {
+		// 	// dumpRegisters(&regs);
+		// 	panic("IRQ handler %d not found!", (irq_no - 32));
+		// }
 
 		pic_send_eoi(irq_no);
 	}

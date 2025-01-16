@@ -8,6 +8,11 @@ MB_FLAGS		equ  MB_ALIGN | MB_MEMORY_INFO | MB_GFX		; Multiboot flags.
 MB_MAGIC		equ  0x1BADB002       						; Multiboot MAGIC.
 MB_CHECKSUM		equ  -(MB_MAGIC + MB_FLAGS) 				; Checksum of the above.
 
+KERNEL_VIRTUAL_BASE equ 0xC0000000                          ; 3GB
+KERNEL_PAGE_COUNT equ (KERNEL_VIRTUAL_BASE >> 22)           ; 768
+
+STACKSIZE equ 16 * 0x400                                    ; 16KB
+
 section .multiboot											; Defines the multiboot header.
 align 4
 	dd MB_MAGIC
@@ -15,28 +20,18 @@ align 4
 	dd MB_CHECKSUM
     dd 0, 0, 0, 0, 0
 
-    ; Graphics
-    dd 0                                                    ; linear graphic mode
-    dd 800                                                  ; width
-    dd 600                                                  ; height
-    dd 32                                                   ; bits per pixel
+align 0x1000
+bootPageDirectory:
+    dd 0x00000083
+    times (KERNEL_PAGE_COUNT - 1) dd 0
+    ; This page directory entry defines a 4MB page containing the kernel.
+    dd 0x00000083
+    times (1024 - KERNEL_PAGE_COUNT - 1) dd 0
 
-section .bss                                                ; Setup the stack.
-align 16
-stack_bottom:
-    resb 16384 * 8											; Allocate 131KB for the stack.
-stack_top:
-
-section .text
 global _start
 _start:
-    ; Enable A20 line
-    in al, 0x92
-	or al, 2
-	out 0x92, al
-
-    mov eax, (initialPageDirectory - 0xC0000000)
-    mov cr3, eax                                            ; Move into control register CR3, tells the processor where 
+    mov ecx, bootPageDirectory
+    mov cr3, ecx                                            ; Move into control register CR3, tells the processor where 
                                                             ; the location of the page directory and page tables is.
     mov ecx, cr4
     or ecx, 0x10                                            ; Set physical address extension
@@ -46,45 +41,26 @@ _start:
     or ecx, 0x80000000                                      ; Enables paging on our system
     mov cr0, ecx
 
-    jmp higher_half
-higher_half:
-    mov esp, stack_top                                      ; Move stack pointer into esp
+    jmp higherHalf
+
+section .text
+higherHalf:
+    ; mov dword [bootPageDirectory], 0
+    ; invlpg [0]
+
+    mov esp, (stack + STACKSIZE)                            ; Move stack pointer into esp
+    push eax
+    add ebx, KERNEL_VIRTUAL_BASE
     push ebx                                                ; Push ebx onto the stack
-    xor ebp, ebp                                            ; Reset ebp
 
     extern kmain                                            ; External reference to kmain
     call kmain                                              ; Call kmain in main.c
     cli                                                     ; Disable interrupts
-    hlt                                                     ; Halt the next interrupt
 halt:
+    hlt                                                     ; Halt the next interrupt
     jmp halt
 
-global enablePaging
-enablePaging:
-    push ebp
-    mov ebp, esp
-    mov eax, cr0
-    or eax, 0x80000000
-    mov cr0, eax
-    mov esp, ebp
-    pop ebp
-    ret
-
-; Initialize paging table
-section .data
-align 4096
-global initialPageDirectory
-initialPageDirectory:
-    ; Set first entry to be [Present | ReadWrite | Supervisor]
-    dd 10000011b
-    ; Set next 768 entries to 0
-    times 768-1 dd 0
-
-    ; Set next 4 entries to be [Present | ReadWrite | Supervisor]
-    ; offset by the first four addresses.
-    dd (0 << 22) | 10000011b
-    dd (1 << 22) | 10000011b
-    dd (2 << 22) | 10000011b
-    dd (3 << 22) | 10000011b
-    ; Set remaining 252 entries to 0 (to equal 1024 pages)
-    times 256-4 dd 0
+section .bss                                                ; Setup the stack.
+align 32
+stack:
+    resb 16384											    ; Allocate 16KB for the stack.

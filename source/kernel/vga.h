@@ -46,7 +46,7 @@ enum EVGAColor : uint8_t
 
 namespace VGA
 {
-	static uint16_t* buffer = VGA_BUFFER_START;
+	static uint16_t* buffer;
 	static uint8_t	 color;
 	static int32_t	 row;
 	static int32_t	 column;

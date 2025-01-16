@@ -2,9 +2,6 @@
 #include <pit.h>
 #include <stdio.h>
 
-static uint64_t ticks = 0;
-static uint64_t seconds = 0;
-
 void PIT::init()
 {
 	info("Initializing timer...");
@@ -29,11 +26,12 @@ void PIT::init()
 
 void PIT::callback(Registers regs)
 {
-	ticks++;
-	if ((ticks % PIT_FREQ) == 0)
-	{
-		seconds++;
-	}
+	g_ticks++;
+	// TODO: Causes page fault at 0x1700
+	// if (SLEEP_TICK > 0)
+	// {
+	// 	SLEEP_TICK--;
+	// }
 }
 
 uint32_t PIT::getPITCount()
