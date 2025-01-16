@@ -1,5 +1,6 @@
 #include <pic.h>
 #include <pit.h>
+#include <pmm.h>
 #include <stdio.h>
 #include <syscall.h>
 
@@ -30,12 +31,17 @@ void sysCallDispatcher(Registers regs)
 		"push %3\n"
 		"push %4\n"
 		"push %5\n"
+
 		"call %6\n"
+
+		"pop %%eax\n"
 		"pop %%ebx\n"
-		"pop %%ebx\n"
-		"pop %%ebx\n"
-		"pop %%ebx\n"
-		"pop %%ebx\n"
+		"pop %%ecx\n"
+		"pop %%edx\n"
+		"pop %%esi\n"
+		"pop %%edi\n"
+
+		"iret\n"
 		: "=a"(ret)
 		: "r"(regs.edi), "r"(regs.esi), "r"(regs.edx), "r"(regs.ecx), "r"(regs.ebx), "r"(syscall));
 }
@@ -151,8 +157,9 @@ int32_t sysMalloc(SysCallRegisters regs)
 {
 	size_t bytes = regs.ecx;
 	debug("Allocating %d bytes of memory.", bytes);
-	// void* ptr = Heap::kmalloc(bytes);
-	// asm("mov %%eax, %0" ::"g"(ptr));
+	void* ptr = PMM::kmalloc(bytes);
+	debug("Out address is %x.", ptr);
+	asm("mov %0, %%eax" ::"g"(ptr));
 	return 0;
 }
 int32_t sysFree(SysCallRegisters regs)

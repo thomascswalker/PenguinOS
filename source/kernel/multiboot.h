@@ -272,10 +272,10 @@ struct multiboot_apm_info
 	uint16_t dseg_len;
 };
 
-static void initMultiboot(MultibootInfo* mbi, uint32_t* address, uint32_t* size)
+static void initMultiboot(MultibootInfo* info, uint32_t* address, uint32_t* size)
 {
-	MBMEntry* mmap = (MBMEntry*)mbi->mmapAddress;
-	while ((uintptr_t)mmap < mbi->mmapAddress + mbi->mmapLength)
+	MBMEntry* mmap = (MBMEntry*)info->mmapAddress;
+	while ((uintptr_t)mmap < info->mmapAddress + info->mmapLength)
 	{
 		if (mmap->lengthLow > *size && mmap->type == MULTIBOOT_MEMORY_AVAILABLE)
 		{

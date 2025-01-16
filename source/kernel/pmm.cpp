@@ -1,9 +1,12 @@
 #include <pmm.h>
 
-static BlockAllocator allocator(0);
-static uint8_t*		  heapStart;
-static uint8_t*		  heapEnd;
-static size_t		  heapSize;
+static BlockAllocator* allocator;
+
+static uint8_t* heapStart;
+static uint8_t* heapEnd;
+static size_t	heapSize;
+
+static uint32_t mallocAddress;
 
 BlockAllocator::BlockAllocator(uint32_t inBlockCount)
 {
@@ -14,10 +17,10 @@ BlockAllocator::BlockAllocator(uint32_t inBlockCount)
 
 int32_t BlockAllocator::getNext(const uint32_t blockCount)
 {
-	uint32_t* memoryMap = allocator.bitmap.data();
+	uint32_t* memoryMap = allocator->bitmap.data();
 
 	// Test 32 blocks at a time
-	for (uint32_t chunk = 0; chunk < maxBlocks / 32; chunk++)
+	for (uint32_t chunk = 0; chunk < maxBlocks / BLOCKS_PER_BYTE; chunk++)
 	{
 		if (memoryMap[chunk] == 0xFFFFFFFF)
 		{
@@ -25,7 +28,7 @@ int32_t BlockAllocator::getNext(const uint32_t blockCount)
 		}
 
 		// Otherwise test each bit.
-		for (uint32_t shift = 0; shift < 32; shift++)
+		for (uint32_t shift = 0; shift < BLOCKS_PER_BYTE; shift++)
 		{
 			// The bit we are currently testing.
 			uint32_t bit = 1 << shift;
@@ -43,10 +46,11 @@ int32_t BlockAllocator::getNext(const uint32_t blockCount)
 			{
 				// Since we are going from n..31, check if we are still within range.
 				// As well, check to make sure we haven't exceeded our max block count.
-				if ((shift + count > 31) && (chunk + 1 <= maxBlocks / 32))
+				if ((shift + count > (BLOCKS_PER_BYTE - 1))
+					&& (chunk + 1 <= maxBlocks / BLOCKS_PER_BYTE))
 				{
 					// If the current bit is free, increment.
-					if (!(memoryMap[chunk + 1] & (1 << ((shift + count) - 32))))
+					if (!(memoryMap[chunk + 1] & (1 << ((shift + count) - BLOCKS_PER_BYTE))))
 					{
 						freeBlocks++;
 					}
@@ -66,7 +70,7 @@ int32_t BlockAllocator::getNext(const uint32_t blockCount)
 				if (freeBlocks == blockCount)
 				{
 					// Return the starting block index.
-					return (chunk * 32) + shift;
+					return (chunk * BLOCKS_PER_BYTE) + shift;
 				}
 			}
 		}
@@ -102,39 +106,66 @@ uint32_t* BlockAllocator::allocate(uint32_t blockCount)
 	usedBlocks += blockCount;
 
 	// Return the address of the starting block in this sequence
-	uint32_t address = startBlock * BLOCK_SIZE;
+	uint32_t address = (startBlock * BLOCK_SIZE) + ALLOCATE_OFFSET;
 	return (uint32_t*)address;
 }
 
 void BlockAllocator::free(uint32_t* address, uint32_t blockCount)
 {
+	debug("Freeing %d blocks at %x.", blockCount, address);
+	uint32_t start = (uint32_t)address / BLOCK_SIZE;
+
+	for (uint32_t i = 0; i < blockCount; i++)
+	{
+		bitmap.reset(start + i);
+	}
+
+	usedBlocks -= blockCount;
 }
 
 void BlockAllocator::initRegion(uint32_t address, uint32_t size)
 {
+	debug("Initializing region at %x for %d bytes.", address, size);
+	uint32_t align = address / BLOCK_SIZE;
+	uint32_t blockCount = size / BLOCK_SIZE;
+
+	while (blockCount > 0)
+	{
+		bitmap.reset(align++);
+		usedBlocks--;
+		blockCount--;
+	}
+
+	bitmap.set(0);
 }
 
 void BlockAllocator::deinitRegion(uint32_t address, uint32_t size)
 {
+	debug("Deinitializing region at %x for %d bytes.", address, size);
+	uint32_t align = address / BLOCK_SIZE;
+	uint32_t blockCount = size / BLOCK_SIZE;
+
+	while (blockCount > 0)
+	{
+		bitmap.set(align++);
+		usedBlocks++;
+		blockCount--;
+	}
 }
 
 void PMM::init(uint32_t address, uint32_t memorySize)
 {
 	// Initialize the heap at the end of the kernel.
 	heapStart = (uint8_t*)ALIGN(address, BLOCK_SIZE);
-	debugx(heapStart);
 
 	// Compute the maximum number of blocks which can fit
 	// in the requested memory space.
 	uint32_t maxBlocks = ceildiv(memorySize, BLOCK_SIZE);
-	debugd(maxBlocks);
 
 	// Given the maximum number of blocks we can allocate, compute
 	// the heap end.
 	heapSize = maxBlocks * BLOCK_SIZE;
-	debugd(heapSize / MB);
 	heapEnd = heapStart + heapSize;
-	debugx(heapEnd);
 
 	/*
 	Create a new block allocator.
@@ -151,27 +182,26 @@ void PMM::init(uint32_t address, uint32_t memorySize)
 	---------------------------------------
 	*/
 
-	// Initialize the bitmap
-	allocator = BlockAllocator(maxBlocks);
+	debugx(heapStart);
+	// Move the allocator pointer to the heap start
+	allocator = (BlockAllocator*)heapStart + 0x10000;
+	// Construct a new BlockAllocator at the allocator pointer
+	*allocator = BlockAllocator(maxBlocks);
 }
 
 BlockAllocator* PMM::getAllocator()
 {
-	return &allocator;
+	return allocator;
 }
 
-// Allocates physical memory.
 void* PMM::kmalloc(uint32_t size)
 {
 	uint32_t blockCount = ceildiv(size, BLOCK_SIZE);
-	return allocator.allocate(blockCount);
-}
-
-// Frees physical memory.
-void PMM::kfree(void* ptr)
-{
-}
-
-void PMM::kdebug()
-{
+	debug("%d blocks required.", blockCount);
+	auto	 allocator = PMM::getAllocator();
+	uint32_t address = (uint32_t)allocator->allocate(blockCount);
+	debug("Allocated address is %x.", address);
+	void* tmp = (void*)address;
+	memset(tmp, 0, size);
+	return tmp;
 }

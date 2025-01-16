@@ -28,11 +28,7 @@ void itoa(char* buffer, uint32_t value, uint32_t base)
 void* malloc(const uint32_t size)
 {
 	void* ptr = 0;
-	__asm__ __volatile__("int $0x80" : "=d"(ptr) : "a"(SYSCALL_MALLOC), "b"(size));
-	if (!ptr)
-	{
-		panic("Failed to initialize memory of size %d.", size);
-	}
+	asm("int $0x80" : "=d"(ptr) : "a"(SYSCALL_MALLOC), "b"(size));
 	return ptr;
 }
 

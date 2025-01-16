@@ -34,14 +34,14 @@ public:
 
 	void set(size_t pos)
 	{
-		uint8_t offset = pos == 0 ? 0 : pos / (sizeof(T) * 8);
+		size_t	offset = pos == 0 ? 0 : pos / (sizeof(T) * 8);
 		uint8_t bit = pos == 0 ? 0 : pos % (sizeof(T) * 8);
 		m_data[offset] |= (1 << bit);
 	}
 
 	void reset(size_t pos)
 	{
-		uint8_t offset = pos == 0 ? 0 : pos / (sizeof(T) * 8);
+		size_t	offset = pos == 0 ? 0 : pos / (sizeof(T) * 8);
 		uint8_t bit = pos == 0 ? 0 : pos % (sizeof(T) * 8);
 		m_data[offset] &= ~(1 << bit);
 	}
@@ -62,7 +62,7 @@ public:
 	// if it is 1 and false if it is 0.
 	bool test(size_t pos) const
 	{
-		uint8_t offset = pos == 0 ? 0 : pos / (sizeof(T) * 8);
+		size_t	offset = pos == 0 ? 0 : pos / (sizeof(T) * 8);
 		uint8_t bit = pos == 0 ? 0 : pos % (sizeof(T) * 8);
 		return m_data[offset] & (1 << bit);
 	}

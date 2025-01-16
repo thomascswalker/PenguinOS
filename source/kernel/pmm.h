@@ -4,7 +4,8 @@
 #include <math.h>
 #include <stdio.h>
 
-#define VIRTUAL_START 0xC0000000 // 3GB + 1MB
+#define VIRTUAL_START 0xC0100000 // 3GB + 1MB
+#define ALLOCATE_OFFSET 0x10000
 #define BLOCK_SIZE 0x1000
 #define BLOCKS_PER_BYTE 32
 #define ALIGN(addr, size) (((uintptr_t)addr + size - 1) & ~(size - 1))
@@ -43,8 +44,6 @@ struct Block
 
 struct BlockAllocator
 {
-
-	Block*			   blocks = nullptr;
 	uint32_t		   usedBlocks = 0;
 	uint32_t		   maxBlocks = 0;
 	BitArray<uint32_t> bitmap;
@@ -61,8 +60,5 @@ namespace PMM
 {
 	void			init(uint32_t address, uint32_t memorySize);
 	BlockAllocator* getAllocator();
-
-	void* kmalloc(uint32_t size);
-	void  kfree(void* ptr);
-	void  kdebug();
+	void*			kmalloc(uint32_t size);
 }; // namespace PMM
