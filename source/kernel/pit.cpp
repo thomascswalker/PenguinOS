@@ -4,7 +4,6 @@
 
 void PIT::init()
 {
-	info("Initializing timer...");
 	IDT::registerInterruptHandler(IRQ0, &callback);
 
 	uint16_t divisor = PIT_NATURAL_FREQ / PIT_FREQ;

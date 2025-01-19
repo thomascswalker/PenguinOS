@@ -202,7 +202,7 @@ void panic(const char* format, ...)
 	char buffer[512];
 	sprintf(buffer, format, args);
 	println(buffer);
-	println("System halted.\n");
+	println("\nSYSTEM HALTED\n");
 	va_end(args);
 	halt();
 }

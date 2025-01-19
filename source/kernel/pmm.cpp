@@ -12,7 +12,7 @@ BlockAllocator::BlockAllocator(uint32_t inBlockCount)
 {
 	maxBlocks = inBlockCount;
 	bitmap = BitArray<uint32_t>(inBlockCount);
-	// bitmap.fill(true);
+	bitmap.set(0);
 }
 
 int32_t BlockAllocator::getNext(const uint32_t blockCount)
@@ -106,13 +106,13 @@ uint32_t* BlockAllocator::allocate(uint32_t blockCount)
 	usedBlocks += blockCount;
 
 	// Return the address of the starting block in this sequence
-	uint32_t address = (startBlock * BLOCK_SIZE) + ALLOCATE_OFFSET;
+	uint32_t address = (startBlock * BLOCK_SIZE) + VIRTUAL_START + 0x100000; // TODO: Why +0x100000?
 	return (uint32_t*)address;
 }
 
 void BlockAllocator::free(uint32_t* address, uint32_t blockCount)
 {
-	debug("Freeing %d blocks at %x.", blockCount, address);
+	// debug("Freeing %d blocks at %x.", blockCount, address);
 	uint32_t start = (uint32_t)address / BLOCK_SIZE;
 
 	for (uint32_t i = 0; i < blockCount; i++)
@@ -125,7 +125,7 @@ void BlockAllocator::free(uint32_t* address, uint32_t blockCount)
 
 void BlockAllocator::initRegion(uint32_t address, uint32_t size)
 {
-	debug("Initializing region at %x for %d bytes.", address, size);
+	// debug("Initializing region at %x for %d bytes.", address, size);
 	uint32_t align = address / BLOCK_SIZE;
 	uint32_t blockCount = size / BLOCK_SIZE;
 
@@ -141,7 +141,7 @@ void BlockAllocator::initRegion(uint32_t address, uint32_t size)
 
 void BlockAllocator::deinitRegion(uint32_t address, uint32_t size)
 {
-	debug("Deinitializing region at %x for %d bytes.", address, size);
+	// debug("Deinitializing region at %x for %d bytes.", address, size);
 	uint32_t align = address / BLOCK_SIZE;
 	uint32_t blockCount = size / BLOCK_SIZE;
 
@@ -167,6 +167,8 @@ void PMM::init(uint32_t address, uint32_t memorySize)
 	heapSize = maxBlocks * BLOCK_SIZE;
 	heapEnd = heapStart + heapSize;
 
+	info("Heap is from %x to %x (%dMB).", heapStart, heapEnd, heapSize / MB);
+
 	/*
 	Create a new block allocator.
 
@@ -181,8 +183,6 @@ void PMM::init(uint32_t address, uint32_t memorySize)
 	| 4096b | 4096b | 4096b | 4096b | ... |
 	---------------------------------------
 	*/
-
-	debugx(heapStart);
 	// Move the allocator pointer to the heap start
 	allocator = (BlockAllocator*)heapStart + 0x10000;
 	// Construct a new BlockAllocator at the allocator pointer
@@ -197,11 +197,9 @@ BlockAllocator* PMM::getAllocator()
 void* PMM::kmalloc(uint32_t size)
 {
 	uint32_t blockCount = ceildiv(size, BLOCK_SIZE);
-	debug("%d blocks required.", blockCount);
 	auto	 allocator = PMM::getAllocator();
 	uint32_t address = (uint32_t)allocator->allocate(blockCount);
-	debug("Allocated address is %x.", address);
-	void* tmp = (void*)address;
+	void*	 tmp = (void*)address;
 	memset(tmp, 0, size);
 	return tmp;
 }

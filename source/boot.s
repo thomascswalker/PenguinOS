@@ -9,7 +9,6 @@ MB_MAGIC		equ  0x1BADB002       						; Multiboot MAGIC.
 MB_CHECKSUM		equ  -(MB_MAGIC + MB_FLAGS) 				; Checksum of the above.
 
 KERNEL_VIRTUAL_BASE equ 0xC0000000                          ; 3GB
-KERNEL_PAGE_COUNT equ (KERNEL_VIRTUAL_BASE >> 22)           ; 768
 
 STACKSIZE equ 16 * 0x400                                    ; 16KB
 
@@ -20,17 +19,16 @@ align 4
 	dd MB_CHECKSUM
     dd 0, 0, 0, 0, 0
 
-align 0x1000
-bootPageDirectory:
-    dd 0x00000083
-    times (KERNEL_PAGE_COUNT - 1) dd 0
-    ; This page directory entry defines a 4MB page containing the kernel.
-    dd 0x00000083
-    times (1024 - KERNEL_PAGE_COUNT - 1) dd 0
+align 4096
+global pagingStart
+pagingStart:
+    times 1024 dd 0b10000011  ; TODO: Figure out why this triple faults if anything othehr than 0x83
 
+section .text
 global _start
 _start:
-    mov ecx, bootPageDirectory
+    cli
+    mov ecx, pagingStart                                    ; Store a pointer to the physical address of our page table.
     mov cr3, ecx                                            ; Move into control register CR3, tells the processor where 
                                                             ; the location of the page directory and page tables is.
     mov ecx, cr4
@@ -43,15 +41,11 @@ _start:
 
     jmp higherHalf
 
-section .text
 higherHalf:
-    ; mov dword [bootPageDirectory], 0
-    ; invlpg [0]
-
     mov esp, (stack + STACKSIZE)                            ; Move stack pointer into esp
-    push eax
-    add ebx, KERNEL_VIRTUAL_BASE
-    push ebx                                                ; Push ebx onto the stack
+    push eax                                                ; Multiboot magic
+    ; add ebx, KERNEL_VIRTUAL_BASE
+    push ebx                                                ; Multiboot header
 
     extern kmain                                            ; External reference to kmain
     call kmain                                              ; Call kmain in main.c

@@ -6,6 +6,10 @@
 namespace IDT
 {
 
+#define PAGE_FAULT_MESSAGE  \
+	"Page fault. Code %d\n" \
+	"\t\t  Attempted to access %x which is in a non-paged area."
+
 	IDTEntry entries[IDT_ENTRY_COUNT];
 	IDTPtr	 ptr;
 	Handler	 handlers[IDT_ENTRY_COUNT];
@@ -13,18 +17,13 @@ namespace IDT
 	void init()
 	{
 		// Setup PIC
-		info("Remapping IRQ table...");
 		pic_remap();
-		info("IRQ table remapped.");
-
-		info("Initializing IDT...");
 
 		ptr.limit = (sizeof(IDTEntry) * IDT_ENTRY_COUNT) - 1;
 		ptr.base = (uint32_t)&entries;
 
 		memset(&entries, 0, sizeof(IDTEntry) * IDT_ENTRY_COUNT);
 
-		info("Setting ISR gates...");
 		setGate(ISR0, (uint32_t)isr0, 0x08, 0x8E);
 		setGate(ISR1, (uint32_t)isr1, 0x08, 0x8E);
 		setGate(ISR2, (uint32_t)isr2, 0x08, 0x8E);
@@ -58,10 +57,8 @@ namespace IDT
 		setGate(ISR30, (uint32_t)isr30, 0x08, 0x8E);
 		setGate(ISR31, (uint32_t)isr31, 0x08, 0x8E);
 
-		info("Setting system calls...");
 		setGate(ISR128, (uint32_t)isr128, 0x08, 0x8E);
 
-		info("Setting IRQ gates...");
 		setGate(IRQ0, (uint32_t)irq0, 0x08, 0x8E);
 		setGate(IRQ1, (uint32_t)irq1, 0x08, 0x8E);
 		setGate(IRQ2, (uint32_t)irq2, 0x08, 0x8E);
@@ -79,7 +76,6 @@ namespace IDT
 		setGate(IRQ14, (uint32_t)irq14, 0x08, 0x8E);
 		setGate(IRQ15, (uint32_t)irq15, 0x08, 0x8E);
 
-		info("Loading IDT...");
 		loadIDT((uint32_t)&ptr);
 		success("IDT initialized.");
 	}
@@ -96,20 +92,18 @@ namespace IDT
 
 	void registerInterruptHandler(uint32_t index, Handler handler)
 	{
-		info("Registering %s interrupt handler...", idt_messages[index], index);
 		handlers[index] = handler;
-		debug("%s interrupt handler registered at: %x", idt_messages[index], handler);
 	}
 
 	void unregisterInterruptHandler(uint32_t index)
 	{
-		info("Unregistering interrupt handler %d...", index);
 		handlers[index] = 0;
 	}
 
 	// Interrupt service routines
 	void isrHandler(Registers regs)
 	{
+
 		uint8_t isr_no = regs.int_no;
 		switch (isr_no)
 		{
@@ -123,7 +117,7 @@ namespace IDT
 				// Obtain the fault address from the CR2 register.
 				uint32_t addr;
 				asm("movl %%cr2, %0" : "=r"(addr));
-				panic("Page fault thrown at %x.", addr);
+				panic(PAGE_FAULT_MESSAGE, regs.err_code, addr);
 				break;
 			case SYSTEM_CALL:
 				{

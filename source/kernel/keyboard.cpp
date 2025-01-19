@@ -11,8 +11,6 @@ namespace Keyboard
 
 	void init()
 	{
-		debug("Initializing keyboard...");
-
 		// Wait for the keyboard to be available.
 		while (inb(KEYBOARD_STATUS_PORT) & KEYBOARD_INPUT_FULL)
 		{

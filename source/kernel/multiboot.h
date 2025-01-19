@@ -272,16 +272,21 @@ struct multiboot_apm_info
 	uint16_t dseg_len;
 };
 
-static void initMultiboot(MultibootInfo* info, uint32_t* address, uint32_t* size)
+namespace Multiboot
 {
-	MBMEntry* mmap = (MBMEntry*)info->mmapAddress;
-	while ((uintptr_t)mmap < info->mmapAddress + info->mmapLength)
+	static void init(MultibootInfo* info, uint32_t* address, uint32_t* size)
 	{
-		if (mmap->lengthLow > *size && mmap->type == MULTIBOOT_MEMORY_AVAILABLE)
+		debug("Multiboot memory map:");
+		MBMEntry* mmap = (MBMEntry*)info->mmapAddress;
+		while ((uintptr_t)mmap < info->mmapAddress + info->mmapLength)
 		{
-			*size = mmap->lengthLow;
-			*address = mmap->addressLow;
+			printf("\taddr=%x, size=%d\n", mmap->addressLow, mmap->lengthLow);
+			if (mmap->lengthLow > *size && mmap->type == MULTIBOOT_MEMORY_AVAILABLE)
+			{
+				*size = mmap->lengthLow;
+				*address = mmap->addressLow;
+			}
+			mmap = (MBMEntry*)((uint32_t)mmap + mmap->size + sizeof(uint32_t));
 		}
-		mmap = (MBMEntry*)((uint32_t)mmap + mmap->size + sizeof(uint32_t));
 	}
-}
+} // namespace Multiboot

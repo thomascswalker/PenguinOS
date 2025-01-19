@@ -4,7 +4,7 @@
 #include <math.h>
 #include <stdio.h>
 
-#define VIRTUAL_START 0xC0100000 // 3GB + 1MB
+#define VIRTUAL_START 0xC0000000 // 3GB
 #define ALLOCATE_OFFSET 0x10000
 #define BLOCK_SIZE 0x1000
 #define BLOCKS_PER_BYTE 32

@@ -2,8 +2,6 @@
 
 void GDT::init()
 {
-	info("Initializing GDT...");
-
 	ptr.limit = (sizeof(GDTEntry) * GDT_ENTRY_COUNT) - 1;
 	ptr.base = (uint32_t)&entries;
 
