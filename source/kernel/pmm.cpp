@@ -89,7 +89,7 @@ uint32_t* BlockAllocator::allocate(uint32_t blockCount)
 		return nullptr;
 	}
 
-	uint32_t startBlock = getNext(blockCount);
+	int32_t startBlock = getNext(blockCount);
 	if (startBlock == -1)
 	{
 		error("Unable to find contiguous block sequence of size %d.", blockCount);

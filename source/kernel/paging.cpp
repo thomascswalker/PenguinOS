@@ -2,8 +2,8 @@
 #include <paging.h>
 #include <stdio.h>
 
-EXTERN uint32_t pagingStart; // 0x101000
-static uint32_t pagingEnd;	 // 0x501000, 4MB long
+EXTERN uint32_t	 pagingStart; // 0x101000
+static uint32_t* pagingEnd;	  // 0x501000, 4MB long
 
 static uint32_t* pageDirectory = (uint32_t*)&pagingStart; // 0x101000
 static uint32_t* pageTables = nullptr; // 0x105000, 0x1000 from the start of pageDirectory
@@ -13,8 +13,11 @@ Initialize paging. Paging is already enabled in boot.s.
 */
 void Paging::init()
 {
-	debug("Page directory is at %x.", pageDirectory);
-	debug("Page start %x, end %x.", &pagingStart, &pagingStart + (TABLE_COUNT * PAGE_COUNT));
+	// The page directory ends 4MB (size of table entries) + 4KB
+	// (size of directory entries) from the start of the directory.
+	pagingEnd = &pagingStart + (TABLE_COUNT * PAGE_COUNT * 4) + 0x1000;
+	debug("Page directory is from %x to %x (%dB).", &pagingStart, pagingEnd,
+		pagingEnd - &pagingStart);
 	pageTables = pageDirectory + 0x1000;
 	ASSERT(pageDirectory == pageTables - 0x1000);
 	debug("Page tables start at %x.", pageTables);
@@ -23,8 +26,10 @@ void Paging::init()
 	uint32_t index = getPageTableIndex((uint32_t)&kernelStart);
 	debug("Initializing table %d.", index);
 	TPageTable* table = getPageTable(index);
+
 	// Set this table's flags to [Present | ReadWrite].
 	*table = PTE_Present | PTE_ReadWrite;
+
 	// Set the first entry in the page directory to this table,
 	// also setting the flags to [Present | ReadWrite].
 	pageDirectory[0] = (uint32_t)table | PDE_Present | PDE_ReadWrite;
@@ -46,7 +51,14 @@ void Paging::init()
 
 void Paging::map(VirtualAddress vaddr, PhysicalAddress paddr)
 {
-	debug("Mapping %x to %x.", vaddr, paddr);
+	if (vaddr == paddr)
+	{
+		debug("Identity mapping %x.", vaddr);
+	}
+	else
+	{
+		debug("Mapping %x to %x.", vaddr, paddr);
+	}
 	TPage* page = getPage(vaddr);
 	*page = paddr | 0x1; // Present
 }
@@ -64,16 +76,37 @@ TPageTable* Paging::getPageTable(uint32_t index)
 	return pageTables + (index * TABLE_SIZE);
 }
 
+/*
+		Virtual Address
+-------------------------------
+| 10 bits | 10 bits | 12 bits |
+-------------------------------
+	^
+*/
 constexpr uint32_t Paging::getPageDirectoryIndex(VirtualAddress vaddr)
 {
 	return (vaddr >> 22);
 }
 
+/*
+		Virtual Address
+-------------------------------
+| 10 bits | 10 bits | 12 bits |
+-------------------------------
+			   ^
+*/
 constexpr uint32_t Paging::getPageTableIndex(VirtualAddress vaddr)
 {
 	return ((vaddr >> 12) & 0x3FF);
 }
 
+/*
+		Virtual Address
+-------------------------------
+| 10 bits | 10 bits | 12 bits |
+-------------------------------
+						 ^
+*/
 constexpr uint32_t Paging::getPhysicalAddress(VirtualAddress vaddr)
 {
 	return (vaddr & 0xFFF);
