@@ -26,11 +26,11 @@ void PIT::init()
 void PIT::callback(Registers regs)
 {
 	g_ticks++;
-	// TODO: Causes page fault at 0x1700
-	// if (SLEEP_TICK > 0)
-	// {
-	// 	SLEEP_TICK--;
-	// }
+	// TODO: Causes page fault at tick location
+	if (SLEEP_TICK > 0)
+	{
+		SLEEP_TICK--;
+	}
 }
 
 uint32_t PIT::getPITCount()

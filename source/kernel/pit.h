@@ -12,8 +12,11 @@
 
 // Global ticks for the timer.
 static uint32_t g_ticks = 0;
+
+// TODO: Resolve this mess. Why do we need a pointer to the
+// sleep tick? Can't we just use a normal static int?
 // Sleep tick memory is stored at a specific location.
-#define SLEEP_TICK_LOCATION 0x1700
+#define SLEEP_TICK_LOCATION (0xC0000000 + 0x1700)
 // Initialize `g_sleep_ticks` at specific location.
 static uint32_t* g_sleep_ticks = (uint32_t*)SLEEP_TICK_LOCATION;
 #define SLEEP_TICK_PTR ((uint32_t*)SLEEP_TICK_LOCATION) // Pointer to `g_sleep_ticks`.
