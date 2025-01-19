@@ -6,14 +6,13 @@
 
 // Printing
 
-enum format_spec
+enum FormatSpec
 {
 	FMT_CHAR = 'c',
 	FMT_STRING = 's',
 	FMT_INT = 'd',
 	FMT_HEX = 'x'
 };
-typedef enum format_spec format_spec_t;
 
 void	 print(const char* str);
 void	 println(const char* str);
@@ -26,3 +25,8 @@ void warning(const char* format, ...);
 void error(const char* format, ...);
 void success(const char* format, ...);
 void panic(const char* format, ...);
+
+#define debugd(v) debug("%s: %d", #v, v)
+#define debugx(v) debug("%s: %x", #v, v)
+#define debugs(v) debug("%s: %s", #v, v)
+#define debugc(v) debug("%s: %c", #v, v)

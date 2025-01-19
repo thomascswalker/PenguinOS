@@ -23,6 +23,7 @@
 #pragma once
 
 #include <stdint.h>
+#include <stdio.h>
 
 /* How many bytes from the start of the file we search for the header. */
 #define MULTIBOOT_SEARCH 8192
@@ -91,7 +92,7 @@
 #define MULTIBOOT_INFO_VBE_INFO 0x00000800
 #define MULTIBOOT_INFO_FRAMEBUFFER_INFO 0x00001000
 
-struct multiboot_header
+struct MultibootHeader
 {
 	/* Must be MULTIBOOT_MAGIC - see above. */
 	uint32_t magic;
@@ -103,14 +104,14 @@ struct multiboot_header
 	uint32_t checksum;
 
 	/* These are only valid if MULTIBOOT_AOUT_KLUDGE is set. */
-	uint32_t header_addr;
-	uint32_t load_addr;
-	uint32_t load_end_addr;
-	uint32_t bss_end_addr;
-	uint32_t entry_addr;
+	uint32_t headerAddress;
+	uint32_t loadAddress;
+	uint32_t loadEndAddress;
+	uint32_t bssEndAddress;
+	uint32_t entryAddress;
 
 	/* These are only valid if MULTIBOOT_VIDEO_MODE is set. */
-	uint32_t mode_type;
+	uint32_t modeType;
 	uint32_t width;
 	uint32_t height;
 	uint32_t depth;
@@ -136,24 +137,24 @@ struct multiboot_elf_section_header_table
 };
 typedef struct multiboot_elf_section_header_table multiboot_elf_section_header_table_t;
 
-struct multiboot_info
+struct MultibootInfo
 {
 	/* Multiboot info version number */
 	uint32_t flags;
 
 	/* Available memory from BIOS */
-	uint32_t mem_lower;
-	uint32_t mem_upper;
+	uint32_t memLower;
+	uint32_t memUpper;
 
 	/* "root" partition */
-	uint32_t boot_device;
+	uint32_t bootDevice;
 
 	/* Kernel command line */
 	uint32_t cmdline;
 
 	/* Boot-Module list */
-	uint32_t mods_count;
-	uint32_t mods_addr;
+	uint32_t moduleCount;
+	uint32_t moduleAddress;
 
 	union
 	{
@@ -162,21 +163,21 @@ struct multiboot_info
 	} u;
 
 	/* Memory Mapping buffer */
-	uint32_t mmap_length;
-	uint32_t mmap_addr;
+	uint32_t mmapLength;
+	uint32_t mmapAddress;
 
 	/* Drive Info buffer */
-	uint32_t drives_length;
-	uint32_t drives_addr;
+	uint32_t drivesLength;
+	uint32_t drivesAddress;
 
 	/* ROM configuration table */
-	uint32_t config_table;
+	uint32_t configTable;
 
 	/* Boot Loader Name */
-	uint32_t boot_loader_name;
+	uint32_t bootLoaderName;
 
 	/* APM table */
-	uint32_t apm_table;
+	uint32_t apmTable;
 
 	/* Video */
 	uint32_t vbe_control_info;
@@ -214,7 +215,6 @@ struct multiboot_info
 		};
 	};
 };
-typedef struct multiboot_info multiboot_info_t;
 
 struct multiboot_color
 {
@@ -223,13 +223,13 @@ struct multiboot_color
 	uint8_t blue;
 };
 
-struct multiboot_mmap_entry
+struct MBMEntry // Memory map entry
 {
 	uint32_t size;
-	uint32_t addr_low;
-	uint32_t addr_high;
-	uint32_t len_low;
-	uint32_t len_high;
+	uint32_t addressLow;
+	uint32_t addressHigh;
+	uint32_t lengthLow;
+	uint32_t lengthHigh;
 #define MULTIBOOT_MEMORY_AVAILABLE 1
 #define MULTIBOOT_MEMORY_RESERVED 2
 #define MULTIBOOT_MEMORY_ACPI_RECLAIMABLE 3
@@ -237,14 +237,12 @@ struct multiboot_mmap_entry
 #define MULTIBOOT_MEMORY_BADRAM 5
 	uint32_t type;
 } __attribute__((packed));
-typedef struct multiboot_mmap_entry multiboot_mmap_entry_t;
 
-struct multiboot_mmap
+struct MBMMap // Memory map
 {
-	uint32_t			   count;
-	multiboot_mmap_entry_t entries[144];
+	uint32_t count;
+	MBMEntry entries[144];
 };
-typedef struct multiboot_mmap multiboot_mmap_t;
 
 struct multiboot_mod_list
 {
@@ -273,3 +271,22 @@ struct multiboot_apm_info
 	uint16_t cseg_16_len;
 	uint16_t dseg_len;
 };
+
+namespace Multiboot
+{
+	static void init(MultibootInfo* info, uint32_t* address, uint32_t* size)
+	{
+		debug("Multiboot memory map:");
+		MBMEntry* mmap = (MBMEntry*)info->mmapAddress;
+		while ((uintptr_t)mmap < info->mmapAddress + info->mmapLength)
+		{
+			printf("\taddr=%x, size=%d\n", mmap->addressLow, mmap->lengthLow);
+			if (mmap->lengthLow > *size && mmap->type == MULTIBOOT_MEMORY_AVAILABLE)
+			{
+				*size = mmap->lengthLow;
+				*address = mmap->addressLow;
+			}
+			mmap = (MBMEntry*)((uint32_t)mmap + mmap->size + sizeof(uint32_t));
+		}
+	}
+} // namespace Multiboot

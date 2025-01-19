@@ -10,8 +10,9 @@
 // Keyboard status
 #define KEYBOARD_OUTPUT_FULL 0x01
 #define KEYBOARD_INPUT_FULL 0x02
+#define KEYBOARD_RELEASED 0x80
 
-enum scancode
+enum ScanCode
 {
 	SC_ESC = 0X01,			// Esc
 	SC_1 = 0x02,			// 1
@@ -81,17 +82,15 @@ enum scancode
 	SC_F9 = 0x43,			// F9
 	SC_F10 = 0x44,			// F10
 };
-typedef enum scancode scancode_t;
 
-struct keycode
+struct KeyCode
 {
-	scancode_t code;
-	char	   lower;
-	char	   upper;
+	ScanCode code;
+	char	 lower;
+	char	 upper;
 };
-typedef struct keycode keycode_t;
 
-static keycode_t keymap[] = {
+static KeyCode keymap[] = {
 	{ SC_1,			'1',	 '!' },
 	{ SC_2,			'2',	 '@' },
 	{ SC_3,			'3',	 '#' },
@@ -149,17 +148,20 @@ static keycode_t keymap[] = {
 	{ SC_CAPSLOCK,	   0,	  0	},
 };
 
-enum modifier_key
+enum ModifierKey
 {
 	MOD_SHIFT = 1 << 0,
 	MOD_CONTROL = 1 << 1,
 	MOD_ALT = 1 << 2,
 	MOD_COMMAND = 1 << 3,
 };
-typedef enum modifier_key modifier_key_t;
 
-void init_keyboard();
-void keyboard_callback(registers_t regs);
-void on_key_released(keycode_t* kc);
-void on_key_pressed(keycode_t* kc);
-bool is_shift_down();
+namespace Keyboard
+{
+	void init();
+	void callback(Registers regs);
+	bool getKeycode(ScanCode sc, KeyCode* kc);
+	void onKeyReleased(KeyCode* kc);
+	void onKeyPressed(KeyCode* kc);
+	bool isShiftDown();
+} // namespace Keyboard

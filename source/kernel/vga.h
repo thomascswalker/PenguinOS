@@ -18,10 +18,11 @@
 #define VGA_SIZE (VGA_WIDTH * VGA_HEIGHT)
 
 // The starting point of the terminal's text buffer in memory.
-#define TERMINAL_BUFFER_START (uint16_t*)0xC00B8000
+#define VGA_BUFFER_START (uint16_t*)(0xB8000 + 0xC0000000)
+#define TEXT_BLANK 1824 // ' ' with black background
 
 /* Hardware text mode color constants. */
-typedef enum vga_color
+enum EVGAColor : uint8_t
 {
 	VGA_COLOR_BLACK = 0,
 	VGA_COLOR_BLUE = 1,
@@ -41,44 +42,28 @@ typedef enum vga_color
 	VGA_COLOR_WHITE = 15,
 	VGA_COLOR_DEFAULT = VGA_COLOR_LIGHT_GREY,
 	VGA_COLOR_BACKGROUND = VGA_COLOR_BLACK,
-} vga_color_t;
+};
 
-// Terminal containing a 16-bit text buffer.
-typedef struct terminal
+namespace VGA
 {
-	uint16_t* buffer; // Buffer of all terminal text.
-	uint16_t  color;  // The current cursor color.
-	int32_t	  row;	  // The current cursor row.
-	int32_t	  column; // The current cursor column.
-} terminal_t;
+	static uint16_t* buffer;
+	static uint8_t	 color;
+	static int32_t	 row;
+	static int32_t	 column;
 
-// Global terminal object.
-static terminal_t g_terminal;
-
-// VGA
-
-uint16_t make_entry_color(vga_color_t fore_color, vga_color_t back_color);
-uint16_t create_entry(uint8_t character, uint8_t color);
-
-// Cursor
-
-uint32_t get_cursor_pos();
-void	 set_cursor_pos(int8_t x, int8_t y);
-void	 update_cursor_pos();
-void	 enable_cursor(uint8_t start, uint8_t end);
-void	 disable_cursor();
-
-// Terminal
-
-void clear_terminal();
-void init_terminal();
-void putchar(char c);
-void remchar();
-void terminal_new_line();
-void write_terminal(const char* data, size_t size);
-void scroll_terminal();
-
-// Terminal color
-
-void set_terminal_color(uint8_t color);
-void reset_terminal_color();
+	void	 init();
+	uint16_t createEntry(char character, uint8_t color);
+	uint32_t getCursorPosition();
+	void	 setCursorPosition(int32_t x, int32_t y);
+	void	 updateCursorPosition();
+	void	 enableCursor(uint32_t start, uint32_t end);
+	void	 disableCursor();
+	void	 clear();
+	void	 setForeColor(uint8_t newColor);
+	void	 setBackColor(uint8_t newColor);
+	void	 resetColor();
+	void	 put(char c);
+	void	 remchar();
+	void	 insertNewLine();
+	void	 scroll();
+} // namespace VGA

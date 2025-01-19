@@ -1,7 +1,7 @@
 section .text
 
-global load_idt
-load_idt:
+global loadIDT
+loadIDT:
     mov eax, [esp + 4]                                      ; Get first param, pointer to our IDT
     lidt [eax]                                              ; Load the IDT pointer
     ret
@@ -12,7 +12,7 @@ isr%1:
     cli
     push 0
     push %1                                                 ; Push interrupt number
-    jmp isr_common_stub
+    jmp isrCommon
 %endmacro
 
 %macro ISR_ERRCODE 1
@@ -20,7 +20,7 @@ global isr%1
 isr%1:
     cli
     push %1                                                 ; Push error code
-    jmp isr_common_stub
+    jmp isrCommon
 %endmacro
 
 ISR_NOERRORCODE 0
@@ -56,8 +56,10 @@ ISR_NOERRORCODE 29
 ISR_NOERRORCODE 30
 ISR_NOERRORCODE 31
 
-extern isr_handler
-isr_common_stub:
+ISR_NOERRORCODE 128
+
+extern isrHandler
+isrCommon:
     pusha
 
     mov	    ax, ds
@@ -70,7 +72,7 @@ isr_common_stub:
     mov 	fs, ax
     mov 	gs, ax
 
-    call	isr_handler
+    call	isrHandler
 
     pop	    ebx
     mov 	ebx, esi
@@ -91,7 +93,7 @@ irq%1:
     cli
     push 0                                                  ; Push default error code of 0
     push %2                                                 ; Push interrupt number
-    jmp irq_common_stub
+    jmp irqCommon
 %endmacro
 
 IRQ 0, 32
@@ -111,8 +113,8 @@ IRQ 13, 45
 IRQ 14, 46
 IRQ 15, 47
 
-extern irq_handler
-irq_common_stub:
+extern irqHandler
+irqCommon:
     pusha
 
     mov	    ax, ds
@@ -125,7 +127,7 @@ irq_common_stub:
     mov 	fs, ax
     mov 	gs, ax
 
-    call	irq_handler
+    call	irqHandler
 
     pop	    ebx
     mov 	ebx, esi

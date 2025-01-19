@@ -18,7 +18,7 @@ compile_source_file() {
     debug "Compiling '$1'..."
     BASE_FILENAME=$(basename $1 | sed 's/\.[^.]*$//')
     OUT_FILENAME="${BUILD_DIR}/${BASE_FILENAME}_c.o"
-    $GCC -std=$C_VERSION $CFLAGS -nostdlib -fno-builtin -Wno-unused-function -Wno-unused-parameter -Wno-unused-variable -Wno-parentheses $INCLUDE_ARGS -c -o $OUT_FILENAME $1
+    $GCC -std=$CPP_VERSION $CFLAGS -nostdlib -fno-builtin -Wno-unused-function -Wno-unused-parameter -Wno-unused-variable -Wno-parentheses $INCLUDE_ARGS -c -o $OUT_FILENAME $1
     verify_file $OUT_FILENAME
     OBJ_FILES+=($OUT_FILENAME)
 }
@@ -36,11 +36,11 @@ assemble_source_file "${SOURCE_DIR}/kernel/gdt.s"
 assemble_source_file "${SOURCE_DIR}/kernel/idt.s"
 
 # Compile the kernel
-info "Generating C source code..."
+info "Generating CPP source code..."
 debug "Compiling with include directories: ${INCLUDE_ARGS}"
-c_files=$(find "./source/" -type f -name "*.c")
-for c_file in ${c_files[@]}; do
-    compile_source_file $c_file
+cpp_files=$(find "./source/" -type f -name "*.cpp" -o -name "*.c")
+for cpp_file in ${cpp_files[@]}; do
+    compile_source_file $cpp_file
 done
 
 # Link the kernel and all source files

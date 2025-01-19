@@ -2,9 +2,12 @@
 
 #include <ctype.h>
 
-#define asm __asm__ volatile
+#define KB 0x400
+#define MB 0x100000
+#define GB 0x40000000
+#define asm __asm__ __volatile__
 
-struct registers
+struct Registers
 {
 	/* Pushed by common stub. */
 	uint32_t ds, edi, esi, ebp, esp, ebx, edx, ecx, eax;
@@ -13,18 +16,9 @@ struct registers
 	/* Pushed by interrupt. */
 	uint32_t eip, cs, eflags, useresp, ss;
 };
-typedef struct registers registers_t;
 
 // Function pointer to an IRQ callback
-typedef void (*handler_t)(registers_t);
-
-enum privelege_level
-{
-	RING0,
-	RING1,
-	RING2,
-	RING3
-};
+typedef void (*Handler)(Registers);
 
 // Reads a byte of data from the specified IO port
 static inline uint8_t inb(uint16_t port)
@@ -45,14 +39,21 @@ static inline void outw(uint16_t port, uint16_t data)
 	asm("outw %1, %0" : : "Nd"(port), "a"(data));
 }
 
-static inline void disable_interrupts()
+static inline void disableInterrupts()
 {
 	asm("cli");
 }
 
-static inline void enable_interrupts()
+static inline void enableInterrupts()
 {
 	asm("sti");
+}
+
+static inline void pause()
+{
+	while (true)
+	{
+	}
 }
 
 static inline void halt()
@@ -72,3 +73,5 @@ static inline void invalidate(uint32_t vaddr)
 {
 	asm("invlpg %0" ::"m"(vaddr));
 }
+
+void sleep(uint32_t seconds);

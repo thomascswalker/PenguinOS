@@ -1,11 +1,12 @@
 #!/bin/bash
 
 export C_VERSION=c23
+export CPP_VERSION=c++23
 
 export MAKE=${MAKE:-make}
 
 export HOST=i686-elf
-export GCC=${HOST}-gcc
+export GCC=${HOST}-g++
 export AS=nasm
 
 export SOURCE_DIR="./source"
