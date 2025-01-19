@@ -27,7 +27,7 @@ EXTERN void kmain(MultibootInfo* info, uint32_t magic)
 
 	Multiboot::init(info, &heapAddr, &heapSize);
 
-	PMM::init(heapAddr, heapSize);
+	// PMM::init(heapAddr, heapSize);
 	Paging::init();
 
 	while (1)

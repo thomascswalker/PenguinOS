@@ -8,7 +8,7 @@ namespace IDT
 
 #define PAGE_FAULT_MESSAGE  \
 	"Page fault. Code %d\n" \
-	"\t\t  Attempted to access %x which is in a non-paged area."
+	"\t\t  Attempted to access %x which caused a %s violation."
 
 	IDTEntry entries[IDT_ENTRY_COUNT];
 	IDTPtr	 ptr;
@@ -103,10 +103,15 @@ namespace IDT
 	// Interrupt service routines
 	void isrHandler(Registers regs)
 	{
-
-		uint8_t isr_no = regs.int_no;
+		uint8_t		isr_no = regs.int_no;
+		uint8_t		e = regs.err_code;
+		const char* violationMessage = (e & 0x1) ? "page-protection" : "non-present page";
 		switch (isr_no)
 		{
+			case INVALID_OPCODE:
+				dumpRegisters(&regs);
+				panic("Invalid opcode!");
+				break;
 			case DOUBLE_FAULT:
 				panic("Double Fault. Code: %d", regs.err_code);
 				break;
@@ -117,7 +122,7 @@ namespace IDT
 				// Obtain the fault address from the CR2 register.
 				uint32_t addr;
 				asm("movl %%cr2, %0" : "=r"(addr));
-				panic(PAGE_FAULT_MESSAGE, regs.err_code, addr);
+				panic(PAGE_FAULT_MESSAGE, regs.err_code, addr, violationMessage);
 				break;
 			case SYSTEM_CALL:
 				{

@@ -3,6 +3,7 @@
 #include <sys.h>
 
 #define DIVIDE_BY_ZERO 0x00
+#define INVALID_OPCODE 0x06
 #define DOUBLE_FAULT 0x08
 #define GENERAL_PROTECTION_FAULT 0x0D
 #define PAGE_FAULT 0x0E
