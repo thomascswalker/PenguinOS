@@ -155,6 +155,7 @@ void BlockAllocator::deinitRegion(uint32_t address, uint32_t size)
 
 void PMM::init(uint32_t address, uint32_t memorySize)
 {
+	debug("Initializing heap at %x with %d bytes.", address, memorySize);
 	// Initialize the heap at the end of the kernel.
 	heapStart = (uint8_t*)ALIGN(address, BLOCK_SIZE);
 
@@ -184,7 +185,7 @@ void PMM::init(uint32_t address, uint32_t memorySize)
 	---------------------------------------
 	*/
 	// Move the allocator pointer to the heap start
-	allocator = (BlockAllocator*)heapStart + 0x10000;
+	allocator = (BlockAllocator*)(heapStart + 0x10000);
 	// Construct a new BlockAllocator at the allocator pointer
 	*allocator = BlockAllocator(maxBlocks);
 }

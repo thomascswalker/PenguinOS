@@ -2,11 +2,9 @@
 #include <paging.h>
 #include <stdio.h>
 
-EXTERN uint32_t	 pagingStart; // 0x101000
-static uint32_t* pagingEnd;	  // 0x501000, 4MB long
-
+EXTERN uint32_t	 pagingStart;							  // 0x101000
+static uint32_t* pagingEnd;								  // 0x102000, 4MB long
 static uint32_t* pageDirectory = (uint32_t*)&pagingStart; // 0x101000
-static uint32_t* pageTables = nullptr; // 0x105000, 0x1000 from the start of pageDirectory
 
 /*
 Initialize paging. Paging is already enabled in boot.s.
@@ -15,24 +13,15 @@ void Paging::init()
 {
 	// The page directory ends 4MB (size of table entries) + 4KB
 	// (size of directory entries) from the start of the directory.
-	pagingEnd = &pagingStart + (TABLE_COUNT * PAGE_COUNT * 4) + 0x1000;
+	pagingEnd = &pagingStart + 0x1000;
 	debug("Page directory is from %x to %x (%dB).", &pagingStart, pagingEnd,
 		pagingEnd - &pagingStart);
-	pageTables = pageDirectory + 0x1000;
-	ASSERT(pageDirectory == pageTables - 0x1000);
-	debug("Page tables start at %x.", pageTables);
 
-	// Get the first table in the table array
-	uint32_t index = getPageTableIndex((uint32_t)&kernelStart);
-	debug("Initializing table %d.", index);
-	TPageTable* table = getPageTable(index);
-
-	// Set this table's flags to [Present | ReadWrite].
-	*table = PTE_Present | PTE_ReadWrite;
-
-	// Set the first entry in the page directory to this table,
-	// also setting the flags to [Present | ReadWrite].
-	pageDirectory[0] = (uint32_t)table | PDE_Present | PDE_ReadWrite;
+	// Set all entries in the page directory to ReadWrite,
+	// but not present. As we allocate tables they will
+	// become present.
+	debug("Setting all page directory entries to [ReadWrite].");
+	memset(pageDirectory, PDE_ReadWrite, 1024);
 
 	// Identity map the number of pages enough to cover
 	// the size of the kernel. This maps the kernel to itself
@@ -40,12 +29,13 @@ void Paging::init()
 	// page fault exception.
 	uint32_t kernelSize = &kernelEnd - &kernelStart;
 	uint32_t kernelPageCount = ceildiv(kernelSize, PAGE_SIZE);
-	debug("Identity mapping %d pages.", kernelPageCount);
+	debug("Identity mapping %d pages for kernel size %d bytes.", kernelPageCount, kernelSize);
 	for (uint32_t i = 0; i < kernelPageCount; i++)
 	{
-		PhysicalAddress address = (uint32_t)&kernelStart + (i * PAGE_SIZE);
+		VirtualAddress address = (uint32_t)&kernelStart + (i * PAGE_SIZE);
 		map(address, address);
 	}
+
 	debug("Identity mapping complete.");
 }
 
@@ -59,21 +49,36 @@ void Paging::map(VirtualAddress vaddr, PhysicalAddress paddr)
 	{
 		debug("Mapping %x to %x.", vaddr, paddr);
 	}
-	TPage* page = getPage(vaddr);
-	*page = paddr | 0x1; // Present
-}
 
-TPage* Paging::getPage(VirtualAddress vaddr)
-{
-	uint32_t  pdIndex = getPageDirectoryIndex(vaddr);
-	uint32_t  ptIndex = getPageTableIndex(vaddr);
-	uint32_t* table = getPageTable(pdIndex);
-	return &table[ptIndex];
-}
+	// Get the Page Directory and Page Table indexes
+	// stored in this virtual address.
+	uint32_t pdIndex = getPageDirectoryIndex(vaddr);
+	uint32_t ptIndex = getPageTableIndex(vaddr);
 
-TPageTable* Paging::getPageTable(uint32_t index)
-{
-	return pageTables + (index * TABLE_SIZE);
+	uint32_t* pdEntry = &pageDirectory[pdIndex];
+	uint32_t  ptAddress = *pdEntry;
+	uint32_t* table = (uint32_t*)ptAddress;
+
+	// Is there a corresponding page table yet?
+	// If no, create a new table (allocating a block)
+	// and set the corresponding index in the page directory
+	// to the table.
+	if (!hasFlag(pdEntry, PDE_Present))
+	{
+		debug("Table %d not found. Making new table.", pdIndex);
+		table = createPageTable(pdEntry);
+	}
+	// Otherwise just get the existing table.
+	else
+	{
+		table = (uint32_t*)&pageDirectory[pdIndex];
+		debug("Table %d found at %x.", pdIndex, table);
+	}
+
+	TPage* page = &table[ptIndex];
+	*page |= PTE_Present; // Present
+	setPhysicalAddress(page, paddr);
+	debug("Set [%d][%d] to %x.", pdIndex, ptIndex, *page);
 }
 
 /*
@@ -112,6 +117,33 @@ constexpr uint32_t Paging::getPhysicalAddress(VirtualAddress vaddr)
 	return (vaddr & 0xFFF);
 }
 
+void Paging::setPhysicalAddress(uint32_t* entry, uint32_t address)
+{
+	*entry = (*entry & ~0xFFFFF000) | address;
+}
+
+uint32_t* Paging::createPageTable(uint32_t* pdEntry)
+{
+	auto allocator = PMM::getAllocator();
+
+	// Allocate 1 block
+	uint32_t* table = allocator->allocate(1);
+	debug("Allocated new table at %x.", table);
+
+	// Zero out the memory for the table
+	memset(table, 0, 1024);
+
+	// Set the flags for the directory entry associated
+	// with this table to Present and ReadWrite.
+	setFlags(pdEntry, PDE_Present | PDE_ReadWrite);
+
+	// Set the physical address pointed to by the directory
+	// entry to the address of the table we just made.
+	setPhysicalAddress(pdEntry, (uint32_t)table);
+
+	return table;
+}
+
 /*
 	Returns the value of the `CR3` register, which contains
 	the address of the current page directory.
@@ -133,7 +165,22 @@ void Paging::setCurrentPageDirectory(PhysicalAddress address)
 	asm("mov %0, %%cr3" ::"a"(address));
 }
 
-uint32_t Paging::getFlags(VirtualAddress address)
+uint32_t Paging::getFlags(VirtualAddress* address)
 {
-	return address & ~(0xFFFFF000);
+	return *address & ~(0xFFFFF000);
+}
+
+constexpr bool Paging::hasFlag(VirtualAddress* address, uint8_t flag)
+{
+	return (*address & flag) == flag;
+}
+
+void Paging::setFlags(VirtualAddress* address, uint8_t flag)
+{
+	*address |= flag;
+}
+
+void Paging::resetFlags(VirtualAddress* address, uint8_t flag)
+{
+	*address &= ~flag;
 }

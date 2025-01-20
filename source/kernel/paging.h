@@ -32,15 +32,17 @@ namespace Paging
 
 	void map(VirtualAddress vaddr, PhysicalAddress paddr);
 
-	TPage*		getPage(VirtualAddress vaddr);
-	TPageTable* getPageTable(uint32_t index);
-
 	constexpr uint32_t getPageDirectoryIndex(VirtualAddress vaddr);
 	constexpr uint32_t getPageTableIndex(VirtualAddress vaddr);
 	constexpr uint32_t getPhysicalAddress(VirtualAddress vaddr);
+	void			   setPhysicalAddress(uint32_t* entry, uint32_t address);
 
-	uint32_t getCurrentPageDirectory();
-	void	 setCurrentPageDirectory(PhysicalAddress address);
+	uint32_t* createPageTable(uint32_t* pdEntry);
+	uint32_t  getCurrentPageDirectory();
+	void	  setCurrentPageDirectory(PhysicalAddress address);
 
-	uint32_t getFlags(VirtualAddress address);
+	uint32_t	   getFlags(VirtualAddress* address);
+	constexpr bool hasFlag(VirtualAddress* address, uint8_t flag);
+	void		   setFlags(VirtualAddress* address, uint8_t flag);
+	void		   resetFlags(VirtualAddress* address, uint8_t flag);
 } // namespace Paging

@@ -12,7 +12,7 @@ SECTIONS
 	/* Ensure multiboot starts at 1MB. */
 	. = 0x100000;
 
-	.multiboot : {
+	.multiboot ALIGN(4K) : {
 		KEEP(*(.multiboot))
 	}
 
