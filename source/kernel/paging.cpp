@@ -14,20 +14,11 @@ EXTERN uint32_t kernelEnd;
 #define PD_INDEX(address) (address >> 22)
 #define PT_INDEX(address) ((address >> 12) & 0x3FF)
 
-#define PRESENT (1 << 0)
-#define READ_WRITE (1 << 1)
-#define USER_SUP (1 << 2)
-#define PAGE_SIZE (1 << 7)
-
-// EXTERN uint32_t	 pagingStart;							  // 0x101000
-// static uint32_t* pageDirectory = (uint32_t*)&pagingStart; // 0x101000
-
 #define FRAME_MAP_SIZE 0x400000
 static std::BitArray<uint32_t, FRAME_MAP_SIZE> bitmap; // 1048576 bits
 
 static uint32_t pageDirectory[1024] __attribute__((aligned(4096)));
-static uint32_t pageTable1[1024] __attribute__((aligned(4096)));
-static uint32_t pageTable2[1024] __attribute__((aligned(4096)));
+static uint32_t pageTables[6][1024] __attribute__((aligned(4096)));
 
 /*
 Initialize paging. Paging is already enabled in boot.s.
@@ -38,13 +29,17 @@ void Paging::init()
 	debugx(&bitmap);
 
 	// Zero page directory entries
-	for (uint32_t i = 0; i < 1024; i++)
+	for (uint32_t i = 0; i < TABLE_COUNT; i++)
 	{
 		pageDirectory[i] = 0;
 	}
 
-	map(pageTable1, 0, 0);
-	map(pageTable2, 0xC0000000, 0x100000);
+	map(pageTables[0], 0, 0);
+	map(pageTables[1], 0xC0000000, 0x100000);
+	map(pageTables[2], 0xC0100000, 0x200000);
+	map(pageTables[3], 0xC0200000, 0x300000);
+	map(pageTables[4], 0xC0300000, 0x400000);
+	map(pageTables[5], 0xC0400000, 0x500000);
 
 	setPageDirectory(pageDirectory);
 	enablePaging();
@@ -55,11 +50,12 @@ void Paging::map(uint32_t* table, uint32_t vaddr, uint32_t paddr)
 	debug("Mapping %x to %x.", vaddr, paddr);
 	uint32_t pdIndex = PD_INDEX(vaddr);
 
-	for (uint32_t i = 0; i < 1024; i++)
+	for (uint32_t i = 0; i < PAGE_COUNT; i++)
 	{
-		table[i] = (paddr + (i * 0x1000)) | 0x3;
+		auto address = paddr + (i * PAGE_SIZE);
+		table[i] = address | Present | ReadWrite;
 	}
-	pageDirectory[pdIndex] = ((uint32_t)table) | 0x3;
+	pageDirectory[pdIndex] = (uint32_t)table | Present | ReadWrite;
 }
 
 void Paging::setPageDirectory(uint32_t* directory)
