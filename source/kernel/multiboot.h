@@ -280,7 +280,7 @@ namespace Multiboot
 		MBMEntry* mmap = (MBMEntry*)info->mmapAddress;
 		while ((uintptr_t)mmap < info->mmapAddress + info->mmapLength)
 		{
-			printf("\taddr=%x, size=%d\n", mmap->addressLow, mmap->lengthLow);
+			printf("\taddr=%x, size=%d, type=%d\n", mmap->addressLow, mmap->lengthLow, mmap->type);
 			if (mmap->lengthLow > *size && mmap->type == MULTIBOOT_MEMORY_AVAILABLE)
 			{
 				*size = mmap->lengthLow;

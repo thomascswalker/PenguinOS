@@ -53,3 +53,5 @@ dkms.conf
 /.vscode
 /build
 symbols.txt
+bx_enh_dbg.ini
+bx_enh_dbg.ini

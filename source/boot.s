@@ -8,8 +8,6 @@ MB_FLAGS		equ  MB_ALIGN | MB_MEMORY_INFO | MB_GFX		; Multiboot flags.
 MB_MAGIC		equ  0x1BADB002       						; Multiboot MAGIC.
 MB_CHECKSUM		equ  -(MB_MAGIC + MB_FLAGS) 				; Checksum of the above.
 
-KERNEL_VIRTUAL_BASE equ 0xC0000000                          ; 3GB
-
 STACKSIZE equ 16 * 0x400                                    ; 16KB
 
 section .multiboot											; Defines the multiboot header.
@@ -19,33 +17,12 @@ align 4
 	dd MB_CHECKSUM
     dd 0, 0, 0, 0, 0
 
-align 4096
-global pagingStart
-pagingStart:
-    times 1024 dd 0b10000011  ; TODO: Figure out why this triple faults if anything othehr than 0x83
-
 section .text
 global _start
 _start:
-    cli
-    mov ecx, pagingStart                                    ; Store a pointer to the physical address of our page table.
-    mov cr3, ecx                                            ; Move into control register CR3, tells the processor where 
-                                                            ; the location of the page directory and page tables is.
-    mov ecx, cr4
-    or ecx, 0x10                                            ; Set physical address extension
-    mov cr4, ecx
-
-    mov ecx, cr0
-    or ecx, 0x80000000                                      ; Enables paging on our system
-    mov cr0, ecx
-
-    jmp higherHalf
-
-higherHalf:
     mov esp, (stack + STACKSIZE)                            ; Move stack pointer into esp
-    push eax                                                ; Multiboot magic
-    ; add ebx, KERNEL_VIRTUAL_BASE
     push ebx                                                ; Multiboot header
+    push eax                                                ; Multiboot magic
 
     extern kmain                                            ; External reference to kmain
     call kmain                                              ; Call kmain in main.c
