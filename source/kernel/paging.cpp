@@ -3,19 +3,17 @@
 #include <paging.h>
 #include <stdio.h>
 
+#define PAGE_SIZE 4096
+#define PAGE_COUNT 1024
+#define TABLE_COUNT 1024
+#define FRAME_MAP_SIZE (TABLE_COUNT * PAGE_COUNT * sizeof(uint32_t))
+
 EXTERN uint32_t kernelStart;
 EXTERN uint32_t kernelEnd;
 
-#define PD_INDEX(address) (address >> 22)
-#define PT_INDEX(address) ((address >> 12) & 0x3FF)
-
-#define FRAME_MAP_SIZE 0x400000
-static std::BitArray<uint32_t, FRAME_MAP_SIZE> bitmap; // 4194304 bits, 524KB
-
-static uint32_t pageDirectory[TABLE_COUNT] __attribute__((aligned(4096)));			// 4KB
+static std::BitArray<uint32_t, FRAME_MAP_SIZE> bitmap;					   // 4194304 bits, 524KB
+static uint32_t pageDirectory[TABLE_COUNT] __attribute__((aligned(4096))); // 4KB
 static uint32_t pageTables[TABLE_COUNT][PAGE_COUNT] __attribute__((aligned(4096))); // 4MB
-
-static uint32_t nextFreePage = 0;
 
 /*
 Initialize paging. Paging is already enabled in boot.s.
@@ -49,14 +47,15 @@ void Paging::init()
 	enablePaging();
 
 	// Once paging is enabled:
-	// Map kernel (0xC0000000..0xC03FFFFF) to the physical kernel space (0x100000..0x4FFFFF).
+	// Map kernel [0xC0000000..0xC03FFFFF] to the physical kernel space [0x100000..0x4FFFFF].
 	map(0xC0000000, 0x100000);
+
+	success("Paging enabled.");
 }
 
 void Paging::map(uint32_t vaddr, uint32_t paddr)
 {
-	info("Mapping %x to %x.", vaddr, paddr);
-	uint32_t  pdIndex = PD_INDEX(vaddr);
+	uint32_t  pdIndex = getPageDirectoryIndex(vaddr);
 	uint32_t* table = (uint32_t*)pageDirectory[pdIndex];
 
 	// Map all pages within this table
@@ -80,6 +79,16 @@ void* Paging::allocatePage()
 		}
 	}
 	return nullptr;
+}
+
+uint32_t Paging::getPageDirectoryIndex(uint32_t address)
+{
+	return address >> 22;
+}
+
+uint32_t Paging::getPageTableIndex(uint32_t address)
+{
+	return (address >> 12) & 0x3FF;
 }
 
 void Paging::setPageDirectory(uint32_t* directory)

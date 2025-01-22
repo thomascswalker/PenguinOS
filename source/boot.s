@@ -21,8 +21,9 @@ section .text
 global _start
 _start:
     mov esp, (stack + STACKSIZE)                            ; Move stack pointer into esp
-    push ebx                                                ; Multiboot header
-    push eax                                                ; Multiboot magic
+    
+    push eax                                                ; Multiboot header
+    push ebx                                                ; Multiboot magic
 
     extern kmain                                            ; External reference to kmain
     call kmain                                              ; Call kmain in main.c

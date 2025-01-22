@@ -276,9 +276,12 @@ namespace Multiboot
 {
 	static void init(MultibootInfo* info, uint32_t* address, uint32_t* size)
 	{
-		debug("Multiboot memory map:");
+		uint32_t end = info->mmapAddress + info->mmapLength;
+		debug("Total multiboot end address: %x.", end);
+
 		MBMEntry* mmap = (MBMEntry*)info->mmapAddress;
-		while ((uintptr_t)mmap < info->mmapAddress + info->mmapLength)
+
+		while ((uintptr_t)mmap < end)
 		{
 			printf("\taddr=%x, size=%d, type=%d\n", mmap->addressLow, mmap->lengthLow, mmap->type);
 			if (mmap->lengthLow > *size && mmap->type == MULTIBOOT_MEMORY_AVAILABLE)

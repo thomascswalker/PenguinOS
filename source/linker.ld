@@ -3,7 +3,6 @@
 ENTRY(_start)
 OUTPUT_FORMAT(elf32-i386)
 
-MULTIBOOT_ADDR = 0x100000;
 HIGHER_HALF_OFFSET = 0xC0000000;
 
 /* Tell where the various sections of the object files will be put in the final
@@ -11,12 +10,12 @@ HIGHER_HALF_OFFSET = 0xC0000000;
 SECTIONS
 {
 	/* Ensure multiboot starts at 1MB. */
-	. = MULTIBOOT_ADDR;
+	. = 0x100000;
 
-	.multiboot ALIGN(4K) : {
-		KEEP(*(.multiboot))
+	.multiboot ALIGN(4K) :
+	{
+		*(.multiboot)
 	}
-
 
 	kernelStart = . + HIGHER_HALF_OFFSET;
 

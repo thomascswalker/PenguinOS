@@ -14,18 +14,17 @@ static uint32_t heapAddr = 0;
 EXTERN void kmain(MultibootInfo* info, uint32_t magic)
 {
 	VGA::init();
-	// println("Welcome to PengOS!");
-
 	GDT::init();
 	IDT::init();
 	PIT::init();
 	Keyboard::init();
 
-	// // Once everything is initialized, enable interrupts.
+	// Once everything is initialized, enable interrupts.
 	enableInterrupts();
 
-	Multiboot::init(info, &heapAddr, &heapSize);
 	Paging::init();
+
+	println("Welcome to PengOS!");
 
 	while (1)
 	{
