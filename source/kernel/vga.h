@@ -18,7 +18,8 @@
 #define VGA_SIZE (VGA_WIDTH * VGA_HEIGHT)
 
 // The starting point of the terminal's text buffer in memory.
-#define VGA_BUFFER_START (uint16_t*)(0xB8000 + 0xC0000000)
+#define VGA_ADDRESS 0xB8000
+#define VGA_BUFFER_START (uint16_t*)VGA_ADDRESS
 #define TEXT_BLANK 1824 // ' ' with black background
 
 /* Hardware text mode color constants. */

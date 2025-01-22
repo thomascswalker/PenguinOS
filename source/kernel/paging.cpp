@@ -1,139 +1,102 @@
 #include <assert.h>
+#include <bitarray.h>
 #include <paging.h>
 #include <stdio.h>
 
-EXTERN uint32_t	 pagingStart; // 0x101000
-static uint32_t* pagingEnd;	  // 0x501000, 4MB long
+EXTERN uint32_t kernelStart;
+EXTERN uint32_t kernelEnd;
 
-static uint32_t* pageDirectory = (uint32_t*)&pagingStart; // 0x101000
-static uint32_t* pageTables = nullptr; // 0x105000, 0x1000 from the start of pageDirectory
+#define PD_INDEX(address) (address >> 22)
+#define PT_INDEX(address) ((address >> 12) & 0x3FF)
+
+#define FRAME_MAP_SIZE 0x400000
+static std::BitArray<uint32_t, FRAME_MAP_SIZE> bitmap; // 4194304 bits, 524KB
+
+static uint32_t pageDirectory[TABLE_COUNT] __attribute__((aligned(4096)));			// 4KB
+static uint32_t pageTables[TABLE_COUNT][PAGE_COUNT] __attribute__((aligned(4096))); // 4MB
+
+static uint32_t nextFreePage = 0;
 
 /*
 Initialize paging. Paging is already enabled in boot.s.
 */
 void Paging::init()
 {
-	// The page directory ends 4MB (size of table entries) + 4KB
-	// (size of directory entries) from the start of the directory.
-	pagingEnd = &pagingStart + (TABLE_COUNT * PAGE_COUNT * 4) + 0x1000;
-	debug("Page directory is from %x to %x (%dB).", &pagingStart, pagingEnd,
-		pagingEnd - &pagingStart);
-	pageTables = pageDirectory + 0x1000;
-	ASSERT(pageDirectory == pageTables - 0x1000);
-	debug("Page tables start at %x.", pageTables);
+	bitmap = std::BitArray<uint32_t, FRAME_MAP_SIZE>();
 
-	// Get the first table in the table array
-	uint32_t index = getPageTableIndex((uint32_t)&kernelStart);
-	debug("Initializing table %d.", index);
-	TPageTable* table = getPageTable(index);
-
-	// Set this table's flags to [Present | ReadWrite].
-	*table = PTE_Present | PTE_ReadWrite;
-
-	// Set the first entry in the page directory to this table,
-	// also setting the flags to [Present | ReadWrite].
-	pageDirectory[0] = (uint32_t)table | PDE_Present | PDE_ReadWrite;
-
-	// Identity map the number of pages enough to cover
-	// the size of the kernel. This maps the kernel to itself
-	// so any memory access of the kernel does not throw a
-	// page fault exception.
-	uint32_t kernelSize = &kernelEnd - &kernelStart;
-	uint32_t kernelPageCount = ceildiv(kernelSize, PAGE_SIZE);
-	debug("Identity mapping %d pages.", kernelPageCount);
-	for (uint32_t i = 0; i < kernelPageCount; i++)
+	// Zero page directory entries
+	for (uint32_t i = 0; i < TABLE_COUNT; i++)
 	{
-		PhysicalAddress address = (uint32_t)&kernelStart + (i * PAGE_SIZE);
-		map(address, address);
+		pageDirectory[i] = 0;
 	}
-	debug("Identity mapping complete.");
-}
+	bitmap.set(0); // The first bit in the bitmap corresponds to the page directory itself
 
-void Paging::map(VirtualAddress vaddr, PhysicalAddress paddr)
-{
-	if (vaddr == paddr)
+	// Set up identity mapping (physical == virtual) for all 1024 page tables
+	for (uint32_t i = 0; i < TABLE_COUNT; i++)
 	{
-		debug("Identity mapping %x.", vaddr);
+		uint32_t* table = (uint32_t*)&pageTables[i];
+		for (uint32_t entry = 0; entry < PAGE_COUNT; entry++)
+		{
+			uint32_t address = (i * PAGE_COUNT * PAGE_SIZE) + (entry * PAGE_SIZE);
+			table[entry] = address | Present | ReadWrite;
+		}
+		// Point page directory to the table
+		pageDirectory[i] = ((uint32_t)table) | Present | ReadWrite;
 	}
-	else
+
+	// Enable paging
+	setPageDirectory(pageDirectory);
+	enablePaging();
+
+	// Once paging is enabled:
+	// Map kernel (0xC0000000..0xC03FFFFF) to the physical kernel space (0x100000..0x4FFFFF).
+	map(0xC0000000, 0x100000);
+}
+
+void Paging::map(uint32_t vaddr, uint32_t paddr)
+{
+	info("Mapping %x to %x.", vaddr, paddr);
+	uint32_t  pdIndex = PD_INDEX(vaddr);
+	uint32_t* table = (uint32_t*)pageDirectory[pdIndex];
+
+	// Map all pages within this table
+	for (uint32_t i = 0; i < PAGE_COUNT; i++)
 	{
-		debug("Mapping %x to %x.", vaddr, paddr);
+		auto address = paddr + (i * PAGE_SIZE); // Page address
+		table[i] = address | Present | ReadWrite;
 	}
-	TPage* page = getPage(vaddr);
-	*page = paddr | 0x1; // Present
+	pageDirectory[pdIndex] = (uint32_t)table | Present | ReadWrite;
 }
 
-TPage* Paging::getPage(VirtualAddress vaddr)
+void* Paging::allocatePage()
 {
-	uint32_t  pdIndex = getPageDirectoryIndex(vaddr);
-	uint32_t  ptIndex = getPageTableIndex(vaddr);
-	uint32_t* table = getPageTable(pdIndex);
-	return &table[ptIndex];
+	// TODO: Test 32 bits at once
+	for (uint32_t i = 0; i < bitmap.bitSize(); i++)
+	{
+		if (!bitmap.test(i))
+		{
+			bitmap.set(i);
+			return (void*)(i * PAGE_SIZE);
+		}
+	}
+	return nullptr;
 }
 
-TPageTable* Paging::getPageTable(uint32_t index)
+void Paging::setPageDirectory(uint32_t* directory)
 {
-	return pageTables + (index * TABLE_SIZE);
+	asm("mov %0, %%cr3" ::"r"(directory));
 }
 
-/*
-		Virtual Address
--------------------------------
-| 10 bits | 10 bits | 12 bits |
--------------------------------
-	^
-*/
-constexpr uint32_t Paging::getPageDirectoryIndex(VirtualAddress vaddr)
+void Paging::enablePaging()
 {
-	return (vaddr >> 22);
-}
+	// Read the current value of CR0
+	uint32_t cr0;
+	asm("mov %%cr0, %0" : "=r"(cr0));
 
-/*
-		Virtual Address
--------------------------------
-| 10 bits | 10 bits | 12 bits |
--------------------------------
-			   ^
-*/
-constexpr uint32_t Paging::getPageTableIndex(VirtualAddress vaddr)
-{
-	return ((vaddr >> 12) & 0x3FF);
-}
+	// Paging is enabled by the setting the highest bit to 1.
+	// Protected mode is enabled by setting the lowest bit to 1.
+	cr0 |= 0x80000001;
 
-/*
-		Virtual Address
--------------------------------
-| 10 bits | 10 bits | 12 bits |
--------------------------------
-						 ^
-*/
-constexpr uint32_t Paging::getPhysicalAddress(VirtualAddress vaddr)
-{
-	return (vaddr & 0xFFF);
-}
-
-/*
-	Returns the value of the `CR3` register, which contains
-	the address of the current page directory.
-*/
-uint32_t Paging::getCurrentPageDirectory()
-{
-	uint32_t out;
-	asm("mov %%cr3, %0" : "=r"(out));
-	return out;
-}
-
-/*
-	Sets the value of `CR3` to point to the new address
-	of the current page directory.
-*/
-void Paging::setCurrentPageDirectory(PhysicalAddress address)
-{
-	debug("Setting current page directory to %x.", address);
-	asm("mov %0, %%cr3" ::"a"(address));
-}
-
-uint32_t Paging::getFlags(VirtualAddress address)
-{
-	return address & ~(0xFFFFF000);
+	// Enable paging (set PG and PE bits in CR0)
+	asm("mov %0, %%cr0" ::"r"(cr0));
 }
