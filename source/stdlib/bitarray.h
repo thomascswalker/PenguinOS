@@ -5,7 +5,8 @@
 
 namespace std
 {
-	template <typename T, uint32_t N> class BitArray
+	template <typename T, uint32_t N>
+	class BitArray
 	{
 		T*		 m_data = nullptr;
 		size_t	 m_size = 0;

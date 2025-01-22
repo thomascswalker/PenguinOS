@@ -17,7 +17,7 @@ namespace IDT
 	void init()
 	{
 		// Setup PIC
-		pic_remap();
+		PIC::remap();
 
 		ptr.limit = (sizeof(IDTEntry) * IDT_ENTRY_COUNT) - 1;
 		ptr.base = (uint32_t)&entries;
@@ -147,13 +147,8 @@ namespace IDT
 		{
 			handler(regs);
 		}
-		// else
-		// {
-		// 	// dumpRegisters(&regs);
-		// 	panic("IRQ handler %d not found!", (irq_no - 32));
-		// }
 
-		pic_send_eoi(irq_no);
+		PIC::sendEOI(irq_no);
 	}
 
 	void dumpRegisters(Registers* reg)

@@ -8,7 +8,10 @@
 #define PIC1_DATA (PIC1_COMMAND + 1)
 #define PIC_EOI 0x20
 
-void pic_irq_mask(uint8_t index);
-void pic_irq_unmask(uint8_t index);
-void pic_remap();
-void pic_send_eoi(uint8_t index);
+namespace PIC
+{
+	void irqMask(uint8_t index);
+	void irqUnmask(uint8_t index);
+	void remap();
+	void sendEOI(uint8_t index);
+} // namespace PIC

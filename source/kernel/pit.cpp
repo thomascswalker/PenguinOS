@@ -18,7 +18,7 @@ void PIT::init()
 	outb(PIT_DATA0, low);
 	outb(PIT_DATA0, high);
 
-	pic_send_eoi(IRQ0);
+	PIC::sendEOI(IRQ0);
 
 	success("Timer initialized.");
 }

@@ -14,8 +14,10 @@ namespace Paging
 		ReadWrite = (1 << 1),
 	};
 
-	void init();
-	void map(uint32_t* table, uint32_t vaddr, uint32_t paddr);
+	void  init();
+	void  map(uint32_t vaddr, uint32_t paddr);
+	void* allocatePage();
+
 	void setPageDirectory(uint32_t* directory);
 	void enablePaging();
 } // namespace Paging
