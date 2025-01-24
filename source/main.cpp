@@ -14,6 +14,10 @@ static uint32_t heapAddr = 0;
 EXTERN void kmain(MultibootInfo* info, uint32_t magic)
 {
 	VGA::init();
+	if (magic != MULTIBOOT_BOOTLOADER_MAGIC)
+	{
+		panic("Invalid Multiboot magic value.");
+	}
 	GDT::init();
 	IDT::init();
 	PIT::init();
@@ -22,6 +26,10 @@ EXTERN void kmain(MultibootInfo* info, uint32_t magic)
 	// Once everything is initialized, enable interrupts.
 	enableInterrupts();
 
+	uint32_t address = 0;
+	uint32_t size = 0;
+	Multiboot::init(info, &address, &size);
+	debug("Physical Memory: %x => %x (%dMB)", address, address + size, (size / 1024 / 1024));
 	Paging::init();
 
 	println("Welcome to PengOS!");

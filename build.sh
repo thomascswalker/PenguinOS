@@ -32,4 +32,5 @@ success "ISO built at './build/${ISO}'."
 
 # Run QEMU
 info "Running QEMU-i386."
-setsid qemu-system-i386 -cdrom build/${ISO} -m 512M -display gtk,zoom-to-fit=on # -S -gdb tcp::1234
+MEM_SIZE=128 # Memory size in megabytes
+setsid qemu-system-i386 -cdrom build/${ISO} -m ${MEM_SIZE}M -display gtk,zoom-to-fit=on # -S -gdb tcp::1234
