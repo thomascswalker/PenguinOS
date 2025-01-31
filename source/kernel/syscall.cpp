@@ -1,4 +1,3 @@
-#include <memory.h>
 #include <pic.h>
 #include <pit.h>
 #include <stdio.h>
@@ -157,9 +156,9 @@ int32_t sysMalloc(SysCallRegisters regs)
 {
 	size_t bytes = regs.ecx;
 	debug("Allocating %d bytes of memory.", bytes);
-	void* ptr = kmalloc(bytes);
-	debug("Out address is %x.", ptr);
-	asm("mov %0, %%eax" ::"r"(ptr));
+	// void* ptr = kmalloc(bytes);
+	// debug("Out address is %x.", ptr);
+	// asm("mov %0, %%edx" ::"r"(ptr));
 	return 0;
 }
 int32_t sysFree(SysCallRegisters regs)

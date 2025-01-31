@@ -10,6 +10,8 @@ class BitArray
 	uint32_t m_bitSize = 0;
 
 public:
+	// Size is equal to the size in bytes this map will
+	// take up.
 	BitArray(size_t size = 0)
 	{
 		m_size = size;
