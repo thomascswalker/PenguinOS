@@ -159,7 +159,7 @@ int32_t sysMalloc(SysCallRegisters regs)
 	debug("Allocating %d bytes of memory.", bytes);
 	void* ptr = kmalloc(bytes);
 	debug("Out address is %x.", ptr);
-	asm("mov %0, %%eax" ::"g"(ptr));
+	asm("mov %0, %%eax" ::"r"(ptr));
 	return 0;
 }
 int32_t sysFree(SysCallRegisters regs)

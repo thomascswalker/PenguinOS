@@ -28,7 +28,8 @@ void itoa(char* buffer, uint32_t value, uint32_t base)
 void* malloc(const uint32_t size)
 {
 	void* ptr = 0;
-	asm("int $0x80" : "=d"(ptr) : "a"(SYSCALL_MALLOC), "b"(size));
+	asm("int $0x80" : "=a"(ptr) : "a"(SYSCALL_MALLOC), "b"(size));
+	debug("Malloc %d: %x", size, ptr);
 	return ptr;
 }
 

@@ -3,6 +3,7 @@
 #include <stdint.h>
 
 #define EXTERN extern "C"
+#define ALIGN(x, n) (((uint32_t)(x) + (n) - 1) & ~((n) - 1))
 
 typedef unsigned long long size_t;
 
