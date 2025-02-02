@@ -26,7 +26,6 @@ _start:
     push ebx                                                ; Multiboot magic
     xor ebp, ebp
 
-
     extern kmain                                            ; External reference to kmain
     call kmain                                              ; Call kmain in main.c
     cli                                                     ; Disable interrupts
