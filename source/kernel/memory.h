@@ -17,9 +17,6 @@
 #define PD_INDEX(x) (((x) >> 22) & 0x3FF)
 #define PT_INDEX(x) (((x) >> 12) & 0x3FF)
 
-#define GET_ADDRESS(x) ((x) & 0xFFFFF000)
-#define TABLE_OFFSET(x) (x << 22)
-
 #define ENTRY_TEST(e, x) ((*e & x) == x)
 #define ENTRY_SET(e, x) (*e |= x)
 #define ENTRY_RESET(e, x) (*e &= ~(x))
@@ -34,8 +31,6 @@ enum PTE : uint32_t
 	PTE_Accessed = (1 << 5),	 // 00000000000000000000000000100000
 	PTE_Dirty = (1 << 6),		 // 00000000000000000000000001000000
 	PTE_Reserved = 0x180,		 // 00000000000000000000000110000000
-	PTE_Available = 0xE00,		 // 00000000000000000000111000000000
-	PTE_Frame = 0xFFFFF000		 // 11111111111111111111000000000000
 };
 
 enum PDE : uint32_t
@@ -48,13 +43,17 @@ enum PDE : uint32_t
 	PDE_Accessed = (1 << 5),	 // 00000000000000000000000000100000
 	PDE_Dirty = (1 << 6),		 // 00000000000000000000000001000000
 	PDE_PageSize = 0x180,		 // 00000000000000000000000110000000
-	PDE_Available = 0xE00,		 // 00000000000000000000111000000000
-	PDE_Frame = 0xFFFFF000		 // 11111111111111111111000000000000
 };
 
 typedef uint32_t Page;
 typedef uint32_t PageTable;
 typedef uint32_t PageDirectory;
+
+struct Block
+{
+	uint32_t size;
+	Block*	 next;
+};
 
 namespace Memory
 {

@@ -1,21 +1,61 @@
+/*
+
+Paging directory memory is located at:
+[PD .. PD + 4096 + (1024 * 4096)] (+4096 is the size of the PDEs)
+[0x110000 .. 0x511000] == 4MB + 4KB of memory space
+
+Paging Memory
+---------------------------------
+| PD | PT0 | PT1 | ... | PT1023 |
+---------------------------------
+
+Page Directory (first 4K bytes)
+--------------------------------------
+| PDE0 | PDE1 | PDE2 | ... | PDE1023 |
+--------------------------------------
+
+Page Directory Entry (4 bytes)
+See the PDE enum for details.
+--------------------------------------------------
+| PT Address | PS | D | A | NC | W | US | RW | P |
+--------------------------------------------------
+31          8| 7  | 6 | 5 |  4 | 3 |  2 |  1 | 0 |
+
+
+Page Table (PD + (N * 4K), 4K bytes long)
+--------------------------------------
+| PTE0 | PTE1 | PTE2 | ... | PTE1023 |
+--------------------------------------
+
+Page Table Entry (4 bytes)
+See the PTE enum for details.
+-----------------
+| P Address | A |
+-----------------
+31         2|1  0
+
+*/
+
+#include <math.h>
 #include <memory.h>
 #include <stdio.h>
 
 EXTERN uint32_t kernelStart;
 EXTERN uint32_t kernelEnd;
+
 static uint32_t memoryStart;
 static uint32_t memoryEnd;
+static uint32_t memorySize;
+
+static Block* blocks;
 
 // The page directory is constructed at an arbitrary location, but
 // most notably it is REQUIRED to be page-aligned (aligned to 4096).
+// 0x110000 is the (likely) location in memory.
 static uint32_t pageDirectory[1024] __attribute__((aligned(PAGE_SIZE)));
 
 void Memory::init(uint32_t start, uint32_t size)
 {
-	// Page-aligned start and end of usable memory in the system.
-	memoryStart = PAGE_ALIGN(start);
-	memoryEnd = PAGE_ALIGN(start + size);
-
 	// Zero out all entries in the page directory.
 	memset(pageDirectory, 0, sizeof(PageDirectory));
 
@@ -34,21 +74,39 @@ void Memory::init(uint32_t start, uint32_t size)
 		*entry = address | PDE_Write;
 	}
 
-	// Identity map the first 4MB of memory
-	// 0x0 => 0x3FFFFF
+	// Identity map the first 8MB of memory
+	// 0x000000 => 0x3FFFFF
+	// 0x400000 => 0x7FFFFF
 	identityMapTable(0);
+	identityMapTable(1);
 
 	// Identity map the 768th table (at 0xC0000000)
 	// 0xC0000000 => 0xC003FFFFF
 	// 0xC0000000 >> 22 == 768
-	uint32_t table768 = PD_INDEX(VIRTUAL_START);
-	identityMapTable(table768);
+	identityMapTable(PD_INDEX(VIRTUAL_START));
 
 	setPageDirectory(pageDirectory);
 
 	// Disable 4MB paging.
 	setLargePaging(false);
+
+	// After everything is all setup, enable paging.
 	enablePaging();
+
+	// Setup memory allocation
+	// Page-aligned start and end of usable memory in the system.
+	debug("Initializing physical memory allocation...");
+	memoryStart = (uint32_t)pageDirectory + 0x1000 + DIR_SIZE;
+	memoryEnd = PAGE_ALIGN(memoryStart + (size - 0x1000 - DIR_SIZE));
+	memorySize = memoryEnd - memoryStart;
+	debug("Physical memory area is from [%x => %x] (%xB)", memoryStart, memoryEnd, memorySize);
+
+	uint32_t blockByteCount = ceildiv(PAGE_ALIGN(memorySize), BLOCK_SIZE);
+	uint32_t blockCount = blockByteCount * 8;
+	blocks = (Block*)memoryStart;
+	uint32_t blockMemorySize = PAGE_ALIGN(blockByteCount) * sizeof(Block);
+	debug("Allocating %dKB for block memory at %x.", blockMemorySize / 1024, blocks);
+	memset(blocks, 0, blockMemorySize);
 }
 
 void Memory::identityMapTable(uint32_t index)
@@ -70,12 +128,12 @@ void Memory::identityMapTable(uint32_t index)
 
 PageTable* Memory::getTableFromAddress(uint32_t address)
 {
-	return (PageTable*)(GET_ADDRESS(pageDirectory[PD_INDEX(address)]));
+	return (PageTable*)(pageDirectory[PD_INDEX(address)] & PAGE_MASK);
 }
 
 PageTable* Memory::getTableFromIndex(uint32_t index)
 {
-	return (PageTable*)(GET_ADDRESS(pageDirectory[index]));
+	return (PageTable*)(pageDirectory[index] & PAGE_MASK);
 }
 
 void Memory::enablePaging()
