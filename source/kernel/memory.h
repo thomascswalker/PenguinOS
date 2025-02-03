@@ -45,28 +45,35 @@ enum PDE : uint32_t
 	PDE_PageSize = 0x180,		 // 00000000000000000000000110000000
 };
 
-typedef uint32_t Page;
-typedef uint32_t PageTable;
-typedef uint32_t PageDirectory;
-
 struct Block
 {
 	uint32_t size;
+	uint32_t index;
 	Block*	 next;
 };
+
+void* kmalloc(uint32_t size);
+void  kfree(void* ptr);
 
 namespace Memory
 {
 	void init(uint32_t start, uint32_t size);
+
+	/* Paging */
+
 	void identityMapTable(uint32_t index);
 
-	PageTable* getTableFromAddress(uint32_t address);
-	PageTable* getTableFromIndex(uint32_t index);
+	uint32_t* getTableFromAddress(uint32_t address);
+	uint32_t* getTableFromIndex(uint32_t index);
 
 	void enablePaging();
-	void setPageDirectory(PageDirectory* directory);
+	void setPageDirectory(uint32_t* directory);
 	void setLargePaging(bool state);
 
 	void dumpPageTable();
 
+	/* Memory Allocation */
+
+	bool allocateBlocks(uint32_t count, int32_t* index);
+	void freeBlocks(uint32_t index, uint32_t count);
 } // namespace Memory

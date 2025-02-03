@@ -47,10 +47,16 @@ EXTERN uint32_t kernelEnd;
 static uint32_t memoryStart;
 static uint32_t memoryEnd;
 static uint32_t memorySize;
+static void*	mallocStart;
 
-typedef BitArray<uint32_t> BlockMap;
-static Block*			   blocks;
-static BlockMap*		   blockMap;
+// Singlely linked-list for tracking all in-use blocks
+// and their respective sizes.
+static Block* blockHead;
+static Block* blockTail;
+
+typedef std::bitarray<uint32_t> BlockMap;
+// Bit array for tracking whether a block is in use or not.
+static BlockMap* blockMap;
 
 // The page directory is constructed at an arbitrary location, but
 // most notably it is REQUIRED to be page-aligned (aligned to 4096).
@@ -60,7 +66,7 @@ static uint32_t pageDirectory[1024] __attribute__((aligned(PAGE_SIZE)));
 void Memory::init(uint32_t start, uint32_t size)
 {
 	// Zero out all entries in the page directory.
-	memset(pageDirectory, 0, sizeof(PageDirectory));
+	memset(pageDirectory, 0, 1024 * sizeof(uint32_t));
 
 	debug("Initializing page directory...");
 	for (uint32_t i = 0; i < TABLE_COUNT; i++)
@@ -99,21 +105,34 @@ void Memory::init(uint32_t start, uint32_t size)
 	// Setup memory allocation
 	// Page-aligned start and end of usable memory in the system.
 	debug("Initializing physical memory allocation...");
-	memoryStart = (uint32_t)pageDirectory + 0x1000 + DIR_SIZE;
-	memoryEnd = PAGE_ALIGN(memoryStart + (size - 0x1000 - DIR_SIZE));
+	memoryStart = (uint32_t)pageDirectory + PAGE_SIZE + DIR_SIZE;
+	memoryEnd = PAGE_ALIGN(memoryStart + (size - PAGE_SIZE - DIR_SIZE));
 	memorySize = memoryEnd - memoryStart;
 	debug("Physical memory area is from [%x => %x] (%xB)", memoryStart, memoryEnd, memorySize);
 
+	// Initialize the block linked list.
 	uint32_t blockCount = ceildiv(PAGE_ALIGN(memorySize), BLOCK_SIZE);
 	uint32_t blockByteCount = blockCount / 8;
-	blocks = (Block*)memoryStart;
+	blockHead = (Block*)memoryStart;
+	blockTail = blockHead; // Tail == Head
 	uint32_t blockMemorySize = PAGE_ALIGN(blockByteCount) * sizeof(Block);
-	debug("Allocating %dKB for block memory at %x.", blockMemorySize / 1024, blocks);
-	memset(blocks, 0, blockMemorySize);
+	debug("Allocating %dKB for block memory at %x.", blockMemorySize / 1024, blockHead);
+	memset(blockHead, 0, blockMemorySize);
 
-	blockMap = (BlockMap*)((uint32_t)blocks + blockMemorySize);
+	// Now that we have the number of blocks and the maximum possible
+	// linked list size, we can initialize the block bitmap.
+	blockMap = (BlockMap*)((uint32_t)blockHead + blockMemorySize);
 	*blockMap = BlockMap(blockByteCount);
 	debug("Constructed block map at %x with %d blocks.", blockMap, blockCount);
+
+	// Set the memory for the block map itself to always be in use.
+	for (uint32_t i = 0; i < ceildiv(blockByteCount, BLOCK_SIZE); i++)
+	{
+		blockMap->set(i);
+	}
+
+	// Initialize malloc-able memory at the same location of the block map.
+	mallocStart = (void*)blockMap;
 }
 
 void Memory::identityMapTable(uint32_t index)
@@ -125,22 +144,22 @@ void Memory::identityMapTable(uint32_t index)
 	// Because we're identity mapping (physical == virtual),
 	// we can just unshift the table index to retrieve
 	// the address this table is mapped to.
-	uint32_t   offset = index << 22;
-	PageTable* table = getTableFromIndex(index);
+	uint32_t  offset = index << 22;
+	uint32_t* table = getTableFromIndex(index);
 	for (uint32_t i = 0; i < PAGE_COUNT; i++)
 	{
 		table[i] = offset + (i * PAGE_SIZE) | 0x1; // Active page
 	}
 }
 
-PageTable* Memory::getTableFromAddress(uint32_t address)
+uint32_t* Memory::getTableFromAddress(uint32_t address)
 {
-	return (PageTable*)(pageDirectory[PD_INDEX(address)] & PAGE_MASK);
+	return (uint32_t*)(pageDirectory[PD_INDEX(address)] & PAGE_MASK);
 }
 
-PageTable* Memory::getTableFromIndex(uint32_t index)
+uint32_t* Memory::getTableFromIndex(uint32_t index)
 {
-	return (PageTable*)(pageDirectory[index] & PAGE_MASK);
+	return (uint32_t*)(pageDirectory[index] & PAGE_MASK);
 }
 
 void Memory::enablePaging()
@@ -153,7 +172,7 @@ void Memory::enablePaging()
 	success("Paging enabled.");
 }
 
-void Memory::setPageDirectory(PageDirectory* directory)
+void Memory::setPageDirectory(uint32_t* directory)
 {
 	debug("Setting page directory to %x.", directory);
 	asm("mov %0, %%cr3" ::"r"((uint32_t)directory));
@@ -185,9 +204,75 @@ void Memory::dumpPageTable()
 		{
 			continue;
 		}
-		PageTable* table = getTableFromIndex(i);
-		uint32_t   start = table[0] & PAGE_MASK;
-		uint32_t   end = (table[1023] & PAGE_MASK) + 0x1000 - 1;
+		uint32_t* table = getTableFromIndex(i);
+		uint32_t  start = table[0] & PAGE_MASK;
+		uint32_t  end = (table[1023] & PAGE_MASK) + 0x1000 - 1;
 		printf("Table %d: %x => %x\n", i, start, end);
 	}
+}
+
+bool Memory::allocateBlocks(uint32_t count, int32_t* index)
+{
+	if (count == 0)
+	{
+		warning("Invalid 'count' argument: %d.", count);
+		return false;
+	}
+	*index = blockMap->firstContiguous(count);
+	if (*index < 0)
+	{
+		error("Out of memory.");
+		return false;
+	}
+	for (uint32_t i = *index; i < *index + count; i++)
+	{
+		blockMap->set(i);
+	}
+	return true;
+}
+
+void Memory::freeBlocks(uint32_t index, uint32_t count)
+{
+	for (uint32_t i = index; i < index + count; i++)
+	{
+		blockMap->reset(i);
+	}
+}
+
+void* kmalloc(uint32_t size)
+{
+	uint32_t blockCount = ceildiv(size, BLOCK_SIZE);
+	int32_t	 index;
+	if (!Memory::allocateBlocks(blockCount, &index))
+	{
+		return nullptr;
+	}
+
+	Block* tail = blockTail;
+	while (tail->next != nullptr)
+	{
+		tail = tail->next;
+	}
+	Block* newTail = (Block*)((uint32_t)tail + sizeof(Block));
+	tail->next = newTail;
+	newTail->size = size;
+	newTail->index = index;
+	blockTail = newTail;
+	return (void*)((uint32_t)mallocStart + (index * BLOCK_SIZE));
+}
+
+void kfree(void* ptr)
+{
+	uint32_t index = ((uint32_t)ptr - (uint32_t)mallocStart) / BLOCK_SIZE;
+	Block*	 current = blockHead;
+	while (current->next != nullptr)
+	{
+		if (current->index == index)
+		{
+			break;
+		}
+		current = current->next;
+	}
+	uint32_t count = ceildiv(current->size, BLOCK_SIZE);
+	Memory::freeBlocks(index, count);
 }
