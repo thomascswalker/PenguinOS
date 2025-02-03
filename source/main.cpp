@@ -4,7 +4,6 @@ Main entry point into PengOS.
 
 #include <gdt.h>
 #include <keyboard.h>
-#include <list.h>
 #include <memory.h>
 #include <multiboot.h>
 #include <pit.h>

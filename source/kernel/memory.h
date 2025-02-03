@@ -1,5 +1,6 @@
 #pragma once
 
+#include <stddef.h>
 #include <stdint.h>
 
 #define BLOCK_SIZE 0x1000
