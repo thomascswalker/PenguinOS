@@ -54,7 +54,7 @@ static void*	mallocStart;
 static Block* blockHead;
 static Block* blockTail;
 
-typedef std::bitarray<uint32_t> BlockMap;
+typedef std::BitArray<uint32_t> BlockMap;
 // Bit array for tracking whether a block is in use or not.
 static BlockMap* blockMap;
 
@@ -111,7 +111,7 @@ void Memory::init(uint32_t start, uint32_t size)
 	debug("Physical memory area is from [%x => %x] (%xB)", memoryStart, memoryEnd, memorySize);
 
 	// Initialize the block linked list.
-	uint32_t blockCount = ceildiv(PAGE_ALIGN(memorySize), BLOCK_SIZE);
+	uint32_t blockCount = CEILDIV(PAGE_ALIGN(memorySize), BLOCK_SIZE);
 	uint32_t blockByteCount = blockCount / 8;
 	blockHead = (Block*)memoryStart;
 	blockTail = blockHead; // Tail == Head
@@ -126,12 +126,14 @@ void Memory::init(uint32_t start, uint32_t size)
 	debug("Constructed block map at %x with %d blocks.", blockMap, blockCount);
 
 	// Set the memory for the block map itself to always be in use.
-	for (uint32_t i = 0; i < ceildiv(blockByteCount, BLOCK_SIZE); i++)
+	for (uint32_t i = 0; i < (uint32_t)CEILDIV(blockByteCount, BLOCK_SIZE); i++)
 	{
 		blockMap->set(i);
 	}
 
 	// Initialize malloc-able memory at the same location of the block map.
+	// The block map itself has already been reserved in the above lines
+	// so there should be no worry of overlapping block usage.
 	mallocStart = (void*)blockMap;
 }
 
@@ -239,9 +241,9 @@ void Memory::freeBlocks(uint32_t index, uint32_t count)
 	}
 }
 
-void* kmalloc(uint32_t size)
+void* std::malloc(uint32_t size)
 {
-	uint32_t blockCount = ceildiv(size, BLOCK_SIZE);
+	uint32_t blockCount = CEILDIV(size, BLOCK_SIZE);
 	int32_t	 index;
 	if (!Memory::allocateBlocks(blockCount, &index))
 	{
@@ -261,7 +263,7 @@ void* kmalloc(uint32_t size)
 	return (void*)((uint32_t)mallocStart + (index * BLOCK_SIZE));
 }
 
-void kfree(void* ptr)
+void std::free(void* ptr)
 {
 	uint32_t index = ((uint32_t)ptr - (uint32_t)mallocStart) / BLOCK_SIZE;
 	Block*	 current = blockHead;
@@ -273,6 +275,31 @@ void kfree(void* ptr)
 		}
 		current = current->next;
 	}
-	uint32_t count = ceildiv(current->size, BLOCK_SIZE);
+	uint32_t count = CEILDIV(current->size, BLOCK_SIZE);
 	Memory::freeBlocks(index, count);
 }
+
+void* operator new(size_t size)
+{
+	auto ptr = std::malloc(size);
+	if (!ptr)
+	{
+		panic("Out of memory.");
+	}
+	return (void*)ptr;
+}
+void* operator new(size_t size, void* ptr) { return ptr; }
+
+void* operator new[](size_t size)
+{
+	auto ptr = std::malloc(size);
+	if (!ptr)
+	{
+		panic("Out of memory.");
+	}
+	return ptr;
+}
+void* operator new[](size_t size, void* ptr) { return ptr; }
+
+void operator delete(void* ptr) { std::free(ptr); }
+void operator delete[](void* ptr) { std::free(ptr); }

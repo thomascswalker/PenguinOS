@@ -4,9 +4,8 @@
 
 namespace std
 {
-
 	template <typename T>
-	class bitarray
+	class BitArray
 	{
 		T*		 m_data = nullptr;
 		size_t	 m_size = 0;
@@ -15,7 +14,7 @@ namespace std
 	public:
 		// Size is equal to the size in bytes this map will
 		// take up.
-		bitarray(size_t size = 0)
+		BitArray(size_t size = 0)
 		{
 			m_size = size;
 			m_bitSize = m_size * sizeof(T) * 8;

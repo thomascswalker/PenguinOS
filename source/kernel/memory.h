@@ -1,3 +1,6 @@
+#pragma once
+
+#include <stddef.h>
 #include <stdint.h>
 
 #define BLOCK_SIZE 0x1000
@@ -52,8 +55,11 @@ struct Block
 	Block*	 next;
 };
 
-void* kmalloc(uint32_t size);
-void  kfree(void* ptr);
+namespace std
+{
+	void* malloc(uint32_t size);
+	void  free(void* ptr);
+} // namespace std
 
 namespace Memory
 {
@@ -77,3 +83,10 @@ namespace Memory
 	bool allocateBlocks(uint32_t count, int32_t* index);
 	void freeBlocks(uint32_t index, uint32_t count);
 } // namespace Memory
+
+void* operator new(size_t size);
+void* operator new(size_t size, void* ptr);
+void* operator new[](size_t size);
+void* operator new[](size_t size, void* ptr);
+void  operator delete(void* ptr);
+void  operator delete[](void* ptr);
