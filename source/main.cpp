@@ -1,19 +1,21 @@
 /*
-Main entry point into PengOS. Initializes the kernel.
+Main entry point into PengOS.
 */
 
 #include <gdt.h>
 #include <keyboard.h>
+#include <memory.h>
 #include <multiboot.h>
-#include <paging.h>
 #include <pit.h>
-
-static uint32_t heapSize = 0;
-static uint32_t heapAddr = 0;
 
 EXTERN void kmain(MultibootInfo* info, uint32_t magic)
 {
 	VGA::init();
+	println("Initializing PengOS...");
+	if (magic != MULTIBOOT_BOOTLOADER_MAGIC)
+	{
+		panic("Invalid Multiboot magic value.");
+	}
 	GDT::init();
 	IDT::init();
 	PIT::init();
@@ -21,10 +23,12 @@ EXTERN void kmain(MultibootInfo* info, uint32_t magic)
 
 	// Once everything is initialized, enable interrupts.
 	enableInterrupts();
-
-	Paging::init();
-
 	println("Welcome to PengOS!");
+
+	uint32_t start = 0;
+	uint32_t size = 0;
+	Multiboot::init(info, &start, &size);
+	Memory::init(start, size);
 
 	while (1)
 	{

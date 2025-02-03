@@ -2,9 +2,9 @@
 
 #include <ctype.h>
 
-#define KB 0x400
-#define MB 0x100000
-#define GB 0x40000000
+#define KB(x) (x * 0x400)
+#define MB(x) (x * 0x100000)
+#define GB(x) (x * 0x40000000)
 #define asm __asm__ __volatile__
 
 struct Registers

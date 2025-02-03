@@ -276,20 +276,26 @@ namespace Multiboot
 {
 	static void init(MultibootInfo* info, uint32_t* address, uint32_t* size)
 	{
-		uint32_t end = info->mmapAddress + info->mmapLength;
-		debug("Total multiboot end address: %x.", end);
-
-		MBMEntry* mmap = (MBMEntry*)info->mmapAddress;
-
-		while ((uintptr_t)mmap < end)
+		if ((info->flags & MULTIBOOT_INFO_MODS) == MULTIBOOT_INFO_MODS)
 		{
-			printf("\taddr=%x, size=%d, type=%d\n", mmap->addressLow, mmap->lengthLow, mmap->type);
-			if (mmap->lengthLow > *size && mmap->type == MULTIBOOT_MEMORY_AVAILABLE)
+			uint32_t mod1 = *(uint32_t*)(info->moduleAddress + 4);
+			*address = (mod1 + 0xFFF) & ~0xFFF;
+			*size = (info->memUpper * 1024) - *address;
+		}
+		else
+		{
+			uint32_t end = info->mmapAddress + info->mmapLength;
+
+			MBMEntry* mmap = (MBMEntry*)info->mmapAddress;
+			while ((uintptr_t)mmap < end)
 			{
-				*size = mmap->lengthLow;
-				*address = mmap->addressLow;
+				if (mmap->lengthLow > *size && mmap->type == MULTIBOOT_MEMORY_AVAILABLE)
+				{
+					*size = mmap->lengthLow;
+					*address = mmap->addressLow;
+				}
+				mmap = (MBMEntry*)((uint32_t)mmap + mmap->size + sizeof(uint32_t));
 			}
-			mmap = (MBMEntry*)((uint32_t)mmap + mmap->size + sizeof(uint32_t));
 		}
 	}
 } // namespace Multiboot

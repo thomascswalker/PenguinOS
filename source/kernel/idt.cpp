@@ -3,12 +3,15 @@
 #include <stdio.h>
 #include <syscall.h>
 
+#define PAGE_FAULT_MESSAGE  \
+	"Page fault. Code %x\n" \
+	"\t\t  Attempted to access %x which caused a %s violation."
+#define GENERAL_PROTECTION_FAULT_MESSAGE  \
+	"General protection fault. Code %x\n" \
+	"\t\t  Attempted to access %x which caused a violation."
+
 namespace IDT
 {
-
-#define PAGE_FAULT_MESSAGE  \
-	"Page fault. Code %d\n" \
-	"\t\t  Attempted to access %x which caused a %s violation."
 
 	IDTEntry entries[IDT_ENTRY_COUNT];
 	IDTPtr	 ptr;
@@ -105,6 +108,7 @@ namespace IDT
 	{
 		uint8_t		isr_no = regs.int_no;
 		uint8_t		e = regs.err_code;
+		uint32_t	addr;
 		const char* violationMessage = (e & 0x1) ? "page-protection" : "non-present page";
 		switch (isr_no)
 		{
@@ -116,11 +120,12 @@ namespace IDT
 				panic("Double Fault. Code: %d", regs.err_code);
 				break;
 			case GENERAL_PROTECTION_FAULT:
-				panic("General Protection Fault. Code: %d", regs.err_code);
+				// Obtain the fault address from the CR2 register.
+				asm("movl %%cr2, %0" : "=r"(addr));
+				panic(GENERAL_PROTECTION_FAULT_MESSAGE, regs.err_code, addr);
 				break;
 			case PAGE_FAULT:
 				// Obtain the fault address from the CR2 register.
-				uint32_t addr;
 				asm("movl %%cr2, %0" : "=r"(addr));
 				panic(PAGE_FAULT_MESSAGE, regs.err_code, addr, violationMessage);
 				break;

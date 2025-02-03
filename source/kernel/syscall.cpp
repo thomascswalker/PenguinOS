@@ -156,9 +156,9 @@ int32_t sysMalloc(SysCallRegisters regs)
 {
 	size_t bytes = regs.ecx;
 	debug("Allocating %d bytes of memory.", bytes);
-	// void* ptr = PMM::kmalloc(bytes);
+	// void* ptr = kmalloc(bytes);
 	// debug("Out address is %x.", ptr);
-	// asm("mov %0, %%eax" ::"g"(ptr));
+	// asm("mov %0, %%edx" ::"r"(ptr));
 	return 0;
 }
 int32_t sysFree(SysCallRegisters regs)

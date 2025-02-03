@@ -24,6 +24,7 @@ _start:
     
     push eax                                                ; Multiboot header
     push ebx                                                ; Multiboot magic
+    xor ebp, ebp
 
     extern kmain                                            ; External reference to kmain
     call kmain                                              ; Call kmain in main.c

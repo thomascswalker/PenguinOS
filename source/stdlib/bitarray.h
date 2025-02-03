@@ -1,22 +1,25 @@
 #pragma once
 
-#include <stdint.h>
-#include <string.h>
+#include <stdio.h>
 
 namespace std
 {
-	template <typename T, uint32_t N>
-	class BitArray
+
+	template <typename T>
+	class bitarray
 	{
 		T*		 m_data = nullptr;
 		size_t	 m_size = 0;
-		uint32_t m_bitCount = 0;
+		uint32_t m_bitSize = 0;
 
 	public:
-		BitArray() : m_bitCount(N)
+		// Size is equal to the size in bytes this map will
+		// take up.
+		bitarray(size_t size = 0)
 		{
-			m_size = m_bitCount / sizeof(T) / 8;
-			memset(m_data, 0, m_size);
+			m_size = size;
+			m_bitSize = m_size * sizeof(T) * 8;
+			memset(m_data, 0, m_size * sizeof(T));
 		}
 
 		T* data() const
@@ -31,7 +34,7 @@ namespace std
 
 		size_t bitSize() const
 		{
-			return m_bitCount;
+			return m_bitSize;
 		}
 
 		void set(size_t pos)
@@ -137,13 +140,33 @@ namespace std
 				}
 				for (size_t j = 0; j < 32; j++)
 				{
-					size_t bitIndex = i * 32 + j;
-					if (!(test(bitIndex)))
+					size_t offset = i * 32 + j;
+					if (!(test(offset)))
 					{
-						if (bitIndex < m_bitCount)
+						if (offset < m_bitSize)
 						{
-							return bitIndex;
+							return offset;
 						}
+					}
+				}
+			}
+			return -1;
+		}
+
+		int32_t firstContiguous(uint32_t size) const
+		{
+			for (uint32_t i = firstFree(); i < m_size; i++)
+			{
+				for (uint32_t j = 0; j < size; j++)
+				{
+					uint32_t offset = i + j;
+					if (test(i + j))
+					{
+						break;
+					}
+					if (j + 1 == size)
+					{
+						return i;
 					}
 				}
 			}
