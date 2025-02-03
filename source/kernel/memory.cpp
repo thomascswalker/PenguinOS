@@ -36,6 +36,7 @@ See the PTE enum for details.
 
 */
 
+#include <bitarray.h>
 #include <math.h>
 #include <memory.h>
 #include <stdio.h>
@@ -47,7 +48,9 @@ static uint32_t memoryStart;
 static uint32_t memoryEnd;
 static uint32_t memorySize;
 
-static Block* blocks;
+typedef BitArray<uint32_t> BlockMap;
+static Block*			   blocks;
+static BlockMap*		   blockMap;
 
 // The page directory is constructed at an arbitrary location, but
 // most notably it is REQUIRED to be page-aligned (aligned to 4096).
@@ -101,12 +104,16 @@ void Memory::init(uint32_t start, uint32_t size)
 	memorySize = memoryEnd - memoryStart;
 	debug("Physical memory area is from [%x => %x] (%xB)", memoryStart, memoryEnd, memorySize);
 
-	uint32_t blockByteCount = ceildiv(PAGE_ALIGN(memorySize), BLOCK_SIZE);
-	uint32_t blockCount = blockByteCount * 8;
+	uint32_t blockCount = ceildiv(PAGE_ALIGN(memorySize), BLOCK_SIZE);
+	uint32_t blockByteCount = blockCount / 8;
 	blocks = (Block*)memoryStart;
 	uint32_t blockMemorySize = PAGE_ALIGN(blockByteCount) * sizeof(Block);
 	debug("Allocating %dKB for block memory at %x.", blockMemorySize / 1024, blocks);
 	memset(blocks, 0, blockMemorySize);
+
+	blockMap = (BlockMap*)((uint32_t)blocks + blockMemorySize);
+	*blockMap = BlockMap(blockByteCount);
+	debug("Constructed block map at %x with %d blocks.", blockMap, blockCount);
 }
 
 void Memory::identityMapTable(uint32_t index)
