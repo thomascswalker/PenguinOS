@@ -254,23 +254,30 @@ uint32_t Memory::getBlockSize(uint32_t v)
 
 void* std::kmalloc(uint32_t size)
 {
+	// Get the block count for the memory size requested.0
 	uint32_t blockCount = CEILDIV(size, BLOCK_SIZE);
 	int32_t	 index;
+
+	// Attempt to allocate the number of blocks requested.
+	// If this fails, we're out of memory. `index` is the
+	// in/out parameter to get the index of the first block
+	// in the block sequence we allocated.
 	if (!Memory::allocateBlocks(blockCount, &index))
 	{
+		panic("Out of memory!");
 		return nullptr;
 	}
 
-	Block* tail = blockTail;
-	while (tail->next != nullptr)
-	{
-		tail = tail->next;
-	}
-	Block* newTail = (Block*)((uint32_t)tail + sizeof(Block));
-	tail->next = newTail;
+	// Create a new block `sizeof(Block)` bytes from the current
+	// tail of the block list. This will become the new tail.
+	Block* newTail = (Block*)((uint32_t)blockTail + sizeof(Block));
+	blockTail->next = newTail;
 	newTail->size = size;
 	newTail->index = index;
 	blockTail = newTail;
+
+	// Return a pointer to the offset of the block sequence
+	// start index in malloc memory space.
 	return (void*)((uint32_t)mallocStart + (index * BLOCK_SIZE));
 }
 
