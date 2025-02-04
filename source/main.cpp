@@ -7,6 +7,7 @@ Main entry point into PengOS.
 #include <memory.h>
 #include <multiboot.h>
 #include <pit.h>
+#include <string.h>
 
 EXTERN void kmain(MultibootInfo* info, uint32_t magic)
 {

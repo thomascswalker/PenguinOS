@@ -1,6 +1,6 @@
 #pragma once
 
-#include <string.h>
+#include <cstring.h>
 
 void  itoa(char* buffer, uint32_t value, uint32_t base);
 void* malloc(const uint32_t size);
