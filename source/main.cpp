@@ -31,21 +31,6 @@ EXTERN void kmain(MultibootInfo* info, uint32_t magic)
 	Multiboot::init(info, &start, &size);
 	Memory::init(start, size);
 
-	std::String str1("String1");
-	std::String str2("String2");
-	std::String str3 = str1 + str2;
-	std::String str4("String4");
-	std::String str5 = "String5";
-	str4.append(str3);
-	str4.prepend("lskjdflkjsdf");
-	str4.append("jjjjjjjjjj");
-
-	debugs(str1);
-	debugs(str2);
-	debugs(str3);
-	debugs(str4);
-	debugs(str5);
-
 	while (1)
 	{
 	}

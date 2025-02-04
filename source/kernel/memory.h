@@ -3,7 +3,7 @@
 #include <stddef.h>
 #include <stdint.h>
 
-#define BLOCK_SIZE 0x400
+#define BLOCK_SIZE 0x200
 #define MAX_BLOCK_SIZE 0x1000
 #define BLOCK_MASK 0xFFFFF000
 #define VIRTUAL_START 0xC0000000
