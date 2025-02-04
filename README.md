@@ -1,20 +1,21 @@
-## Memory layout
+# PengOS (Penguin OS)
 
-This assumes running QEMU with `-m 512M` in order to emulate
-512MB of RAM.
+## Requirements
 
-## Physical
+### Windows
+- Windows SubSystem (WSL)
 
-| Purpose | Start | End | Size
-| --- | --- | --- | ---
-| Kernel | `0x0000001C` | `0x00000400` | `996B`
-| Multiboot Header | `0x000100A4` | `0x00010134` | `144B`
-| Heap | `0x00100000` | `0x1FFE0000` | `535MB`
+## How to run
 
-## Virtual
+### Linux
 
-| Purpose | Start | End | Size
-| --- | --- | --- | ---
-| Kernel | `0xC000001C` | `0xC0000400` | `996B`
-| Multiboot Header | `0xC00100A4` | `0xC0010134` | `144B`
-| Heap | `0xC0100000` | `0xE00E0000` | `535MB`
+1. Run `bash build_cross_compiler.sh`.
+2. Run `build.sh`.
+
+### Windows
+
+1. Open a new Command Prompt window.
+2. `cd` to the location of this repository.
+3. Enter `wsl`.
+4. Run `bash build_cross_compiler.sh`.
+5. Run `build.sh`.
