@@ -31,6 +31,8 @@ EXTERN void kmain(MultibootInfo* info, uint32_t magic)
 	Multiboot::init(info, &start, &size);
 	Memory::init(start, size);
 
+	std::String str("test");
+
 	while (1)
 	{
 	}

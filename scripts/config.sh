@@ -3,8 +3,10 @@
 export C_VERSION=c23
 export CPP_VERSION=c++23
 
+
 export MAKE=${MAKE:-make}
 
+export ARCH=i386
 export HOST=i686-elf
 export GCC=${HOST}-g++
 export AS=nasm
@@ -26,14 +28,14 @@ GREEN='\e[0;32m'
 YELLOW='\e[0;33m'
 NC='\e[0m' # No Color
 
-INCLUDE_DIRS=(kernel stdlib)
 build_include_args() {
     result=""
-    for dir in "${INCLUDE_DIRS[@]}"; do
-        result+=" -I./source/${dir}"
+    dirs=$(find "./source/arch/${ARCH}" -type d)
+    for dir in $dirs; do
+        result+=" -I${dir}"
     done
     
-    echo -e "-I.source/ ${result# }"
+    echo -e "-I./source/ -I./source/lib ${result# }"
 }
 
 debug() {
