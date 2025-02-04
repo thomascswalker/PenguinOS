@@ -10,7 +10,7 @@
 #error "This needs to be compiled with ix86-elf."
 #endif
 
-#include <string.h>
+#include <cstring.h>
 #include <sys.h>
 
 #define VGA_WIDTH 80

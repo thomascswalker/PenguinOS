@@ -241,7 +241,18 @@ void Memory::freeBlocks(uint32_t index, uint32_t count)
 	}
 }
 
-void* std::malloc(uint32_t size)
+uint32_t Memory::getBlockSize(uint32_t v)
+{
+	v--;
+	for (uint32_t i = 0; i < 5; i++)
+	{
+		v |= v >> (1 << i);
+	}
+	v++;
+	return v >= MAX_BLOCK_SIZE ? MAX_BLOCK_SIZE : v;
+}
+
+void* std::kmalloc(uint32_t size)
 {
 	uint32_t blockCount = CEILDIV(size, BLOCK_SIZE);
 	int32_t	 index;
@@ -263,7 +274,7 @@ void* std::malloc(uint32_t size)
 	return (void*)((uint32_t)mallocStart + (index * BLOCK_SIZE));
 }
 
-void std::free(void* ptr)
+void std::kfree(void* ptr)
 {
 	uint32_t index = ((uint32_t)ptr - (uint32_t)mallocStart) / BLOCK_SIZE;
 	Block*	 current = blockHead;
@@ -281,7 +292,7 @@ void std::free(void* ptr)
 
 void* operator new(size_t size)
 {
-	auto ptr = std::malloc(size);
+	auto ptr = std::kmalloc(size);
 	if (!ptr)
 	{
 		panic("Out of memory.");
@@ -292,7 +303,7 @@ void* operator new(size_t size, void* ptr) { return ptr; }
 
 void* operator new[](size_t size)
 {
-	auto ptr = std::malloc(size);
+	auto ptr = std::kmalloc(size);
 	if (!ptr)
 	{
 		panic("Out of memory.");
@@ -301,5 +312,7 @@ void* operator new[](size_t size)
 }
 void* operator new[](size_t size, void* ptr) { return ptr; }
 
-void operator delete(void* ptr) { std::free(ptr); }
-void operator delete[](void* ptr) { std::free(ptr); }
+void operator delete(void* ptr) { std::kfree(ptr); }
+void operator delete[](void* ptr) { std::kfree(ptr); }
+void operator delete(void* ptr, size_t size) { std::kfree(ptr); }
+void operator delete[](void* ptr, size_t size) { std::kfree(ptr); }

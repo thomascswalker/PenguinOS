@@ -3,7 +3,8 @@
 #include <stddef.h>
 #include <stdint.h>
 
-#define BLOCK_SIZE 0x1000
+#define BLOCK_SIZE 0x400
+#define MAX_BLOCK_SIZE 0x1000
 #define BLOCK_MASK 0xFFFFF000
 #define VIRTUAL_START 0xC0000000
 
@@ -57,8 +58,8 @@ struct Block
 
 namespace std
 {
-	void* malloc(uint32_t size);
-	void  free(void* ptr);
+	void* kmalloc(uint32_t size);
+	void  kfree(void* ptr);
 } // namespace std
 
 namespace Memory
@@ -80,13 +81,16 @@ namespace Memory
 
 	/* Memory Allocation */
 
-	bool allocateBlocks(uint32_t count, int32_t* index);
-	void freeBlocks(uint32_t index, uint32_t count);
+	bool	 allocateBlocks(uint32_t count, int32_t* index);
+	void	 freeBlocks(uint32_t index, uint32_t count);
+	uint32_t getBlockSize(uint32_t size);
 } // namespace Memory
 
 void* operator new(size_t size);
-void* operator new(size_t size, void* ptr);
 void* operator new[](size_t size);
+void* operator new(size_t size, void* ptr);
 void* operator new[](size_t size, void* ptr);
 void  operator delete(void* ptr);
 void  operator delete[](void* ptr);
+void  operator delete(void* ptr, size_t size);
+void  operator delete[](void* ptr, size_t size);
