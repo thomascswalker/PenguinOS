@@ -7,9 +7,11 @@
 #define DOUBLE_FAULT 0x08
 #define GENERAL_PROTECTION_FAULT 0x0D
 #define PAGE_FAULT 0x0E
+
 #define TIMER 0x20
 #define KEYBOARD 0x21
-#define SYSTEM_CALL 0X80
+#define SYSTEM_CALL 0x80
+#define ATA 0x2D
 
 #define IDT_ENTRY_COUNT 256
 
@@ -61,7 +63,7 @@
 #define IRQ10 42
 #define IRQ11 43
 #define IRQ12 44
-#define IRQ13 45
+#define IRQ13 ATA
 #define IRQ14 46
 #define IRQ15 47
 

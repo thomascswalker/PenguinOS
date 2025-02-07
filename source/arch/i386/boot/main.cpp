@@ -2,6 +2,7 @@
 Main entry point into PengOS.
 */
 
+#include <ata.h>
 #include <gdt.h>
 #include <keyboard.h>
 #include <memory.h>
@@ -17,6 +18,10 @@ EXTERN void kmain(MultibootInfo* info, uint32_t magic)
 	{
 		panic("Invalid Multiboot magic value.");
 	}
+	uint32_t start = 0;
+	uint32_t size = 0;
+	Multiboot::init(info, &start, &size);
+
 	GDT::init();
 	IDT::init();
 	PIT::init();
@@ -26,12 +31,9 @@ EXTERN void kmain(MultibootInfo* info, uint32_t magic)
 	enableInterrupts();
 	println("Welcome to PengOS!");
 
-	uint32_t start = 0;
-	uint32_t size = 0;
-	Multiboot::init(info, &start, &size);
 	Memory::init(start, size);
 
-	std::String str("test");
+	IDE::init();
 
 	while (1)
 	{
