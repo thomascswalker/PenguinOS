@@ -4,7 +4,86 @@
 #include <memory.h>
 #include <stdio.h>
 
-ATADevice devices[4];
+ATADevice  devices[4];
+BootSector bootSector;
+
+void IDE::init()
+{
+	info("Initializing IDE/ATA...");
+	devices[0].init(true, true);
+	devices[1].init(true, false);
+	devices[2].init(false, true);
+	devices[3].init(false, false);
+
+	devices[0].identify();
+	devices[1].identify();
+	devices[2].identify();
+	devices[3].identify();
+
+	IDT::registerInterruptHandler(IRQ14, IDE::callback);
+
+	ATADevice* drive = IDE::getDevice(0);
+	drive->select();
+
+	// Read the boot sector
+	// https://averstak.tripod.com/fatdox/bootsec.htm
+	uint8_t data[512];
+	if (!drive->readSectors(0, 1, data))
+	{
+		panic("Failed to read boot sector of Drive 0.");
+	}
+
+	bootSector.init(data);
+	debugs(bootSector.oemIdentifier);
+	debugd(bootSector.bytesPerSector);
+	debugd(bootSector.sectorsPerCluster);
+	debugd(bootSector.reservedSectors);
+	debugd(bootSector.numberOfFATs);
+	debugd(bootSector.rootEntries);
+	debugd(bootSector.numberOfSectors);
+	debugd(bootSector.mediaDescriptor);
+	debugd(bootSector.sectorsPerFAT);
+	debugd(bootSector.sectorsPerHead);
+	debugd(bootSector.headsPerCylinder);
+	debugd(bootSector.hiddenSectors);
+	debugd(bootSector.bigNumberOfSectors);
+	debugd(bootSector.bigSectorsPerFAT);
+	debugd(bootSector.extFlags);
+	debugd(bootSector.fSVersion);
+	debugd(bootSector.rootDirectoryStart);
+	debugd(bootSector.fSInfoSector);
+	debugd(bootSector.backupBootSector);
+}
+
+void IDE::callback(Registers regs) { /*debug("File IO callback");*/ }
+
+ATADevice* IDE::getDevice(uint32_t index) { return &devices[index]; }
+
+void BootSector::init(uint8_t* data)
+{
+#define BOOT_SECTOR(x, y) memcpy(&x, data + y, sizeof(x))
+	memcpy(&oemIdentifier, (uint8_t*)data + 0x03, 8);
+	oemIdentifier[8] = 0; // Null-terminate string
+	BOOT_SECTOR(bytesPerSector, 0x0B);
+	BOOT_SECTOR(sectorsPerCluster, 0x0D);
+	BOOT_SECTOR(reservedSectors, 0x0E);
+	BOOT_SECTOR(numberOfFATs, 0x10);
+	BOOT_SECTOR(rootEntries, 0x11);
+	BOOT_SECTOR(numberOfSectors, 0x13);
+	BOOT_SECTOR(mediaDescriptor, 0x15);
+	BOOT_SECTOR(sectorsPerFAT, 0x16);
+	BOOT_SECTOR(sectorsPerHead, 0x18);
+	BOOT_SECTOR(headsPerCylinder, 0x1A);
+	BOOT_SECTOR(hiddenSectors, 0x1C);
+	BOOT_SECTOR(bigNumberOfSectors, 0x20);
+	BOOT_SECTOR(bigSectorsPerFAT, 0x24);
+	BOOT_SECTOR(extFlags, 0x28);
+	BOOT_SECTOR(fSVersion, 0x2A);
+	BOOT_SECTOR(rootDirectoryStart, 0x2C);
+	BOOT_SECTOR(fSInfoSector, 0x30);
+	BOOT_SECTOR(backupBootSector, 0x32);
+#undef BOOT_SECTOR
+}
 
 void ATADevice::init(bool inPrimary, bool inMaster)
 {
@@ -22,26 +101,6 @@ void ATADevice::init(bool inPrimary, bool inMaster)
 	ports.command = base + 7;
 	ports.control = channel ? 0x3F6 : 0x376;
 }
-
-void IDE::init()
-{
-	info("Initializing IDE/ATA...");
-	devices[0].init(true, true);
-	devices[1].init(true, false);
-	devices[2].init(false, true);
-	devices[3].init(false, false);
-
-	devices[0].identify();
-	devices[1].identify();
-	devices[2].identify();
-	devices[3].identify();
-
-	IDT::registerInterruptHandler(IRQ14, IDE::callback);
-}
-
-void IDE::callback(Registers regs) { /*debug("File IO callback");*/ }
-
-ATADevice* IDE::getDevice(uint32_t index) { return &devices[index]; }
 
 void ATADevice::wait4ns() const
 {
@@ -101,6 +160,7 @@ void ATADevice::identify()
 
 	waitBusy();
 
+	// Read 256 WORD (2-byte) values (512 bytes total).
 	uint16_t buffer[256];
 	memset(buffer, 0, 256);
 	for (int i = 0; i < 256; i++)
@@ -159,11 +219,6 @@ void ATADevice::flush() const { outb(ports.command, 0xE7); }
 
 bool ATADevice::accessSectors(uint32_t sector, uint32_t count, bool read, void* data)
 {
-	if (sector == 0)
-	{
-		warning("Sector indexes start at 1.");
-		return false;
-	}
 	if (count == 0)
 	{
 		warning("Unable to read 0 sectors.");
@@ -185,7 +240,7 @@ bool ATADevice::accessSectors(uint32_t sector, uint32_t count, bool read, void* 
 	{
 		for (uint32_t i = count; i > 0; i--)
 		{
-			debug("Reading sector %d.", i);
+			debug("Reading sector %d.", i - sector);
 			waitBusy();
 			// Read 256 words
 			for (uint32_t j = 0; j < 256; j++)
@@ -199,7 +254,7 @@ bool ATADevice::accessSectors(uint32_t sector, uint32_t count, bool read, void* 
 	{
 		for (uint32_t i = count; i > 0; i--)
 		{
-			debug("Writing sector %d.", i);
+			debug("Writing sector %d.", i - sector);
 			waitBusy();
 			// Write 256 words
 			for (uint32_t j = 0; j < 256; j++)

@@ -3,7 +3,6 @@
 export C_VERSION=c23
 export CPP_VERSION=c++23
 
-
 export MAKE=${MAKE:-make}
 
 export ARCH=i386

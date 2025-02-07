@@ -35,7 +35,7 @@ EXTERN void kmain(MultibootInfo* info, uint32_t magic)
 	Memory::init(start, size);
 
 	IDE::init();
-	FileSystem::readRoot();
+	FileSystem::init();
 
 	while (1)
 	{

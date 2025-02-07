@@ -1,5 +1,10 @@
 #!/bin/sh
 
+# Requires the `mtools` package.
+
 # Build a disk image
-DISK_IMAGE=disk.img
-qemu-img create -f raw ${DISK_IMAGE} 100M
+DISK=disk.img
+dd if=/dev/zero of=${DISK} bs=1M count=2
+mformat -i ${DISK}
+mcopy -i ${DISK} -s ./image/ ::/
+mdir -i ${DISK} -/

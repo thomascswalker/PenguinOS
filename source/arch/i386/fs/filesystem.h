@@ -7,5 +7,5 @@
 
 namespace FileSystem
 {
-	void readRoot();
+	void init();
 } // namespace FileSystem

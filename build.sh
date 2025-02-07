@@ -32,6 +32,14 @@ grub-mkrescue \
 	build
 success "ISO built at './build/${ISO}'."
 
+info "Building disk image..."
+if [ -e ./disk.img ]
+then
+	rm ./disk.img
+fi
+. ./build_disk_image.sh
+success "Disk image built."
+
 # Run QEMU
 info "Running QEMU-i386."
 MEM_SIZE=512 # Memory size in megabytes

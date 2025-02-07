@@ -35,6 +35,15 @@
 
 #define BYTES_PER_SECTOR 512
 
+struct ATADevice;
+
+namespace IDE
+{
+	void	   init();
+	void	   callback(Registers regs);
+	ATADevice* getDevice(uint32_t index);
+} // namespace IDE
+
 struct ATADevice
 {
 	struct Ports
@@ -74,9 +83,27 @@ struct ATADevice
 	uint32_t size() const { return sectorCount * BYTES_PER_SECTOR; }
 } __attribute__((packed));
 
-namespace IDE
+struct BootSector
 {
-	void	   init();
-	void	   callback(Registers regs);
-	ATADevice* getDevice(uint32_t index);
-} // namespace IDE
+	unsigned char oemIdentifier[9];	  // 0x03
+	uint16_t	  bytesPerSector;	  // 0x0B
+	uint8_t		  sectorsPerCluster;  // 0x0D
+	uint16_t	  reservedSectors;	  // 0x0E
+	uint8_t		  numberOfFATs;		  // 0x10
+	uint16_t	  rootEntries;		  // 0x11
+	uint16_t	  numberOfSectors;	  // 0x13
+	uint8_t		  mediaDescriptor;	  // 0x15
+	uint16_t	  sectorsPerFAT;	  // 0x16
+	uint16_t	  sectorsPerHead;	  // 0x18
+	uint16_t	  headsPerCylinder;	  // 0x1A
+	uint32_t	  hiddenSectors;	  // 0x1C
+	uint32_t	  bigNumberOfSectors; // 0x20
+	uint32_t	  bigSectorsPerFAT;	  // 0x24
+	uint16_t	  extFlags;			  // 0x28
+	uint16_t	  fSVersion;		  // 0x2A
+	uint32_t	  rootDirectoryStart; // 0x2C
+	uint16_t	  fSInfoSector;		  // 0x30
+	uint16_t	  backupBootSector;	  // 0x32
+
+	void init(uint8_t* data);
+};
