@@ -274,6 +274,11 @@ struct multiboot_apm_info
 
 namespace Multiboot
 {
+	static uint8_t drive;
+	static uint8_t part1;
+	static uint8_t part2;
+	static uint8_t part3;
+
 	static void init(MultibootInfo* info, uint32_t* address, uint32_t* size)
 	{
 
@@ -289,10 +294,10 @@ namespace Multiboot
 		{
 			printf("Boot loader: %s\n", reinterpret_cast<char*>(info->bootLoaderName));
 
-			uint8_t drive = (info->bootDevice & 0xFF000000) >> 24;
-			uint8_t part1 = (info->bootDevice & 0x00FF0000) >> 16;
-			uint8_t part2 = (info->bootDevice & 0x0000FF00) >> 8;
-			uint8_t part3 = (info->bootDevice & 0x000000FF);
+			drive = (info->bootDevice & 0xFF000000) >> 24;
+			part1 = (info->bootDevice & 0x00FF0000) >> 16;
+			part2 = (info->bootDevice & 0x0000FF00) >> 8;
+			part3 = (info->bootDevice & 0x000000FF);
 
 			switch (drive)
 			{

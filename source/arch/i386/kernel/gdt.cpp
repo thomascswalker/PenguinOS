@@ -12,8 +12,6 @@ void GDT::init()
 	setGate(4, 0, 0xFFFFFFFF, 0xF2, 0xCF); // User mode data segment
 
 	loadGDT(&ptr);
-
-	success("GDT initialized.");
 }
 
 void GDT::setGate(int32_t entry, uint32_t base, uint32_t limit, uint8_t access, uint8_t gran)

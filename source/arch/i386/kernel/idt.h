@@ -11,7 +11,7 @@
 #define TIMER 0x20
 #define KEYBOARD 0x21
 #define SYSTEM_CALL 0x80
-#define ATA 0x2D
+#define ATA 0x2E
 
 #define IDT_ENTRY_COUNT 256
 
@@ -63,8 +63,8 @@
 #define IRQ10 42
 #define IRQ11 43
 #define IRQ12 44
-#define IRQ13 ATA
-#define IRQ14 46
+#define IRQ13 45
+#define IRQ14 ATA
 #define IRQ15 47
 
 struct IDTEntry

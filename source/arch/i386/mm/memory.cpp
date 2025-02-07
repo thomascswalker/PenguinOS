@@ -68,7 +68,6 @@ void Memory::init(uint32_t start, uint32_t size)
 	// Zero out all entries in the page directory.
 	memset(pageDirectory, 0, 1024 * sizeof(uint32_t));
 
-	debug("Initializing page directory...");
 	for (uint32_t i = 0; i < TABLE_COUNT; i++)
 	{
 		// Compute the address of the page table. Table 0 starts
@@ -104,11 +103,9 @@ void Memory::init(uint32_t start, uint32_t size)
 
 	// Setup memory allocation
 	// Page-aligned start and end of usable memory in the system.
-	debug("Initializing physical memory allocation...");
 	memoryStart = (uint32_t)pageDirectory + PAGE_SIZE + DIR_SIZE;
 	memoryEnd = PAGE_ALIGN(memoryStart + (size - PAGE_SIZE - DIR_SIZE));
 	memorySize = memoryEnd - memoryStart;
-	debug("Physical memory area is from [%x => %x] (%xB)", memoryStart, memoryEnd, memorySize);
 
 	// Initialize the block linked list.
 	uint32_t blockCount = CEILDIV(PAGE_ALIGN(memorySize), BLOCK_SIZE);
@@ -116,14 +113,12 @@ void Memory::init(uint32_t start, uint32_t size)
 	blockHead = (Block*)memoryStart;
 	blockTail = blockHead; // Tail == Head
 	uint32_t blockMemorySize = PAGE_ALIGN(blockByteCount) * sizeof(Block);
-	debug("Allocating %dKB for block memory at %x.", blockMemorySize / 1024, blockHead);
 	memset(blockHead, 0, blockMemorySize);
 
 	// Now that we have the number of blocks and the maximum possible
 	// linked list size, we can initialize the block bitmap.
 	blockMap = (BlockMap*)((uint32_t)blockHead + blockMemorySize);
 	*blockMap = BlockMap(blockByteCount);
-	debug("Constructed block map at %x with %d blocks.", blockMap, blockCount);
 
 	// Set the memory for the block map itself to always be in use.
 	for (uint32_t i = 0; i < (uint32_t)CEILDIV(blockByteCount, BLOCK_SIZE); i++)
@@ -166,17 +161,14 @@ uint32_t* Memory::getTableFromIndex(uint32_t index)
 
 void Memory::enablePaging()
 {
-	debug("Enabling paging.");
 	uint32_t cr0;
 	asm("mov %%cr0, %0" : "=r"(cr0));
 	cr0 |= 0x80000001; // Paging + Protected Mode
 	asm("mov %0, %%cr0" ::"r"(cr0));
-	success("Paging enabled.");
 }
 
 void Memory::setPageDirectory(uint32_t* directory)
 {
-	debug("Setting page directory to %x.", directory);
 	asm("mov %0, %%cr3" ::"r"((uint32_t)directory));
 }
 
@@ -186,12 +178,10 @@ void Memory::setLargePaging(bool state)
 	asm("mov %%cr4, %0" : "=r"(cr4));
 	if (state)
 	{
-		debug("Enabling large paging.");
 		cr4 |= 0x00000010;
 	}
 	else
 	{
-		debug("Disabling large paging.");
 		cr4 &= ~0x00000010;
 	}
 	asm("mov %0, %%cr4" ::"r"(cr4));

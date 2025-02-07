@@ -2,8 +2,9 @@
 Main entry point into PengOS.
 */
 
-#include <ata.h>
+#include <filesystem.h>
 #include <gdt.h>
+#include <ide.h>
 #include <keyboard.h>
 #include <memory.h>
 #include <multiboot.h>
@@ -34,6 +35,7 @@ EXTERN void kmain(MultibootInfo* info, uint32_t magic)
 	Memory::init(start, size);
 
 	IDE::init();
+	FileSystem::readRoot();
 
 	while (1)
 	{
