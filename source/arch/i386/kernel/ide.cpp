@@ -4,8 +4,7 @@
 #include <memory.h>
 #include <stdio.h>
 
-ATADevice  devices[4];
-BootSector bootSector;
+ATADevice devices[4];
 
 void IDE::init()
 {
@@ -22,68 +21,17 @@ void IDE::init()
 
 	IDT::registerInterruptHandler(IRQ14, IDE::callback);
 
+	// Select the first (Master) drive to operate on
 	ATADevice* drive = IDE::getDevice(0);
 	drive->select();
 
-	// Read the boot sector
-	// https://averstak.tripod.com/fatdox/bootsec.htm
-	uint8_t data[512];
-	if (!drive->readSectors(0, 1, data))
-	{
-		panic("Failed to read boot sector of Drive 0.");
-	}
-
-	bootSector.init(data);
-	debugs(bootSector.oemIdentifier);
-	debugd(bootSector.bytesPerSector);
-	debugd(bootSector.sectorsPerCluster);
-	debugd(bootSector.reservedSectors);
-	debugd(bootSector.numberOfFATs);
-	debugd(bootSector.rootEntries);
-	debugd(bootSector.numberOfSectors);
-	debugd(bootSector.mediaDescriptor);
-	debugd(bootSector.sectorsPerFAT);
-	debugd(bootSector.sectorsPerHead);
-	debugd(bootSector.headsPerCylinder);
-	debugd(bootSector.hiddenSectors);
-	debugd(bootSector.bigNumberOfSectors);
-	debugd(bootSector.bigSectorsPerFAT);
-	debugd(bootSector.extFlags);
-	debugd(bootSector.fSVersion);
-	debugd(bootSector.rootDirectoryStart);
-	debugd(bootSector.fSInfoSector);
-	debugd(bootSector.backupBootSector);
+	// Parse the boot sector.
+	drive->parseBootSector();
 }
 
 void IDE::callback(Registers regs) { /*debug("File IO callback");*/ }
 
 ATADevice* IDE::getDevice(uint32_t index) { return &devices[index]; }
-
-void BootSector::init(uint8_t* data)
-{
-#define BOOT_SECTOR(x, y) memcpy(&x, data + y, sizeof(x))
-	memcpy(&oemIdentifier, (uint8_t*)data + 0x03, 8);
-	oemIdentifier[8] = 0; // Null-terminate string
-	BOOT_SECTOR(bytesPerSector, 0x0B);
-	BOOT_SECTOR(sectorsPerCluster, 0x0D);
-	BOOT_SECTOR(reservedSectors, 0x0E);
-	BOOT_SECTOR(numberOfFATs, 0x10);
-	BOOT_SECTOR(rootEntries, 0x11);
-	BOOT_SECTOR(numberOfSectors, 0x13);
-	BOOT_SECTOR(mediaDescriptor, 0x15);
-	BOOT_SECTOR(sectorsPerFAT, 0x16);
-	BOOT_SECTOR(sectorsPerHead, 0x18);
-	BOOT_SECTOR(headsPerCylinder, 0x1A);
-	BOOT_SECTOR(hiddenSectors, 0x1C);
-	BOOT_SECTOR(bigNumberOfSectors, 0x20);
-	BOOT_SECTOR(bigSectorsPerFAT, 0x24);
-	BOOT_SECTOR(extFlags, 0x28);
-	BOOT_SECTOR(fSVersion, 0x2A);
-	BOOT_SECTOR(rootDirectoryStart, 0x2C);
-	BOOT_SECTOR(fSInfoSector, 0x30);
-	BOOT_SECTOR(backupBootSector, 0x32);
-#undef BOOT_SECTOR
-}
 
 void ATADevice::init(bool inPrimary, bool inMaster)
 {
@@ -217,6 +165,96 @@ void ATADevice::identify()
 
 void ATADevice::flush() const { outb(ports.command, 0xE7); }
 
+void ATADevice::parseBootSector()
+{
+	// Read the boot sector
+	// https://averstak.tripod.com/fatdox/bootsec.htm
+	uint8_t mbrData[512];
+	if (!readSectors(0, 1, mbrData))
+	{
+		panic("Failed to read boot sector of drive data.");
+	}
+
+	// https://www.pjrc.com/tech/8051/ide/fat32.html
+	// Extract MBR info
+	memcpy(bootCode, mbrData, MBR_BYTE_SIZE);
+
+#define BOOT_SECTOR(x, y) memcpy(&x, mbrData + y, sizeof(x));
+
+	memcpy(&mbr.oemIdentifier, (uint8_t*)mbrData + 0x03, 8);
+	mbr.oemIdentifier[8] = 0; // Null-terminate string
+	BOOT_SECTOR(mbr.bytesPerSector, 0x0B);
+	BOOT_SECTOR(mbr.sectorsPerCluster, 0x0D);
+	BOOT_SECTOR(mbr.reservedSectorCount, 0x0E);
+	BOOT_SECTOR(mbr.tableCount, 0x10);
+	BOOT_SECTOR(mbr.rootEntryCount, 0x11);
+	BOOT_SECTOR(mbr.sectorCount, 0x13);
+	BOOT_SECTOR(mbr.mediaType, 0x15);
+	BOOT_SECTOR(mbr.sectorsPerTable, 0x16);
+	BOOT_SECTOR(mbr.sectorsPerTrack, 0x18);
+	BOOT_SECTOR(mbr.heads, 0x1A);
+	BOOT_SECTOR(mbr.hiddenSectors, 0x1C);
+	BOOT_SECTOR(mbr.largeSectorCount, 0x20);
+	BOOT_SECTOR(mbr.bigSectorsPerTable, 0x24);
+	BOOT_SECTOR(mbr.extFlags, 0x28);
+	BOOT_SECTOR(mbr.fSVersion, 0x2A);
+	BOOT_SECTOR(mbr.rootDirectoryStart, 0x2C);
+	BOOT_SECTOR(mbr.fSInfoSector, 0x30);
+	BOOT_SECTOR(mbr.backupBootSector, 0x32);
+#undef BOOT_SECTOR
+
+	// Extract partition info
+	memcpy(&partitions, mbrData + MBR_BYTE_SIZE, 64);
+
+	Partition* partition1 = &partitions[0];
+
+	// uint32_t fatSize = mbr.bytesPerSector * mbr.sectorCount;
+
+	// uint32_t totalClusters;
+	// if (partition1->sectorCount == 0)
+	// {
+	// 	partition1->fatType = ExFAT;
+	// }
+	// else if (totalClusters < 4085)
+	// {
+	// 	partition1->fatType = FAT12;
+	// }
+	// else if (totalClusters < 65525)
+	// {
+	// 	partition1->fatType = FAT16;
+	// }
+	// else
+	// {
+	// 	partition1->fatType = FAT32;
+	// }
+	// debug("FAT Type: %d", partition1->fatType);
+
+	// The last two bytes of the MBR should ALWAYS be
+	// [0x55, 0xAA]
+	uint8_t lastTwoBytes[2];
+	memcpy(&lastTwoBytes, mbrData + MBR_BYTE_SIZE + 64, 2);
+	ASSERT(lastTwoBytes[0] == 0x55);
+	ASSERT(lastTwoBytes[1] == 0xAA);
+
+	// Compute the addresses (on disc) to the start of the
+	// File Allocation Table (FAT) and the start of the
+	// first cluster.
+	// pFAT = (partition1->lbaBegin + mbr.reservedSectorCount);
+	// pClusters = (pFAT + (mbr.tableCount * mbr.bigSectorsPerTable));
+	// debugx(pFAT);
+	// debugx(pClusters);
+
+	uint32_t fatSectors = getFATSize();
+	for (uint32_t i = 0; i < fatSectors; i++)
+	{
+		auto entry = getFATEntry(i);
+		printf("%d:%x | ", i, entry);
+	}
+
+	// memcpy(record0, pFAT, 32);
+	// debugs(record0);
+}
+
 bool ATADevice::accessSectors(uint32_t sector, uint32_t count, bool read, void* data)
 {
 	if (count == 0)
@@ -240,7 +278,7 @@ bool ATADevice::accessSectors(uint32_t sector, uint32_t count, bool read, void* 
 	{
 		for (uint32_t i = count; i > 0; i--)
 		{
-			debug("Reading sector %d.", i - sector);
+			// debug("Reading sector %d.", sector);
 			waitBusy();
 			// Read 256 words
 			for (uint32_t j = 0; j < 256; j++)
@@ -254,7 +292,7 @@ bool ATADevice::accessSectors(uint32_t sector, uint32_t count, bool read, void* 
 	{
 		for (uint32_t i = count; i > 0; i--)
 		{
-			debug("Writing sector %d.", i - sector);
+			debug("Writing sector %d.", sector);
 			waitBusy();
 			// Write 256 words
 			for (uint32_t j = 0; j < 256; j++)
@@ -272,7 +310,7 @@ bool ATADevice::accessSectors(uint32_t sector, uint32_t count, bool read, void* 
 
 bool ATADevice::readSectors(uint32_t sector, uint32_t count, void* data)
 {
-	debug("Reading from disk...");
+	// debug("Reading from disk...");
 	return accessSectors(sector, count, true, data);
 }
 
@@ -281,3 +319,53 @@ bool ATADevice::writeSectors(uint32_t sector, uint32_t count, void* data)
 	debug("Writing to disk...");
 	return accessSectors(sector, count, false, data);
 }
+
+uint32_t ATADevice::getFATSector(uint32_t number, uint32_t size, uint32_t sector)
+{
+	return (number * size) + sector;
+}
+
+FATEntryType ATADevice::getFATEntry(uint32_t index)
+{
+	uint32_t fatSector = mbr.reservedSectorCount + index;
+	uint8_t	 fatData[512];
+	uint32_t clusterCount = getClusterCount();
+	if (readSectors(fatSector, 1, fatData))
+	{
+		uint32_t record;
+		memcpy(&record, fatData, 4);
+		if (record == 0x0)
+		{
+			return Free;
+		}
+		else if (record >= 0x2 && record <= clusterCount)
+		{
+			return Allocated;
+		}
+		else if (record >= clusterCount + 1 && record <= 0xFFFFFF6)
+		{
+			return Reserved;
+		}
+		else if (record == 0xFFFFFF7)
+		{
+			return Defective;
+		}
+		else if (record >= 0xFFFFFF8 && record <= 0xFFFFFFE)
+		{
+			return Reserved;
+		}
+		else
+		{
+			return EOF;
+		}
+	}
+	return Defective;
+}
+
+uint32_t ATADevice::getClusterCount()
+{
+	uint32_t dataSectors = mbr.sectorCount - (mbr.reservedSectorCount + getFATSize());
+	return dataSectors / mbr.sectorsPerCluster;
+}
+
+uint32_t ATADevice::getFATSize() { return mbr.tableCount * mbr.bigSectorsPerTable; }

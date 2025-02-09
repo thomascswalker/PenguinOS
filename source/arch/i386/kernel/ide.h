@@ -1,3 +1,5 @@
+// https://academy.cba.mit.edu/classes/networking_communications/SD/FAT.pdf
+
 #pragma once
 
 #include <sys.h>
@@ -34,8 +36,11 @@
 #define ATA_IDENT_MAX_LBA_EXT 100
 
 #define BYTES_PER_SECTOR 512
+#define MBR_BYTE_SIZE 446
 
 struct ATADevice;
+struct Partition;
+struct BootSector;
 
 namespace IDE
 {
@@ -43,6 +48,57 @@ namespace IDE
 	void	   callback(Registers regs);
 	ATADevice* getDevice(uint32_t index);
 } // namespace IDE
+
+enum FAT
+{
+	ExFAT,
+	FAT12,
+	FAT16,
+	FAT32
+};
+
+enum FATEntryType
+{
+	Free,
+	Allocated,
+	Reserved,
+	Defective,
+	EOF
+};
+
+struct Partition
+{
+	uint32_t sectorCount;
+	uint32_t lbaBegin;
+	uint32_t chsEnd;
+	uint8_t	 typeCode;
+	uint32_t chsBegin;
+	uint8_t	 bootFlag;
+	FAT		 fatType;
+} __attribute__((packed));
+
+struct BootSector
+{
+	unsigned char oemIdentifier[9];	   // 0x03
+	uint16_t	  bytesPerSector;	   // 0x0B
+	uint8_t		  sectorsPerCluster;   // 0x0D
+	uint16_t	  reservedSectorCount; // 0x0E, location of FAT table as a sector number
+	uint8_t		  tableCount;		   // 0x10
+	uint16_t	  rootEntryCount;	   // 0x11
+	uint16_t	  sectorCount;		   // 0x13
+	uint8_t		  mediaType;		   // 0x15
+	uint16_t	  sectorsPerTable;	   // 0x16
+	uint16_t	  sectorsPerTrack;	   // 0x18
+	uint16_t	  heads;			   // 0x1A
+	uint32_t	  hiddenSectors;	   // 0x1C
+	uint32_t	  largeSectorCount;	   // 0x20
+	uint32_t	  bigSectorsPerTable;  // 0x24
+	uint16_t	  extFlags;			   // 0x28
+	uint16_t	  fSVersion;		   // 0x2A
+	uint32_t	  rootDirectoryStart;  // 0x2C
+	uint16_t	  fSInfoSector;		   // 0x30
+	uint16_t	  backupBootSector;	   // 0x32
+} __attribute__((packed));
 
 struct ATADevice
 {
@@ -67,6 +123,13 @@ struct ATADevice
 	uint16_t serial;
 	char	 model[41]; // Drive model string, 40 chars + null terminator
 
+	uint8_t	   bootCode[446];
+	BootSector mbr;
+	Partition  partitions[4];
+
+	uint32_t pFAT;
+	uint32_t pClusters;
+
 	void init(bool inPrimary, bool inMaster);
 	void wait4ns() const;
 	void waitBusy() const;
@@ -75,35 +138,17 @@ struct ATADevice
 	void identify();
 	void flush() const;
 
+	void parseBootSector();
+
 	bool accessSectors(uint32_t sector, uint32_t count, bool read, void* data);
 	bool readSectors(uint32_t sector, uint32_t count, void* data);
 	bool writeSectors(uint32_t sector, uint32_t count, void* data);
 
+	uint32_t	 getFATSector(uint32_t FATNumber, uint32_t FATSize, uint32_t FATSector);
+	FATEntryType getFATEntry(uint32_t index);
+	uint32_t	 getClusterCount();
+	uint32_t	 getFATSize();
+
 	// Returns the drive size in bytes.
 	uint32_t size() const { return sectorCount * BYTES_PER_SECTOR; }
 } __attribute__((packed));
-
-struct BootSector
-{
-	unsigned char oemIdentifier[9];	  // 0x03
-	uint16_t	  bytesPerSector;	  // 0x0B
-	uint8_t		  sectorsPerCluster;  // 0x0D
-	uint16_t	  reservedSectors;	  // 0x0E
-	uint8_t		  numberOfFATs;		  // 0x10
-	uint16_t	  rootEntries;		  // 0x11
-	uint16_t	  numberOfSectors;	  // 0x13
-	uint8_t		  mediaDescriptor;	  // 0x15
-	uint16_t	  sectorsPerFAT;	  // 0x16
-	uint16_t	  sectorsPerHead;	  // 0x18
-	uint16_t	  headsPerCylinder;	  // 0x1A
-	uint32_t	  hiddenSectors;	  // 0x1C
-	uint32_t	  bigNumberOfSectors; // 0x20
-	uint32_t	  bigSectorsPerFAT;	  // 0x24
-	uint16_t	  extFlags;			  // 0x28
-	uint16_t	  fSVersion;		  // 0x2A
-	uint32_t	  rootDirectoryStart; // 0x2C
-	uint16_t	  fSInfoSector;		  // 0x30
-	uint16_t	  backupBootSector;	  // 0x32
-
-	void init(uint8_t* data);
-};
