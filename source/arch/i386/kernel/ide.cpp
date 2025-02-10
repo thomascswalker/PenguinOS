@@ -25,8 +25,14 @@ void IDE::init()
 	ATADevice* drive = IDE::getDevice(0);
 	drive->select();
 
-	// Parse the boot sector.
+	// Parse the boot sector (1)
 	drive->parseBootSector();
+
+	// Parse the file system info sector (2)
+	drive->parseFileSystemInfoSector();
+
+	// Parse the root directory
+	drive->parseDirectory(drive->rootDirectorySector);
 }
 
 void IDE::callback(Registers regs) { /*debug("File IO callback");*/ }
@@ -206,29 +212,6 @@ void ATADevice::parseBootSector()
 	// Extract partition info
 	memcpy(&partitions, mbrData + MBR_BYTE_SIZE, 64);
 
-	Partition* partition1 = &partitions[0];
-
-	// uint32_t fatSize = mbr.bytesPerSector * mbr.sectorCount;
-
-	// uint32_t totalClusters;
-	// if (partition1->sectorCount == 0)
-	// {
-	// 	partition1->fatType = ExFAT;
-	// }
-	// else if (totalClusters < 4085)
-	// {
-	// 	partition1->fatType = FAT12;
-	// }
-	// else if (totalClusters < 65525)
-	// {
-	// 	partition1->fatType = FAT16;
-	// }
-	// else
-	// {
-	// 	partition1->fatType = FAT32;
-	// }
-	// debug("FAT Type: %d", partition1->fatType);
-
 	// The last two bytes of the MBR should ALWAYS be
 	// [0x55, 0xAA]
 	uint8_t lastTwoBytes[2];
@@ -236,23 +219,69 @@ void ATADevice::parseBootSector()
 	ASSERT(lastTwoBytes[0] == 0x55);
 	ASSERT(lastTwoBytes[1] == 0xAA);
 
-	// Compute the addresses (on disc) to the start of the
-	// File Allocation Table (FAT) and the start of the
-	// first cluster.
-	// pFAT = (partition1->lbaBegin + mbr.reservedSectorCount);
-	// pClusters = (pFAT + (mbr.tableCount * mbr.bigSectorsPerTable));
-	// debugx(pFAT);
-	// debugx(pClusters);
+	rootDirectorySector = mbr.reservedSectorCount + (mbr.tableCount * mbr.bigSectorsPerTable);
+	debug("Root Directory is at Sector %d.", rootDirectorySector);
+	firstDataSector = mbr.reservedSectorCount + (mbr.tableCount * mbr.bigSectorsPerTable);
+	debug("First data sector is at %d.", firstDataSector);
 
-	uint32_t fatSectors = getFATSize();
-	for (uint32_t i = 0; i < fatSectors; i++)
+	uint32_t rootDirSectors =
+		((mbr.rootEntryCount * 32) + (mbr.bytesPerSector - 1)) / mbr.bytesPerSector;
+	ASSERT(rootDirSectors == 0);
+}
+
+void ATADevice::parseFileSystemInfoSector()
+{
+	if (!readSectors(1, 1, &fsi))
 	{
-		auto entry = getFATEntry(i);
-		printf("%d:%x | ", i, entry);
+		panic("Failed to read file system info sector.");
 	}
 
-	// memcpy(record0, pFAT, 32);
-	// debugs(record0);
+	// Verify integrity of the FSI structure
+	ASSERT(fsi.signature0 == 0x41615252);
+	ASSERT(fsi.signature1 == 0x61417272);
+	ASSERT(fsi.signature2 == 0xAA550000);
+}
+
+void ATADevice::parseDirectory(uint32_t sector)
+{
+	if (!sector)
+	{
+		error("Root directory sector is invalid.");
+		return;
+	}
+
+	uint8_t data[512];
+	if (!readSectors(sector, 1, &data))
+	{
+		panic("Failed to read root directory sector.");
+	}
+
+	// 16 entries per sector
+	for (uint32_t i = 0; i < 16; i++)
+	{
+		FATFile file = *(FATFile*)&data[i * 32];
+		if (file.attr == 0x0)
+		{
+			continue;
+		}
+		if (file.name[0] == '.')
+		{
+			continue;
+		}
+
+		debug("%s.%s : %x", file.name, file.ext, file.attr);
+
+		if (((FileAttribute)file.attr & FileAttribute::Directory) == FileAttribute::Directory)
+		{
+			uint32_t sector = getClusterSector(file.fstClusLO);
+			parseDirectory(sector);
+		}
+	}
+}
+
+uint32_t ATADevice::getClusterSector(uint32_t n)
+{
+	return ((n - 2) * mbr.sectorsPerCluster) + firstDataSector;
 }
 
 bool ATADevice::accessSectors(uint32_t sector, uint32_t count, bool read, void* data)

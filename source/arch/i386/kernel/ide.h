@@ -87,18 +87,56 @@ struct BootSector
 	uint16_t	  rootEntryCount;	   // 0x11
 	uint16_t	  sectorCount;		   // 0x13
 	uint8_t		  mediaType;		   // 0x15
-	uint16_t	  sectorsPerTable;	   // 0x16
+	uint16_t	  sectorsPerTable;	   // 0x16, FAT12/FAT16
 	uint16_t	  sectorsPerTrack;	   // 0x18
 	uint16_t	  heads;			   // 0x1A
 	uint32_t	  hiddenSectors;	   // 0x1C
 	uint32_t	  largeSectorCount;	   // 0x20
-	uint32_t	  bigSectorsPerTable;  // 0x24
+	uint32_t	  bigSectorsPerTable;  // 0x24, FAT32
 	uint16_t	  extFlags;			   // 0x28
 	uint16_t	  fSVersion;		   // 0x2A
 	uint32_t	  rootDirectoryStart;  // 0x2C
 	uint16_t	  fSInfoSector;		   // 0x30
 	uint16_t	  backupBootSector;	   // 0x32
 } __attribute__((packed));
+
+struct FileSystemInfo
+{
+	uint32_t signature0;
+	uint8_t	 reserved1[480];
+	uint32_t signature1;
+	uint32_t freeCount;
+	uint32_t nxtFree;
+	uint8_t	 reserved2[12];
+	uint32_t signature2;
+} __attribute__((packed));
+
+struct FATFile
+{
+	uint8_t	 name[8];
+	uint8_t	 ext[3];
+	uint8_t	 attr;
+	uint8_t	 ntRes;
+	uint8_t	 crtTimeTenth;
+	uint16_t crtTime;
+	uint16_t crtDate;
+	uint16_t lastAccDate;
+	uint16_t fstClusHI;
+	uint16_t wrtTime;
+	uint16_t wrtDate;
+	uint16_t fstClusLO;
+	uint32_t fileSize;
+} __attribute__((packed));
+
+enum FileAttribute
+{
+	ReadOnly = (1 << 0),
+	Hidden = (1 << 1),
+	System = (1 << 2),
+	VolumeID = (1 << 3),
+	Directory = (1 << 4),
+	Archive = (1 << 5),
+};
 
 struct ATADevice
 {
@@ -123,12 +161,13 @@ struct ATADevice
 	uint16_t serial;
 	char	 model[41]; // Drive model string, 40 chars + null terminator
 
-	uint8_t	   bootCode[446];
-	BootSector mbr;
-	Partition  partitions[4];
+	uint8_t		   bootCode[446];
+	BootSector	   mbr;
+	Partition	   partitions[4];
+	FileSystemInfo fsi;
 
-	uint32_t pFAT;
-	uint32_t pClusters;
+	uint32_t rootDirectorySector;
+	uint32_t firstDataSector;
 
 	void init(bool inPrimary, bool inMaster);
 	void wait4ns() const;
@@ -139,6 +178,11 @@ struct ATADevice
 	void flush() const;
 
 	void parseBootSector();
+	void parseFileSystemInfoSector();
+	void parseDirectory(uint32_t sector);
+
+	void	 parseSector(uint32_t n);
+	uint32_t getClusterSector(uint32_t n);
 
 	bool accessSectors(uint32_t sector, uint32_t count, bool read, void* data);
 	bool readSectors(uint32_t sector, uint32_t count, void* data);
