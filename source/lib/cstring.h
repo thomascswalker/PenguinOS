@@ -120,9 +120,20 @@ static void strapp(char* source, const char* string, char* dest)
 	dest += sizeof(source);
 	strcpy(dest, string);
 }
+
 static void strprep(char* source, const char* string, char* dest)
 {
 	strcpy(dest, string);
 	dest += sizeof(string);
 	strcpy(dest, source);
+}
+
+static void wtoc(char* dest, wchar_t* source, size_t length)
+{
+	uint32_t i = 0;
+	while (length--)
+	{
+		*dest++ = source[i]; // | (source[1] << 8);
+		i += 2;
+	}
 }

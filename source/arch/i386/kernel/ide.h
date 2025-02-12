@@ -2,6 +2,8 @@
 
 #pragma once
 
+#include <bitmask.h>
+#include <cstring.h>
 #include <sys.h>
 
 #define ATA_PRIMARY 0x00
@@ -35,8 +37,10 @@
 // Number of User Addressable Logical Sectors (QWord, 64)
 #define ATA_IDENT_MAX_LBA_EXT 100
 
-#define BYTES_PER_SECTOR 512
 #define MBR_BYTE_SIZE 446
+#define FAT_BYTES_PER_SECTOR 512
+#define FAT_ENTRY_SIZE 32
+#define FAT_ENTRIES_PER_SECTOR (FAT_BYTES_PER_SECTOR / FAT_ENTRY_SIZE)
 
 struct ATADevice;
 struct Partition;
@@ -111,9 +115,9 @@ struct FileSystemInfo
 	uint32_t signature2;
 } __attribute__((packed));
 
-struct FATFile
+struct FATFileEntry // 32 bytes
 {
-	uint8_t	 name[8];
+	uint8_t	 shortName[8];
 	uint8_t	 ext[3];
 	uint8_t	 attr;
 	uint8_t	 ntRes;
@@ -126,6 +130,21 @@ struct FATFile
 	uint16_t wrtDate;
 	uint16_t fstClusLO;
 	uint32_t fileSize;
+} __attribute__((packed));
+
+struct FATLongFileEntry // 32 bytes
+{
+	uint8_t	 id;
+	char	 data0[10];
+	uint8_t	 attr; // Should always be 0x0F
+	uint8_t	 longEntryType;
+	uint8_t	 checksum;
+	char	 data1[12];
+	uint16_t always0;
+	char	 data2[4];
+
+	bool isLast() const { return (id & 0x40) == 0x40; }
+
 } __attribute__((packed));
 
 enum FileAttribute
@@ -166,8 +185,9 @@ struct ATADevice
 	Partition	   partitions[4];
 	FileSystemInfo fsi;
 
-	uint32_t rootDirectorySector;
-	uint32_t firstDataSector;
+	uint32_t	 rootDirectorySector;
+	uint32_t	 firstDataSector;
+	FATFileEntry rootDirectory;
 
 	void init(bool inPrimary, bool inMaster);
 	void wait4ns() const;
@@ -179,9 +199,12 @@ struct ATADevice
 
 	void parseBootSector();
 	void parseFileSystemInfoSector();
-	void parseDirectory(uint32_t sector);
+	void parseDirectory(uint32_t sector, bool recurse);
 
-	void	 parseSector(uint32_t n);
+	bool isLongEntry(uint8_t* buffer);
+	void parseEntry(FATFileEntry* entry, char* buffer, uint32_t* pos);
+	void parseLongEntry(FATLongFileEntry* entry, uint32_t count, char* filename);
+
 	uint32_t getClusterSector(uint32_t n);
 
 	bool accessSectors(uint32_t sector, uint32_t count, bool read, void* data);
@@ -194,5 +217,5 @@ struct ATADevice
 	uint32_t	 getFATSize();
 
 	// Returns the drive size in bytes.
-	uint32_t size() const { return sectorCount * BYTES_PER_SECTOR; }
+	uint32_t size() const { return sectorCount * FAT_BYTES_PER_SECTOR; }
 } __attribute__((packed));
