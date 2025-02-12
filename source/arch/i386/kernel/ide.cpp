@@ -43,7 +43,7 @@ void ATADevice::init(bool inPrimary, bool inMaster)
 	parseFileSystemInfoSector();
 
 	// Parse the root directory
-	FATFileEntry data[FAT_ENTRIES_PER_SECTOR];
+	FATEntry data[FAT_ENTRIES_PER_SECTOR];
 	if (!readSectors(rootDirectorySector, 1, &data))
 	{
 		panic("Failed to read root directory sector.");
@@ -51,7 +51,7 @@ void ATADevice::init(bool inPrimary, bool inMaster)
 	rootDirectory = data[0];
 
 	uint32_t rootDataSector = getClusterSector(rootDirectory.fstClusLO);
-	parseDirectory(rootDataSector, true);
+	parseDirectory(rootDataSector);
 }
 
 void ATADevice::wait4ns() const
@@ -239,7 +239,7 @@ void ATADevice::parseFileSystemInfoSector()
 	ASSERT(fsi.signature2 == 0xAA550000);
 }
 
-void ATADevice::parseDirectory(uint32_t sector, bool recurse)
+void ATADevice::parseDirectory(uint32_t sector)
 {
 	if (!sector)
 	{
@@ -256,22 +256,39 @@ void ATADevice::parseDirectory(uint32_t sector, bool recurse)
 	uint32_t index = 0;
 	while (index < 16)
 	{
-		uint8_t* attr = &data[index * 32];
-		char	 filename[128];
+		uint8_t* attr = &data[index * FAT_ENTRY_SIZE];
+		char	 longName[128];
+		memset(longName, 0, 128);
 		if (isLongEntry(attr))
 		{
-			memset(filename, 0, 128);
-			FATLongFileEntry* entry = (FATLongFileEntry*)(data + (index * 32));
-			uint8_t			  entryCount = (entry->id & ~0x40);
-			parseLongEntry(entry, entryCount, filename);
+			FATLongEntry* entry = (FATLongEntry*)(data + (index * FAT_ENTRY_SIZE));
+			uint8_t		  entryCount = (entry->id & ~0x40);
+			parseLongEntry(entry, entryCount, longName);
 			index += entryCount;
 		}
-		attr = &data[index * 32];
+		attr = &data[index * FAT_ENTRY_SIZE];
 		if (*attr != 0x0)
 		{
-			FATFileEntry* entry = (FATFileEntry*)(data + (index * 32));
-			debug("Parsing SHORT entry %d: %s", index, entry->shortName);
-			debug("LONG filename: %s", filename);
+			FATEntry* entry = (FATEntry*)(data + (index * FAT_ENTRY_SIZE));
+			char	  lowerShortName[13];
+			for (int i = 0; i < 8; i++)
+			{
+				lowerShortName[i] = tolower(entry->shortName[i]);
+			}
+			if (entry->ext[0] != 0)
+			{
+				lowerShortName[8] = '.';
+				for (int i = 0; i < 3; i++)
+				{
+					lowerShortName[i + 9] = tolower(entry->ext[i]);
+				}
+				lowerShortName[12] = 0;
+			}
+			else
+			{
+				lowerShortName[8] = 0;
+			}
+			printf("%s | %dB\n", *longName ? longName : lowerShortName, entry->fileSize);
 		}
 		index++;
 	}
@@ -290,11 +307,14 @@ void ATADevice::parseDirectory(uint32_t sector, bool recurse)
 	// }
 }
 
-bool ATADevice::isLongEntry(uint8_t* buffer) { return *buffer == 0x41 || *(buffer + 11) == 0x0F; }
+bool ATADevice::isLongEntry(uint8_t* buffer)
+{
+	return *buffer == FileAttribute::LastEntry || *(buffer + 11) == FileAttribute::LongFileName;
+}
 
-void ATADevice::parseEntry(FATFileEntry* entry, char* buffer, uint32_t* pos) {}
+void ATADevice::parseEntry(FATEntry* entry, char* buffer, uint32_t* pos) {}
 
-void ATADevice::parseLongEntry(FATLongFileEntry* entry, uint32_t count, char* filename)
+void ATADevice::parseLongEntry(FATLongEntry* entry, uint32_t count, char* filename)
 {
 	while (count)
 	{
@@ -304,7 +324,6 @@ void ATADevice::parseLongEntry(FATLongFileEntry* entry, uint32_t count, char* fi
 		memcpy(wdata, entry->data0, 10);
 		memcpy(wdata + 10, entry->data1, 12);
 		memcpy(wdata + 22, entry->data2, 4);
-
 		for (int i = 0; i < 13; i++)
 		{
 			*(filename + offset + i) = wdata[i * 2];

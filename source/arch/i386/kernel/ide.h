@@ -115,10 +115,10 @@ struct FileSystemInfo
 	uint32_t signature2;
 } __attribute__((packed));
 
-struct FATFileEntry // 32 bytes
+struct FATEntry // 32 bytes
 {
-	uint8_t	 shortName[8];
-	uint8_t	 ext[3];
+	int8_t	 shortName[8];
+	int8_t	 ext[3];
 	uint8_t	 attr;
 	uint8_t	 ntRes;
 	uint8_t	 crtTimeTenth;
@@ -132,7 +132,7 @@ struct FATFileEntry // 32 bytes
 	uint32_t fileSize;
 } __attribute__((packed));
 
-struct FATLongFileEntry // 32 bytes
+struct FATLongEntry // 32 bytes
 {
 	uint8_t	 id;
 	char	 data0[10];
@@ -153,8 +153,10 @@ enum FileAttribute
 	Hidden = (1 << 1),
 	System = (1 << 2),
 	VolumeID = (1 << 3),
+	LongFileName = 0x0F,
 	Directory = (1 << 4),
 	Archive = (1 << 5),
+	LastEntry = 0x41,
 };
 
 struct ATADevice
@@ -185,9 +187,9 @@ struct ATADevice
 	Partition	   partitions[4];
 	FileSystemInfo fsi;
 
-	uint32_t	 rootDirectorySector;
-	uint32_t	 firstDataSector;
-	FATFileEntry rootDirectory;
+	uint32_t rootDirectorySector;
+	uint32_t firstDataSector;
+	FATEntry rootDirectory;
 
 	void init(bool inPrimary, bool inMaster);
 	void wait4ns() const;
@@ -199,11 +201,11 @@ struct ATADevice
 
 	void parseBootSector();
 	void parseFileSystemInfoSector();
-	void parseDirectory(uint32_t sector, bool recurse);
+	void parseDirectory(uint32_t sector);
 
 	bool isLongEntry(uint8_t* buffer);
-	void parseEntry(FATFileEntry* entry, char* buffer, uint32_t* pos);
-	void parseLongEntry(FATLongFileEntry* entry, uint32_t count, char* filename);
+	void parseEntry(FATEntry* entry, char* buffer, uint32_t* pos);
+	void parseLongEntry(FATLongEntry* entry, uint32_t count, char* filename);
 
 	uint32_t getClusterSector(uint32_t n);
 
