@@ -55,7 +55,7 @@ void ATADevice::init(bool inPrimary, bool inMaster)
 	memset(directory.files, 0, sizeof(FATEntry) * FAT_ENTRIES_PER_SECTOR);
 	uint32_t rootDataSector = getClusterSector(rootDirectory.fstClusLO);
 	parseDirectory(rootDataSector, &directory);
-	for (int32_t i = 0; i < directory.fileCount; i++)
+	for (uint32_t i = 0; i < directory.fileCount; i++)
 	{
 		FATEntry* f = &directory.files[i];
 

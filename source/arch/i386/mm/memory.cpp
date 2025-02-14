@@ -253,7 +253,7 @@ void* std::kmalloc(uint32_t size)
 		return nullptr;
 	}
 
-	int currentOrder = order;
+	uint32_t currentOrder = order;
 	while (currentOrder < BUCKET_COUNT && freeList[currentOrder] == nullptr)
 	{
 		currentOrder++;

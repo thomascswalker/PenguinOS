@@ -119,8 +119,8 @@ struct FileSystemInfo
 
 struct FATShortEntry // 32 bytes
 {
-	int8_t	 shortName[8];
-	int8_t	 ext[3];
+	uint8_t	 shortName[8];
+	uint8_t	 ext[3];
 	uint8_t	 attr;
 	uint8_t	 ntRes;
 	uint8_t	 crtTimeTenth;

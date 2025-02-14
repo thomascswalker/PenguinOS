@@ -2,6 +2,7 @@
 Main entry point into PengOS.
 */
 
+#include <array.h>
 #include <filesystem.h>
 #include <gdt.h>
 #include <ide.h>
@@ -37,6 +38,11 @@ EXTERN void kmain(MultibootInfo* info, uint32_t magic)
 	IDE::init();
 	// FileSystem::init();
 
+	std::Array<uint32_t> a;
+	for (uint32_t i = 0; i < 500; i++)
+	{
+		a.add(i);
+	}
 	while (1)
 	{
 	}
