@@ -8,4 +8,5 @@
 namespace FileSystem
 {
 	void init();
+
 } // namespace FileSystem

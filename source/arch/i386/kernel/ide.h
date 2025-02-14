@@ -41,6 +41,8 @@
 #define FAT_BYTES_PER_SECTOR 512
 #define FAT_ENTRY_SIZE 32
 #define FAT_ENTRIES_PER_SECTOR (FAT_BYTES_PER_SECTOR / FAT_ENTRY_SIZE)
+#define MAX_FILENAME 256
+#define FAT_EOC 0x0FFFFFF8
 
 struct ATADevice;
 struct Partition;
@@ -115,7 +117,7 @@ struct FileSystemInfo
 	uint32_t signature2;
 } __attribute__((packed));
 
-struct FATEntry // 32 bytes
+struct FATShortEntry // 32 bytes
 {
 	int8_t	 shortName[8];
 	int8_t	 ext[3];
@@ -130,18 +132,20 @@ struct FATEntry // 32 bytes
 	uint16_t wrtDate;
 	uint16_t fstClusLO;
 	uint32_t fileSize;
+
+	bool isValid() const { return shortName[0] != 0x0 && shortName[0] != 0xE5; }
 } __attribute__((packed));
 
 struct FATLongEntry // 32 bytes
 {
 	uint8_t	 id;
-	char	 data0[10];
+	uint8_t	 data0[10];
 	uint8_t	 attr; // Should always be 0x0F
 	uint8_t	 longEntryType;
 	uint8_t	 checksum;
-	char	 data1[12];
+	uint8_t	 data1[12];
 	uint16_t always0;
-	char	 data2[4];
+	uint8_t	 data2[4];
 
 	bool isLast() const { return (id & 0x40) == 0x40; }
 
@@ -149,14 +153,29 @@ struct FATLongEntry // 32 bytes
 
 enum FileAttribute
 {
-	ReadOnly = (1 << 0),
-	Hidden = (1 << 1),
-	System = (1 << 2),
-	VolumeID = (1 << 3),
-	LongFileName = 0x0F,
-	Directory = (1 << 4),
-	Archive = (1 << 5),
-	LastEntry = 0x41,
+	FA_ReadOnly = (1 << 0),
+	FA_Hidden = (1 << 1),
+	FA_System = (1 << 2),
+	FA_VolumeID = (1 << 3),
+	FA_LongFileName = 0x0F,
+	FA_Directory = (1 << 4),
+	FA_Archive = (1 << 5),
+	FA_LastEntry = 0x41,
+};
+
+struct FATEntry
+{
+	size_t	 size;
+	char	 name[64];
+	char	 ext[3];
+	uint16_t sector;
+	uint8_t	 attr;
+};
+
+struct Directory
+{
+	uint32_t fileCount;
+	FATEntry files[16];
 };
 
 struct ATADevice
@@ -187,9 +206,9 @@ struct ATADevice
 	Partition	   partitions[4];
 	FileSystemInfo fsi;
 
-	uint32_t rootDirectorySector;
-	uint32_t firstDataSector;
-	FATEntry rootDirectory;
+	uint32_t	  rootDirectorySector;
+	uint32_t	  firstDataSector;
+	FATShortEntry rootDirectory;
 
 	void init(bool inPrimary, bool inMaster);
 	void wait4ns() const;
@@ -201,17 +220,20 @@ struct ATADevice
 
 	void parseBootSector();
 	void parseFileSystemInfoSector();
-	void parseDirectory(uint32_t sector);
+	void parseDirectory(uint32_t sector, Directory* directory);
 
+	bool getEntry(const char* name, FATEntry* entry);
 	bool isLongEntry(uint8_t* buffer);
-	void parseEntry(FATEntry* entry, char* buffer, uint32_t* pos);
 	void parseLongEntry(FATLongEntry* entry, uint32_t count, char* filename);
 
-	uint32_t getClusterSector(uint32_t n);
+	bool readFile(uint32_t startCluster, char* data, uint32_t size);
 
-	bool accessSectors(uint32_t sector, uint32_t count, bool read, void* data);
-	bool readSectors(uint32_t sector, uint32_t count, void* data);
-	bool writeSectors(uint32_t sector, uint32_t count, void* data);
+	bool	 accessSectors(uint32_t sector, uint32_t count, bool read, void* data);
+	bool	 readSector(uint32_t sector, void* data);
+	bool	 readSectors(uint32_t sector, uint32_t count, void* data);
+	bool	 writeSector(uint32_t sector, void* data);
+	bool	 writeSectors(uint32_t sector, uint32_t count, void* data);
+	uint32_t getClusterSector(uint32_t n);
 
 	uint32_t	 getFATSector(uint32_t FATNumber, uint32_t FATSize, uint32_t FATSector);
 	FATEntryType getFATEntry(uint32_t index);
