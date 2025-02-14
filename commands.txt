@@ -3,3 +3,6 @@ export PATH="$HOME/opt/cross/bin:$PATH"
 
 # Dump symbols to file
 objdump -drS ./build/boot/pengos.bin > symbols.txt
+
+# Create disk image
+qemu-img create -f raw disk.img 100M

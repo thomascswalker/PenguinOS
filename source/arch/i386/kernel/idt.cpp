@@ -80,7 +80,6 @@ namespace IDT
 		setGate(IRQ15, (uint32_t)irq15, 0x08, 0x8E);
 
 		loadIDT((uint32_t)&ptr);
-		success("IDT initialized.");
 	}
 
 	void setGate(uint8_t num, uint32_t base, uint16_t sel, uint8_t flags)
@@ -93,15 +92,9 @@ namespace IDT
 		entry->flags = flags | 0x60;
 	}
 
-	void registerInterruptHandler(uint32_t index, Handler handler)
-	{
-		handlers[index] = handler;
-	}
+	void registerInterruptHandler(uint32_t index, Handler handler) { handlers[index] = handler; }
 
-	void unregisterInterruptHandler(uint32_t index)
-	{
-		handlers[index] = 0;
-	}
+	void unregisterInterruptHandler(uint32_t index) { handlers[index] = 0; }
 
 	// Interrupt service routines
 	void isrHandler(Registers regs)

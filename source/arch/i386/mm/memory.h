@@ -3,9 +3,6 @@
 #include <stddef.h>
 #include <stdint.h>
 
-#define BLOCK_SIZE 0x200
-#define MAX_BLOCK_SIZE 0x1000
-#define BLOCK_MASK 0xFFFFF000
 #define VIRTUAL_START 0xC0000000
 
 #define PAGE_SHIFT 12
@@ -24,6 +21,11 @@
 #define ENTRY_TEST(e, x) ((*e & x) == x)
 #define ENTRY_SET(e, x) (*e |= x)
 #define ENTRY_RESET(e, x) (*e &= ~(x))
+
+#define MIN_ORDER 5								 // The smallest block is 32 bytes = 2^5.
+#define MAX_ORDER 12							 // The largest block is 4096 bytes = 2^12.
+#define BUCKET_COUNT (MAX_ORDER - MIN_ORDER + 1) // 8 buckets in total
+#define POOL_SIZE ((1 << MAX_ORDER) * 1024)		 // Memory pool is 4K * 1K = 4MB
 
 enum PTE : uint32_t
 {
@@ -51,9 +53,9 @@ enum PDE : uint32_t
 
 struct Block
 {
-	uint32_t size;
-	uint32_t index;
-	Block*	 next;
+	uint8_t		  order;  // The bucket index (0 for 32 bytes, 7 for 4096 bytes)
+	uint8_t		  isFree; // 1 if the block is free, 0 if allocated
+	struct Block* next;	  // Pointer for linking free blocks in a list
 };
 
 namespace std
@@ -80,10 +82,8 @@ namespace Memory
 	void dumpPageTable();
 
 	/* Memory Allocation */
-
-	bool	 allocateBlocks(uint32_t count, int32_t* index);
-	void	 freeBlocks(uint32_t index, uint32_t count);
-	uint32_t getBlockSize(uint32_t size);
+	void addBlock(Block* block);
+	void removeBlock(Block* block, uint32_t order);
 } // namespace Memory
 
 void* operator new(size_t size);

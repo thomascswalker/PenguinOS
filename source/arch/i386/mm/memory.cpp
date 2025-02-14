@@ -47,16 +47,22 @@ EXTERN uint32_t kernelEnd;
 static uint32_t memoryStart;
 static uint32_t memoryEnd;
 static uint32_t memorySize;
-static void*	mallocStart;
+static void*	memoryPool;
 
-// Singlely linked-list for tracking all in-use blocks
-// and their respective sizes.
-static Block* blockHead;
-static Block* blockTail;
+// An array of bucket sizes corresponding to orders 0..NUM_BUCKETS-1.
+// Order 0: 32 bytes, order 1: 64 bytes, ..., order 7: 4096 bytes.
+static const size_t bucketSizes[BUCKET_COUNT] = {
+	1 << MIN_ORDER,		  // 32 bytes
+	1 << (MIN_ORDER + 1), // 64 bytes
+	1 << (MIN_ORDER + 2), // 128 bytes
+	1 << (MIN_ORDER + 3), // 256 bytes
+	1 << (MIN_ORDER + 4), // 512 bytes
+	1 << (MIN_ORDER + 5), // 1024 bytes
+	1 << (MIN_ORDER + 6), // 2048 bytes
+	1 << (MIN_ORDER + 7)  // 4096 bytes
+};
 
-typedef std::BitArray<uint32_t> BlockMap;
-// Bit array for tracking whether a block is in use or not.
-static BlockMap* blockMap;
+static Block* freeList[BUCKET_COUNT];
 
 // The page directory is constructed at an arbitrary location, but
 // most notably it is REQUIRED to be page-aligned (aligned to 4096).
@@ -68,7 +74,6 @@ void Memory::init(uint32_t start, uint32_t size)
 	// Zero out all entries in the page directory.
 	memset(pageDirectory, 0, 1024 * sizeof(uint32_t));
 
-	debug("Initializing page directory...");
 	for (uint32_t i = 0; i < TABLE_COUNT; i++)
 	{
 		// Compute the address of the page table. Table 0 starts
@@ -100,41 +105,35 @@ void Memory::init(uint32_t start, uint32_t size)
 	setLargePaging(false);
 
 	// After everything is all setup, enable paging.
-	enablePaging();
+	// TODO: Figure out how to actually use paging correctly.
+	// enablePaging();
 
 	// Setup memory allocation
 	// Page-aligned start and end of usable memory in the system.
-	debug("Initializing physical memory allocation...");
 	memoryStart = (uint32_t)pageDirectory + PAGE_SIZE + DIR_SIZE;
 	memoryEnd = PAGE_ALIGN(memoryStart + (size - PAGE_SIZE - DIR_SIZE));
 	memorySize = memoryEnd - memoryStart;
-	debug("Physical memory area is from [%x => %x] (%xB)", memoryStart, memoryEnd, memorySize);
+	memoryPool = (uint8_t*)memoryStart;
+	debug("Memory Pool: %x => %x (%dB)", memoryStart, memoryEnd, memorySize);
 
-	// Initialize the block linked list.
-	uint32_t blockCount = CEILDIV(PAGE_ALIGN(memorySize), BLOCK_SIZE);
-	uint32_t blockByteCount = blockCount / 8;
-	blockHead = (Block*)memoryStart;
-	blockTail = blockHead; // Tail == Head
-	uint32_t blockMemorySize = PAGE_ALIGN(blockByteCount) * sizeof(Block);
-	debug("Allocating %dKB for block memory at %x.", blockMemorySize / 1024, blockHead);
-	memset(blockHead, 0, blockMemorySize);
-
-	// Now that we have the number of blocks and the maximum possible
-	// linked list size, we can initialize the block bitmap.
-	blockMap = (BlockMap*)((uint32_t)blockHead + blockMemorySize);
-	*blockMap = BlockMap(blockByteCount);
-	debug("Constructed block map at %x with %d blocks.", blockMap, blockCount);
-
-	// Set the memory for the block map itself to always be in use.
-	for (uint32_t i = 0; i < (uint32_t)CEILDIV(blockByteCount, BLOCK_SIZE); i++)
+	// Buddy allocator
+	size_t offset = 0;
+	for (uint32_t order = BUCKET_COUNT - 1; order > 0; order--)
 	{
-		blockMap->set(i);
+		size_t blockSize = bucketSizes[order];
+		while (offset + blockSize < memorySize)
+		{
+			Block* block = (Block*)((uint8_t*)memoryPool + offset);
+			block->order = order;
+			block->isFree = true;
+			block->next = nullptr;
+
+			addBlock(block);
+			offset += blockSize;
+		}
 	}
 
-	// Initialize malloc-able memory at the same location of the block map.
-	// The block map itself has already been reserved in the above lines
-	// so there should be no worry of overlapping block usage.
-	mallocStart = (void*)blockMap;
+	debug("Memory initialized.");
 }
 
 void Memory::identityMapTable(uint32_t index)
@@ -166,17 +165,14 @@ uint32_t* Memory::getTableFromIndex(uint32_t index)
 
 void Memory::enablePaging()
 {
-	debug("Enabling paging.");
 	uint32_t cr0;
 	asm("mov %%cr0, %0" : "=r"(cr0));
 	cr0 |= 0x80000001; // Paging + Protected Mode
 	asm("mov %0, %%cr0" ::"r"(cr0));
-	success("Paging enabled.");
 }
 
 void Memory::setPageDirectory(uint32_t* directory)
 {
-	debug("Setting page directory to %x.", directory);
 	asm("mov %0, %%cr3" ::"r"((uint32_t)directory));
 }
 
@@ -186,12 +182,10 @@ void Memory::setLargePaging(bool state)
 	asm("mov %%cr4, %0" : "=r"(cr4));
 	if (state)
 	{
-		debug("Enabling large paging.");
 		cr4 |= 0x00000010;
 	}
 	else
 	{
-		debug("Disabling large paging.");
 		cr4 &= ~0x00000010;
 	}
 	asm("mov %0, %%cr4" ::"r"(cr4));
@@ -213,89 +207,90 @@ void Memory::dumpPageTable()
 	}
 }
 
-bool Memory::allocateBlocks(uint32_t count, int32_t* index)
+void Memory::addBlock(Block* block)
 {
-	if (count == 0)
-	{
-		warning("Invalid 'count' argument: %d.", count);
-		return false;
-	}
-	*index = blockMap->firstContiguous(count);
-	if (*index < 0)
-	{
-		error("Out of memory.");
-		return false;
-	}
-	for (uint32_t i = *index; i < *index + count; i++)
-	{
-		blockMap->set(i);
-	}
-	return true;
+	int order = block->order;
+	block->next = freeList[order];
+	freeList[order] = block;
 }
 
-void Memory::freeBlocks(uint32_t index, uint32_t count)
+void Memory::removeBlock(Block* block, uint32_t order)
 {
-	for (uint32_t i = index; i < index + count; i++)
+	Block** current = &freeList[order];
+	while (*current)
 	{
-		blockMap->reset(i);
+		if (*current == block)
+		{
+			*current = block->next;
+			block->next = nullptr;
+			return;
+		}
+		current = &((*current)->next);
 	}
-}
-
-uint32_t Memory::getBlockSize(uint32_t v)
-{
-	v--;
-	for (uint32_t i = 0; i < 5; i++)
-	{
-		v |= v >> (1 << i);
-	}
-	v++;
-	return v >= MAX_BLOCK_SIZE ? MAX_BLOCK_SIZE : v;
 }
 
 void* std::kmalloc(uint32_t size)
 {
-	// Get the block count for the memory size requested.0
-	uint32_t blockCount = CEILDIV(size, BLOCK_SIZE);
-	int32_t	 index;
-
-	// Attempt to allocate the number of blocks requested.
-	// If this fails, we're out of memory. `index` is the
-	// in/out parameter to get the index of the first block
-	// in the block sequence we allocated.
-	if (!Memory::allocateBlocks(blockCount, &index))
+	if (size == 0)
 	{
-		panic("Out of memory!");
+		warning("kmalloc: Size is 0.");
 		return nullptr;
 	}
 
-	// Create a new block `sizeof(Block)` bytes from the current
-	// tail of the block list. This will become the new tail.
-	Block* newTail = (Block*)((uint32_t)blockTail + sizeof(Block));
-	blockTail->next = newTail;
-	newTail->size = size;
-	newTail->index = index;
-	blockTail = newTail;
-
-	// Return a pointer to the offset of the block sequence
-	// start index in malloc memory space.
-	return (void*)((uint32_t)mallocStart + (index * BLOCK_SIZE));
-}
-
-void std::kfree(void* ptr)
-{
-	uint32_t index = ((uint32_t)ptr - (uint32_t)mallocStart) / BLOCK_SIZE;
-	Block*	 current = blockHead;
-	while (current->next != nullptr)
+	uint32_t order;
+	size_t	 totalSize = size + sizeof(Block);
+	for (order = 0; order < BUCKET_COUNT; order++)
 	{
-		if (current->index == index)
+		if (bucketSizes[order] >= totalSize)
 		{
 			break;
 		}
-		current = current->next;
 	}
-	uint32_t count = CEILDIV(current->size, BLOCK_SIZE);
-	Memory::freeBlocks(index, count);
+
+	if (order == BUCKET_COUNT)
+	{
+		warning("kmalloc: Order %d is greater than maximum order %d.", order, MAX_ORDER);
+		return nullptr;
+	}
+
+	int currentOrder = order;
+	while (currentOrder < BUCKET_COUNT && freeList[currentOrder] == nullptr)
+	{
+		currentOrder++;
+	}
+
+	if (currentOrder >= BUCKET_COUNT)
+	{
+		warning("kmalloc: Order >= %d.", BUCKET_COUNT);
+		return nullptr;
+	}
+
+	Block* block = freeList[currentOrder];
+	freeList[currentOrder] = block->next;
+	block->next = nullptr;
+
+	while (currentOrder > order)
+	{
+		currentOrder--;
+
+		size_t newBlockSize = bucketSizes[currentOrder];
+
+		Block* buddy = (Block*)((uint8_t*)block + newBlockSize);
+		buddy->order = currentOrder;
+		buddy->isFree = true;
+		buddy->next = nullptr;
+
+		Memory::addBlock(buddy);
+
+		block->order = currentOrder;
+	}
+
+	block->isFree = false;
+
+	return (void*)((uint8_t*)block + sizeof(Block));
 }
+
+void std::kfree(void* ptr) {}
 
 void* operator new(size_t size)
 {

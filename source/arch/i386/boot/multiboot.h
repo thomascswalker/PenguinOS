@@ -274,28 +274,71 @@ struct multiboot_apm_info
 
 namespace Multiboot
 {
+	static uint8_t drive;
+	static uint8_t part1;
+	static uint8_t part2;
+	static uint8_t part3;
+
 	static void init(MultibootInfo* info, uint32_t* address, uint32_t* size)
 	{
+
 		if ((info->flags & MULTIBOOT_INFO_MODS) == MULTIBOOT_INFO_MODS)
 		{
 			uint32_t mod1 = *(uint32_t*)(info->moduleAddress + 4);
 			*address = (mod1 + 0xFFF) & ~0xFFF;
 			*size = (info->memUpper * 1024) - *address;
+			return;
 		}
-		else
-		{
-			uint32_t end = info->mmapAddress + info->mmapLength;
 
-			MBMEntry* mmap = (MBMEntry*)info->mmapAddress;
-			while ((uintptr_t)mmap < end)
+		if ((info->flags & MULTIBOOT_INFO_BOOTDEV) == MULTIBOOT_INFO_BOOTDEV)
+		{
+			printf("Boot loader: %s\n", reinterpret_cast<char*>(info->bootLoaderName));
+
+			drive = (info->bootDevice & 0xFF000000) >> 24;
+			part1 = (info->bootDevice & 0x00FF0000) >> 16;
+			part2 = (info->bootDevice & 0x0000FF00) >> 8;
+			part3 = (info->bootDevice & 0x000000FF);
+
+			switch (drive)
 			{
-				if (mmap->lengthLow > *size && mmap->type == MULTIBOOT_MEMORY_AVAILABLE)
-				{
-					*size = mmap->lengthLow;
-					*address = mmap->addressLow;
-				}
-				mmap = (MBMEntry*)((uint32_t)mmap + mmap->size + sizeof(uint32_t));
+				case 0xE0:
+					{
+						println("Loaded from CD/DVD.");
+						break;
+					}
+				case 0x80:
+					{
+						println("Loaded from Partition 1.");
+						break;
+					}
+				case 0x81:
+					{
+						println("Loaded from Partition 2.");
+						break;
+					}
+				case 0x82:
+					{
+						println("Loaded from Partition 3.");
+						break;
+					}
+				default:
+					{
+						break;
+					}
 			}
+		}
+
+		uint32_t end = info->mmapAddress + info->mmapLength;
+
+		MBMEntry* mmap = (MBMEntry*)info->mmapAddress;
+		while ((uintptr_t)mmap < end)
+		{
+			if (mmap->lengthLow > *size && mmap->type == MULTIBOOT_MEMORY_AVAILABLE)
+			{
+				*size = mmap->lengthLow;
+				*address = mmap->addressLow;
+			}
+			mmap = (MBMEntry*)((uint32_t)mmap + mmap->size + sizeof(uint32_t));
 		}
 	}
 } // namespace Multiboot

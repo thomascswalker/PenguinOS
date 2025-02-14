@@ -94,9 +94,23 @@ static char* strcat(char* dest, const char* source)
 	return dest;
 }
 
-static char toupper(char c) { return c + ('A' - 'a'); }
+static char toupper(char c)
+{
+	if (!islower(c))
+	{
+		return c;
+	}
+	return c - 'a' + 'A';
+}
 
-static char tolower(char c) { return c - ('A' + 'a'); }
+static char tolower(char c)
+{
+	if (!isupper(c))
+	{
+		return c;
+	}
+	return c - 'A' + 'a';
+}
 
 // Reverses, in-place, the specified `string`.
 static void strrev(char* string)
@@ -120,9 +134,20 @@ static void strapp(char* source, const char* string, char* dest)
 	dest += sizeof(source);
 	strcpy(dest, string);
 }
+
 static void strprep(char* source, const char* string, char* dest)
 {
 	strcpy(dest, string);
 	dest += sizeof(string);
 	strcpy(dest, source);
+}
+
+static void wtoc(char* dest, wchar_t* source, size_t length)
+{
+	uint32_t i = 0;
+	while (length--)
+	{
+		*dest++ = source[i]; // | (source[1] << 8);
+		i += 2;
+	}
 }

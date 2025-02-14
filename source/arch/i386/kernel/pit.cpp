@@ -19,8 +19,6 @@ void PIT::init()
 	outb(PIT_DATA0, high);
 
 	PIC::sendEOI(IRQ0);
-
-	success("Timer initialized.");
 }
 
 void PIT::callback(Registers regs)

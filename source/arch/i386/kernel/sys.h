@@ -34,20 +34,23 @@ static inline void outb(uint16_t port, uint8_t data)
 	asm("outb %1, %0" : : "Nd"(port), "a"(data));
 }
 
+// Reads two bytes of data from the specified IO port
+static inline uint16_t inw(uint16_t port)
+{
+	uint16_t ret;
+	asm("inw %1, %0" : "=a"(ret) : "Nd"(port));
+	return ret;
+};
+
+// Outputs two bytes of data to a specified IO port
 static inline void outw(uint16_t port, uint16_t data)
 {
 	asm("outw %1, %0" : : "Nd"(port), "a"(data));
 }
 
-static inline void disableInterrupts()
-{
-	asm("cli");
-}
+static inline void disableInterrupts() { asm("cli"); }
 
-static inline void enableInterrupts()
-{
-	asm("sti");
-}
+static inline void enableInterrupts() { asm("sti"); }
 
 static inline void pause()
 {
@@ -69,9 +72,6 @@ static inline void exit()
 	outw(0x604, 0x2000); // QEMU
 }
 
-static inline void invalidate(uint32_t vaddr)
-{
-	asm("invlpg %0" ::"m"(vaddr));
-}
+static inline void invalidate(uint32_t vaddr) { asm("invlpg %0" ::"m"(vaddr)); }
 
 void sleep(uint32_t seconds);

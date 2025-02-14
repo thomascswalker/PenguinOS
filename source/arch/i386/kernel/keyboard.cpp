@@ -19,7 +19,6 @@ namespace Keyboard
 		// Register IRQ1 (ISR33) to execute our keyboard callback
 		// function.
 		IDT::registerInterruptHandler(IRQ1, callback);
-		success("Keyboard initialized.");
 	}
 
 	// Called when IRQ1 (ISR33) is executed.
@@ -125,8 +124,5 @@ namespace Keyboard
 		VGA::updateCursorPosition();
 	}
 
-	bool isShiftDown()
-	{
-		return g_modifierKey & MOD_SHIFT;
-	}
+	bool isShiftDown() { return g_modifierKey & MOD_SHIFT; }
 } // namespace Keyboard

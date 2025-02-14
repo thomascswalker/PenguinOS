@@ -3,7 +3,6 @@
 export C_VERSION=c23
 export CPP_VERSION=c++23
 
-
 export MAKE=${MAKE:-make}
 
 export ARCH=i386
@@ -35,7 +34,7 @@ build_include_args() {
         result+=" -I${dir}"
     done
     
-    echo -e "-I./source/ -I./source/lib ${result# }"
+    echo -e "-I./source/ -I./source/lib -I./source/fs ${result# }"
 }
 
 debug() {
