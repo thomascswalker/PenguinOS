@@ -18,6 +18,8 @@ bool		strcmp(const char* lhs, const char* rhs, size_t count);
 EXTERN char* strcpy(char* dest, const char* source);
 // Appends one string to another
 EXTERN char* strcat(char* dest, const char* source);
+EXTERN char* strchr(const char* s, char c);
+EXTERN char* strrchr(const char* s, char c);
 char		 toupper(char c);
 char		 tolower(char c);
 // Reverses, in-place, the specified `string`.

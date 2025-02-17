@@ -56,7 +56,7 @@ namespace IDE
 	ATADevice* getDevice(uint32_t index);
 } // namespace IDE
 
-enum FAT
+enum class FATType
 {
 	ExFAT,
 	FAT12,
@@ -81,7 +81,7 @@ struct Partition
 	uint8_t	 typeCode;
 	uint32_t chsBegin;
 	uint8_t	 bootFlag;
-	FAT		 fatType;
+	FATType	 fatType;
 } __attribute__((packed));
 
 struct BootSector
@@ -154,6 +154,7 @@ struct FATLongEntry // 32 bytes
 
 enum FileAttribute
 {
+	FA_Empty = 0,
 	FA_ReadOnly = (1 << 0),
 	FA_Hidden = (1 << 1),
 	FA_System = (1 << 2),
@@ -162,6 +163,7 @@ enum FileAttribute
 	FA_Directory = (1 << 4),
 	FA_Archive = (1 << 5),
 	FA_LastEntry = 0x41,
+	FA_Deleted = 0xE5,
 };
 
 struct FATEntry
@@ -230,23 +232,28 @@ struct ATADevice
 	bool isLongEntry(uint8_t* buffer);
 	void parseLongEntry(FATLongEntry* entry, uint32_t count, char* filename);
 
-	String	 longToShortName(const String& name);
-	uint32_t getNextCluster(uint32_t cluster);
-	bool	 findEntry(uint32_t startCluster, const String& name, FATShortEntry* entry);
-	bool	 readFile(String& filename, uint8_t* buffer, uint32_t* size);
+	bool findEntry(uint32_t startCluster, const String& name, FATShortEntry* entry);
+	bool readFile(String& filename, uint8_t* buffer, uint32_t* size);
 
-	bool	 accessSectors(uint32_t sector, uint32_t count, bool read, void* data);
-	bool	 readSector(uint32_t sector, void* data);
-	bool	 readSectors(uint32_t sector, uint32_t count, void* data);
-	bool	 writeSector(uint32_t sector, void* data);
-	bool	 writeSectors(uint32_t sector, uint32_t count, void* data);
-	uint32_t getClusterSector(uint32_t n);
-
-	uint32_t	 getFATSector(uint32_t FATNumber, uint32_t FATSize, uint32_t FATSector);
-	FATEntryType getFATEntry(uint32_t index);
-	uint32_t	 getClusterCount();
-	uint32_t	 getFATSize();
+	bool accessSectors(uint32_t sector, uint32_t count, bool read, void* data);
+	bool readSector(uint32_t sector, void* data);
+	bool readSectors(uint32_t sector, uint32_t count, void* data);
+	bool writeSector(uint32_t sector, void* data);
+	bool writeSectors(uint32_t sector, uint32_t count, void* data);
 
 	// Returns the drive size in bytes.
 	uint32_t size() const { return sectorCount * FAT_BYTES_PER_SECTOR; }
 } __attribute__((packed));
+
+namespace FAT32
+{
+	String		 toShortName(const String& longName);
+	String		 sanitize(const String& longName);
+	bool		 isValidChar(char c);
+	uint32_t	 getNextCluster(uint32_t cluster);
+	uint32_t	 getClusterSector(uint32_t n);
+	uint32_t	 getSector(uint32_t FATNumber, uint32_t FATSize, uint32_t FATSector);
+	FATEntryType getEntryType(uint32_t index);
+	uint32_t	 getClusterCount();
+	uint32_t	 getSize();
+} // namespace FAT32

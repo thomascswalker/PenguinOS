@@ -37,12 +37,13 @@ EXTERN void kmain(MultibootInfo* info, uint32_t magic)
 
 	FileSystem::init();
 
-	String path("/longFile.txt");
-	debug("Path: %s", path.cstr());
-
+	// String s("text.txt");
+	// String n = FAT32::toShortName(s);
+	// debugs(n.cstr());
 	auto	 d = IDE::getDevice(0);
 	uint8_t* buffer;
-	uint32_t filesize;
+	uint32_t filesize = 0;
+	String	 path("/home/docs/test2.txt");
 	d->readFile(path, buffer, &filesize);
 
 	while (1)

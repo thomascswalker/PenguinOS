@@ -12,8 +12,33 @@ void FileSystem::init()
 	device = IDE::getDevice(0);
 }
 
-File* FileSystem::readFile(const String& filename) { return nullptr; }
+File* FileSystem::readFile(const Path& path) { return nullptr; }
 
-File* FileSystem::findFile(String& filename) { return nullptr; }
+File* FileSystem::findFile(const Path& path) { return nullptr; }
 
-bool FileSystem::isFile(String& name) { return name.split('.').size(); }
+bool FileSystem::isFile(const Path& path) { return path.string().split('.').size(); }
+
+Pair<String, String> FileSystem::splitExt(const Path& path)
+{
+	String p = path.string();
+	size_t dot = p.findLast('.');
+	String basename, ext;
+	if (dot == String::npos || dot == 0)
+	{
+		basename = p;
+	}
+	else
+	{
+		basename = p.substring(0, dot);
+		ext = p.substring(dot + 1);
+	}
+	return Pair(basename, ext);
+}
+
+Path Path::parent() { return Path(); }
+
+String Path::filename() { return String(); }
+
+String Path::stem() { return String(); }
+
+String Path::extension() { return String(); }

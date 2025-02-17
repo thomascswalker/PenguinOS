@@ -109,6 +109,37 @@ char* strcat(char* dest, const char* source)
 	return dest;
 }
 
+EXTERN char* strchr(const char* str, char c)
+{
+	// Loop until the null terminator is reached.
+	while (*str)
+	{
+		if (*str == c)
+		{
+			return const_cast<char*>(str);
+		}
+		str++;
+	}
+	// If searching for the null terminator, return pointer to it.
+	return (c == '\0') ? const_cast<char*>(str) : nullptr;
+}
+
+EXTERN char* strrchr(const char* str, char c)
+{
+	const char* last = nullptr;
+	// Loop through the string.
+	while (*str)
+	{
+		if (*str == c)
+		{
+			last = str;
+		}
+		str++;
+	}
+	// If searching for the null terminator, return pointer to it.
+	return (c == '\0') ? const_cast<char*>(str) : const_cast<char*>(last);
+}
+
 char toupper(char c)
 {
 	if (!islower(c))

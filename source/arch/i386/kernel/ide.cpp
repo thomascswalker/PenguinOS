@@ -1,18 +1,21 @@
 #include <assert.h>
 #include <bitmask.h>
 #include <cstring.h>
+#include <filesystem.h>
 #include <ide.h>
 #include <idt.h>
 #include <math.h>
 #include <memory.h>
 #include <stdio.h>
 
-ATADevice devices[4];
+ATADevice  devices[4];
+ATADevice* currentDevice;
 
 void IDE::init()
 {
 	info("Initializing IDE/ATA...");
 	devices[0].init(true, true);
+	currentDevice = &devices[0];
 	IDT::registerInterruptHandler(IRQ14, IDE::callback);
 }
 
@@ -51,7 +54,7 @@ void ATADevice::init(bool inPrimary, bool inMaster)
 		panic("Failed to read root directory sector.");
 	}
 	rootDirectory = data[0];
-	rootDataSector = getClusterSector(rootDirectory.fstClusLO);
+	rootDataSector = FAT32::getClusterSector(rootDirectory.fstClusLO);
 }
 
 void ATADevice::wait4ns() const
@@ -296,7 +299,7 @@ void ATADevice::parseDirectory(uint32_t sector, Directory* directory)
 			memcpy(file->name, nameBuffer, strlen(nameBuffer));
 			file->size = entry->fileSize;
 			memcpy(file->ext, entry->ext, 3);
-			file->sector = getClusterSector(entry->fstClusLO);
+			file->sector = FAT32::getClusterSector(entry->fstClusLO);
 			file->attr = entry->attr;
 
 			directory->fileCount++;
@@ -331,59 +334,20 @@ void ATADevice::parseLongEntry(FATLongEntry* entry, uint32_t count, char* filena
 	}
 }
 
-String ATADevice::longToShortName(const String& name)
-{
-	String output(9, ' ');
-
-	char* data = output.data();
-	for (uint32_t i = 0; i < 8; i++)
-	{
-		char c = name.data()[i];
-		if (isalpha(c))
-		{
-			data[i] = toupper(c);
-		}
-		else
-		{
-			data[i] = ' ';
-		}
-	}
-	data[8] = 0;
-
-	debug("%s|", output.cstr());
-	return output;
-}
-
-uint32_t ATADevice::getNextCluster(uint32_t cluster)
-{
-	uint32_t fatOffset = cluster * 4;
-	uint32_t fatSector = mbr.reservedSectorCount + (fatOffset / mbr.bytesPerSector);
-	uint32_t offsetInSector = fatOffset % mbr.bytesPerSector;
-
-	uint8_t buffer[512];
-	if (!readSector(fatSector, buffer))
-	{
-		return 0x0FFFFFFF; // End of chain
-	}
-
-	uint32_t* entry = (uint32_t*)(buffer + offsetInSector);
-	uint32_t  next = *entry & 0x0FFFFFFF;
-	return next;
-}
-
 bool ATADevice::findEntry(uint32_t startCluster, const String& name, FATShortEntry* entry)
 {
-	String	 fmtName = longToShortName(name);
+	String fname = FAT32::toShortName(name);
+	debug("%s => %s", name.cstr(), fname.cstr());
 	uint32_t cluster = startCluster;
 
-	uint8_t clusterBuffer[4096];
+	uint8_t buffer[4096];
 	while (cluster < 0x0FFFFFF8)
 	{
-		uint32_t firstSector = getClusterSector(cluster);
-		debugd(firstSector);
+		debug("Searching for %s in Cluster %d.", fname.cstr(), cluster);
+		uint32_t firstSector = FAT32::getClusterSector(cluster);
 		for (uint8_t sector = 0; sector < mbr.sectorsPerCluster; sector++)
 		{
-			if (!readSector(firstSector + sector, clusterBuffer + (sector * mbr.bytesPerSector)))
+			if (!readSector(firstSector + sector, buffer + (sector * mbr.bytesPerSector)))
 			{
 				debug("Unable to read sector %d", firstSector + sector);
 				return false;
@@ -392,19 +356,19 @@ bool ATADevice::findEntry(uint32_t startCluster, const String& name, FATShortEnt
 
 		uint32_t entriesPerCluster =
 			(mbr.sectorsPerCluster * mbr.bytesPerSector) / sizeof(FATShortEntry);
-		FATShortEntry* entries = (FATShortEntry*)clusterBuffer;
+		FATShortEntry* entries = (FATShortEntry*)buffer;
 
 		for (uint32_t i = 0; i < entriesPerCluster; i++)
 		{
-			if (entries[i].shortName[0] == 0x00) // No more entries
+			if (entries[i].shortName[0] == FA_Empty) // No more entries
 			{
 				return false;
 			}
-			if (entries[i].shortName[0] == 0xE5) // Deleted entry
+			if (entries[i].shortName[0] == FA_Deleted) // Deleted entry
 			{
 				continue;
 			}
-			if ((entries[i].attr & 0x0F) == 0x0F) // Long file name entry
+			if (std::Bitmask::test(entries[i].attr, FA_LongFileName)) // Long file name entry
 			{
 				continue;
 			}
@@ -415,7 +379,8 @@ bool ATADevice::findEntry(uint32_t startCluster, const String& name, FATShortEnt
 				continue;
 			}
 
-			if (strcmp((char*)entries[i].shortName, fmtName.cstr(), 8))
+			debug("Entry %d: %s", i, entries[i].shortName);
+			if (strcmp((char*)entries[i].shortName, fname.cstr(), 8))
 			{
 				uint8_t* dest = (uint8_t*)entry;
 				uint8_t* src = (uint8_t*)(&entries[i]);
@@ -424,7 +389,7 @@ bool ATADevice::findEntry(uint32_t startCluster, const String& name, FATShortEnt
 			}
 		}
 
-		cluster = getNextCluster(cluster);
+		cluster = FAT32::getNextCluster(cluster);
 	}
 	return false;
 }
@@ -442,21 +407,18 @@ bool ATADevice::readFile(String& filename, uint8_t* buffer, uint32_t* size)
 
 	FATShortEntry entry;
 
-	for (size_t i = 0; i < components.size(); i++)
+	for (const auto& c : components)
 	{
-		if (!findEntry(currentCluster, components[i], &entry))
+		debug("Searching for component %s", c.cstr());
+		if (!findEntry(currentCluster, c, &entry))
 		{
 			return false;
 		}
 		success("Entry: %s", entry.shortName);
+		currentCluster = entry.fstClusLO;
 	}
 
 	return false;
-}
-
-uint32_t ATADevice::getClusterSector(uint32_t n)
-{
-	return ((n - 2) * mbr.sectorsPerCluster) + firstDataSector;
 }
 
 bool ATADevice::accessSectors(uint32_t sector, uint32_t count, bool read, void* data)
@@ -532,20 +494,138 @@ bool ATADevice::writeSectors(uint32_t sector, uint32_t count, void* data)
 	return accessSectors(sector, count, false, data);
 }
 
-uint32_t ATADevice::getFATSector(uint32_t number, uint32_t size, uint32_t sector)
+bool FAT32::isValidChar(char c)
+{
+	if (isalnum(c))
+	{
+		return true;
+	}
+	return (c == '_' || c == '$' || c == '%' || c == '\'' || c == '-' || c == '@' || c == '~'
+		|| c == '`' || c == '!' || c == '(' || c == ')' || c == '{' || c == '}' || c == '^'
+		|| c == '#' || c == '&');
+}
+
+String FAT32::toShortName(const String& longName)
+{
+	size_t dot = longName.findLast('.');
+	auto   components = FileSystem::splitExt(longName);
+	String base = sanitize(components.a);
+	String ext = sanitize(components.b);
+
+	// TODO: Account for unique tilde incrementation
+	bool useTilde = false;
+	if (base.size() > 9 || ext.size() > 4)
+	{
+		useTilde = true;
+	}
+	if (base.size() != components.a.size()
+		|| (!components.b.empty() && ext.size() != components.b.size()))
+	{
+		useTilde = true;
+	}
+
+	String shortBase, shortExt;
+	if (!useTilde)
+	{
+		shortBase = base.substring(0, 8);
+		shortExt = ext.substring(0, 3);
+	}
+	else
+	{
+		size_t allowed = 6;
+		if (base.size() < allowed)
+		{
+			allowed = base.size();
+		}
+		shortBase = base.substring(0, allowed) + "~1";
+
+		if (shortBase.size() > 8)
+		{
+			shortBase = shortBase.substring(0, 8);
+		}
+
+		shortExt = ext.substring(0, 3);
+	}
+
+	int pos = shortBase.findFirst('\0');
+	int end = shortBase.size();
+	if (pos < end)
+	{
+		for (int i = pos; i < end; i++)
+		{
+			shortBase[i] = ' ';
+		}
+	}
+
+	String shortName = shortBase;
+	if (!shortExt.empty())
+	{
+		shortName += "." + shortExt;
+	}
+	return shortName;
+}
+
+String FAT32::sanitize(const String& component)
+{
+	String result;
+
+	for (char c : component)
+	{
+		if (c == '\0')
+		{
+			break;
+		}
+		if (c == ' ')
+		{
+			continue;
+		}
+		if (!isValidChar(c))
+		{
+			continue;
+		}
+		result.append(toupper((unsigned char)c));
+	}
+
+	result.terminate();
+
+	return result;
+}
+
+uint32_t FAT32::getNextCluster(uint32_t cluster)
+{
+	ATADevice* d = currentDevice;
+
+	uint32_t offset = cluster * 4;
+	uint32_t sector = d->mbr.reservedSectorCount + (offset / d->mbr.bytesPerSector);
+	uint32_t offsetInSector = offset % d->mbr.bytesPerSector;
+
+	uint8_t buffer[512];
+	if (!d->readSector(sector, buffer))
+	{
+		return 0x0FFFFFFF; // End of chain
+	}
+
+	uint32_t* entry = (uint32_t*)(buffer + offsetInSector);
+	uint32_t  next = *entry & 0x0FFFFFFF;
+	return next;
+}
+
+uint32_t FAT32::getSector(uint32_t number, uint32_t size, uint32_t sector)
 {
 	return (number * size) + sector;
 }
 
-FATEntryType ATADevice::getFATEntry(uint32_t index)
+FATEntryType FAT32::getEntryType(uint32_t index)
 {
-	uint32_t fatSector = mbr.reservedSectorCount + index;
-	uint8_t	 fatData[512];
-	uint32_t clusterCount = getClusterCount();
-	if (readSectors(fatSector, 1, fatData))
+	ATADevice* d = currentDevice;
+	uint32_t   sector = d->mbr.reservedSectorCount + index;
+	uint8_t	   data[512];
+	uint32_t   clusterCount = FAT32::getClusterCount();
+
+	if (d->readSectors(sector, 1, data))
 	{
 		uint32_t record;
-		memcpy(&record, fatData, 4);
+		memcpy(&record, data, 4);
 		if (record == 0x0)
 		{
 			return Free;
@@ -574,10 +654,21 @@ FATEntryType ATADevice::getFATEntry(uint32_t index)
 	return Defective;
 }
 
-uint32_t ATADevice::getClusterCount()
+uint32_t FAT32::getClusterSector(uint32_t n)
 {
-	uint32_t dataSectors = mbr.sectorCount - (mbr.reservedSectorCount + getFATSize());
-	return dataSectors / mbr.sectorsPerCluster;
+	ATADevice* d = currentDevice;
+	return ((n - 2) * d->mbr.sectorsPerCluster) + d->firstDataSector;
 }
 
-uint32_t ATADevice::getFATSize() { return mbr.tableCount * mbr.bigSectorsPerTable; }
+uint32_t FAT32::getClusterCount()
+{
+	ATADevice* d = currentDevice;
+	uint32_t   dataSectors = d->mbr.sectorCount - (d->mbr.reservedSectorCount + getSize());
+	return dataSectors / d->mbr.sectorsPerCluster;
+}
+
+uint32_t FAT32::getSize()
+{
+	ATADevice* d = currentDevice;
+	return d->mbr.tableCount * d->mbr.bigSectorsPerTable;
+}
