@@ -13,6 +13,7 @@ EXTERN uint16_t* wmemset(uint16_t* dest, uint16_t value, int32_t size);
 EXTERN size_t strlen(const char* string);
 // Compares two strings.
 EXTERN bool strcmp(const char* lhs, const char* rhs);
+bool		strcmp(const char* lhs, const char* rhs, size_t count);
 // Copies one string to another
 EXTERN char* strcpy(char* dest, const char* source);
 // Appends one string to another

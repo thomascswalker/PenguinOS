@@ -35,14 +35,16 @@ EXTERN void kmain(MultibootInfo* info, uint32_t magic)
 
 	Memory::init(start, size);
 
-	IDE::init();
-	// FileSystem::init();
+	FileSystem::init();
 
-	std::Array<uint32_t> a;
-	for (uint32_t i = 0; i < 500; i++)
-	{
-		a.add(i);
-	}
+	String path("/longFile.txt");
+	debug("Path: %s", path.cstr());
+
+	auto	 d = IDE::getDevice(0);
+	uint8_t* buffer;
+	uint32_t filesize;
+	d->readFile(path, buffer, &filesize);
+
 	while (1)
 	{
 	}

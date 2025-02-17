@@ -46,4 +46,12 @@ namespace std
 	{
 		return static_cast<T&&>(t);
 	}
+
+	template <typename T>
+	void swap(T& t1, T& t2)
+	{
+		T tmp = std::move(t1);
+		t1 = std::move(t2);
+		t2 = std::move(tmp);
+	}
 } // namespace std

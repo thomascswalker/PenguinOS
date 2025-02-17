@@ -64,11 +64,29 @@ bool strcmp(const char* lhs, const char* rhs)
 	return true;
 }
 
+bool strcmp(const char* lhs, const char* rhs, size_t count)
+{
+	if (strlen(lhs) < count || strlen(rhs) < count)
+	{
+		return false;
+	}
+
+	for (size_t i = 0; i < count; i++)
+	{
+		if (lhs[i] != rhs[i])
+		{
+			return false;
+		}
+	}
+
+	return true;
+}
+
 // Copies one string to another
 char* strcpy(char* dest, const char* source)
 {
 	char* temp = dest;
-	while (*dest++ = *source++)
+	while ((*dest++ = *source++))
 	{
 	}
 	return temp;

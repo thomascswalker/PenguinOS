@@ -4,6 +4,7 @@
 
 #include <bitmask.h>
 #include <cstring.h>
+#include <string.h>
 #include <sys.h>
 
 #define ATA_PRIMARY 0x00
@@ -176,6 +177,8 @@ struct Directory
 {
 	uint32_t fileCount;
 	FATEntry files[16];
+
+	Directory() { memset(files, 0, sizeof(FATEntry) * FAT_ENTRIES_PER_SECTOR); }
 };
 
 struct ATADevice
@@ -208,6 +211,7 @@ struct ATADevice
 
 	uint32_t	  rootDirectorySector;
 	uint32_t	  firstDataSector;
+	uint32_t	  rootDataSector;
 	FATShortEntry rootDirectory;
 
 	void init(bool inPrimary, bool inMaster);
@@ -226,7 +230,10 @@ struct ATADevice
 	bool isLongEntry(uint8_t* buffer);
 	void parseLongEntry(FATLongEntry* entry, uint32_t count, char* filename);
 
-	bool readFile(uint32_t startCluster, char* data, uint32_t size);
+	String	 longToShortName(const String& name);
+	uint32_t getNextCluster(uint32_t cluster);
+	bool	 findEntry(uint32_t startCluster, const String& name, FATShortEntry* entry);
+	bool	 readFile(String& filename, uint8_t* buffer, uint32_t* size);
 
 	bool	 accessSectors(uint32_t sector, uint32_t count, bool read, void* data);
 	bool	 readSector(uint32_t sector, void* data);
