@@ -394,7 +394,7 @@ bool ATADevice::findEntry(uint32_t startCluster, const String& name, FATShortEnt
 	return false;
 }
 
-bool ATADevice::readFile(String& filename, uint8_t* buffer, uint32_t* size)
+bool ATADevice::readFile(const String& filename, File* file)
 {
 	Array<String> components = filename.split('/');
 	if (components.empty())
@@ -406,19 +406,38 @@ bool ATADevice::readFile(String& filename, uint8_t* buffer, uint32_t* size)
 	uint32_t currentCluster = rootDirectory.fstClusLO;
 
 	FATShortEntry entry;
+	uint32_t	  sector = 0;
+	uint32_t	  count = 0;
 
 	for (const auto& c : components)
 	{
 		debug("Searching for component %s", c.cstr());
 		if (!findEntry(currentCluster, c, &entry))
 		{
+			warning("No entry for %s", c.cstr());
 			return false;
 		}
 		success("Entry: %s", entry.shortName);
-		currentCluster = entry.fstClusLO;
+		if (std::Bitmask::test(entry.attr, FA_Directory))
+		{
+			currentCluster = entry.fstClusLO;
+			debug("Moving into dir %s", c.cstr());
+			continue;
+		}
+		break;
+	}
+	if (!entry.fileSize)
+	{
+		warning("File is empty.");
+		return false;
 	}
 
-	return false;
+	file->size = entry.fileSize;
+	sector = FAT32::getClusterSector(entry.fstClusLO);
+	count = CEILDIV(entry.fileSize, mbr.bytesPerSector);
+	debug("Sector: %d, Count: %d", sector, count);
+	file->data = new char[entry.fileSize];
+	return readSector(sector, file->data);
 }
 
 bool ATADevice::accessSectors(uint32_t sector, uint32_t count, bool read, void* data)

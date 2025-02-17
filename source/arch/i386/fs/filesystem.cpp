@@ -12,9 +12,11 @@ void FileSystem::init()
 	device = IDE::getDevice(0);
 }
 
-File* FileSystem::readFile(const Path& path) { return nullptr; }
-
-File* FileSystem::findFile(const Path& path) { return nullptr; }
+bool FileSystem::readFile(const Path& path, File* file)
+{
+	auto d = IDE::getDevice(0);
+	return d->readFile(path.string(), file);
+}
 
 bool FileSystem::isFile(const Path& path) { return path.string().split('.').size(); }
 

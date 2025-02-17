@@ -34,18 +34,20 @@ EXTERN void kmain(MultibootInfo* info, uint32_t magic)
 	println("Welcome to PengOS!");
 
 	Memory::init(start, size);
-
 	FileSystem::init();
 
-	// String s("text.txt");
-	// String n = FAT32::toShortName(s);
-	// debugs(n.cstr());
-	auto	 d = IDE::getDevice(0);
-	uint8_t* buffer;
-	uint32_t filesize = 0;
-	String	 path("/home/docs/test2.txt");
-	d->readFile(path, buffer, &filesize);
+	// Entering user land
 
+	String path("/etc/longFile.txt");
+	File   file;
+	if (FileSystem::readFile(path, &file))
+	{
+		debugs((char*)file.data);
+	}
+	else
+	{
+		error("Failed to read file: %s", path.cstr());
+	}
 	while (1)
 	{
 	}

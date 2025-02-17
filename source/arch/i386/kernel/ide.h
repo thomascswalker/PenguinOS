@@ -233,7 +233,7 @@ struct ATADevice
 	void parseLongEntry(FATLongEntry* entry, uint32_t count, char* filename);
 
 	bool findEntry(uint32_t startCluster, const String& name, FATShortEntry* entry);
-	bool readFile(String& filename, uint8_t* buffer, uint32_t* size);
+	bool readFile(const String& filename, File* file);
 
 	bool accessSectors(uint32_t sector, uint32_t count, bool read, void* data);
 	bool readSector(uint32_t sector, void* data);

@@ -7,9 +7,10 @@
 
 struct File
 {
-	char* name;
-	char  ext[3];
-	void* data;
+	char*	 name;
+	char	 ext[3];
+	uint32_t size;
+	void*	 data;
 };
 
 class Path
@@ -32,9 +33,8 @@ public:
 
 namespace FileSystem
 {
-	void  init();
-	File* readFile(const Path& path);
-	File* findFile(const Path& path);
+	void init();
+	bool readFile(const Path& path, File* file);
 
 	bool isFile(const Path& path);
 	bool isDirectory(const Path& path);
