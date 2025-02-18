@@ -1,17 +1,24 @@
 #include <assert.h>
 #include <bitmask.h>
+#include <cstring.h>
+#include <fat.h>
+#include <filesystem.h>
 #include <ide.h>
 #include <idt.h>
 #include <math.h>
 #include <memory.h>
 #include <stdio.h>
 
-ATADevice devices[4];
+ATADevice  devices[4];
+ATADevice* currentDevice;
+
+FATShortEntry rootDirectory;
 
 void IDE::init()
 {
 	info("Initializing IDE/ATA...");
 	devices[0].init(true, true);
+	currentDevice = &devices[0];
 	IDT::registerInterruptHandler(IRQ14, IDE::callback);
 }
 
@@ -42,32 +49,6 @@ void ATADevice::init(bool inPrimary, bool inMaster)
 
 	// Parse the file system info sector (2)
 	parseFileSystemInfoSector();
-
-	// Parse the root directory
-	FATShortEntry data[FAT_ENTRIES_PER_SECTOR];
-	if (!readSectors(rootDirectorySector, 1, &data))
-	{
-		panic("Failed to read root directory sector.");
-	}
-	rootDirectory = data[0];
-
-	Directory directory;
-	memset(directory.files, 0, sizeof(FATEntry) * FAT_ENTRIES_PER_SECTOR);
-	uint32_t rootDataSector = getClusterSector(rootDirectory.fstClusLO);
-	parseDirectory(rootDataSector, &directory);
-	for (int32_t i = 0; i < directory.fileCount; i++)
-	{
-		FATEntry* f = &directory.files[i];
-
-		// Skip directories
-		if (std::Bitmask::test(f->attr, FA_Directory))
-		{
-			continue;
-		}
-		char* data = (char*)std::kmalloc(f->size);
-		readSectors(f->sector, CEILDIV(1, mbr.bytesPerSector), data);
-		printf("%s, %dB:\n%s\n\n", f->name, f->size, data);
-	}
 }
 
 void ATADevice::wait4ns() const
@@ -255,123 +236,6 @@ void ATADevice::parseFileSystemInfoSector()
 	ASSERT(fsi.signature2 == 0xAA550000);
 }
 
-void ATADevice::parseDirectory(uint32_t sector, Directory* directory)
-{
-	if (!sector || sector >= mbr.sectorCount)
-	{
-		error("Sector %d is invalid.", sector);
-		return;
-	}
-
-	uint8_t data[512];
-	if (!readSector(sector, data))
-	{
-		panic("Failed to read root directory sector.");
-	}
-
-	FATEntry* file = directory->files;
-	uint32_t  index = 0;
-	while (index < FAT_ENTRIES_PER_SECTOR)
-	{
-		uint8_t* attr = &data[index * FAT_ENTRY_SIZE];
-		char	 longName[MAX_FILENAME];
-		memset(longName, 0, MAX_FILENAME);
-		bool isLong = isLongEntry(attr);
-
-		if (isLong)
-		{
-			FATLongEntry* entry = (FATLongEntry*)(data + (index * FAT_ENTRY_SIZE));
-			uint8_t		  entryCount = (entry->id & ~0x40);
-			parseLongEntry(entry, entryCount, longName);
-			index += entryCount;
-		}
-		attr = &data[index * FAT_ENTRY_SIZE];
-		if (*attr != 0x0)
-		{
-			FATShortEntry* entry = (FATShortEntry*)(data + (index * FAT_ENTRY_SIZE));
-			char		   shortName[13];
-			for (int i = 0; i < 8; i++)
-			{
-				shortName[i] = tolower(entry->shortName[i]);
-			}
-			if (!isLong && std::Bitmask::test(*attr, FA_Directory))
-			{
-				shortName[8] = '.';
-				for (int i = 0; i < 3; i++)
-				{
-					shortName[i + 9] = tolower(entry->ext[i]);
-				}
-				shortName[12] = 0;
-			}
-			else
-			{
-				shortName[8] = 0;
-			}
-
-			char* nameBuffer = longName[0] ? longName : shortName;
-			memcpy(file->name, nameBuffer, strlen(nameBuffer));
-			file->size = entry->fileSize;
-			memcpy(file->ext, entry->ext, 3);
-			file->sector = getClusterSector(entry->fstClusLO);
-			file->attr = entry->attr;
-
-			directory->fileCount++;
-			file++;
-		}
-		index++;
-	}
-}
-
-bool ATADevice::getEntry(const char* name, FATEntry* entry) { return false; }
-
-bool ATADevice::isLongEntry(uint8_t* buffer)
-{
-	return *buffer == FA_LastEntry || *(buffer + 11) == FA_LongFileName;
-}
-
-void ATADevice::parseLongEntry(FATLongEntry* entry, uint32_t count, char* filename)
-{
-	while (count)
-	{
-		count--;
-		uint32_t offset = count * 13;
-		char	 wdata[26];
-		memcpy(wdata, entry->data0, 10);
-		memcpy(wdata + 10, entry->data1, 12);
-		memcpy(wdata + 22, entry->data2, 4);
-		for (int i = 0; i < 13; i++)
-		{
-			*(filename + offset + i) = wdata[i * 2];
-		}
-		entry++;
-	}
-}
-
-bool ATADevice::readFile(uint32_t startCluster, char* data, uint32_t size)
-{
-	uint32_t bytesRead = 0;
-	uint32_t cluster = startCluster;
-	while (cluster < FAT_EOC && bytesRead < size)
-	{
-		uint32_t sector = getClusterSector(cluster);
-		uint8_t	 buffer[512];
-		readSector(sector, buffer);
-		uint32_t copySize = mbr.bytesPerSector;
-		if (bytesRead + copySize > size)
-		{
-			copySize = size - bytesRead;
-		}
-		memcpy(data + bytesRead, buffer, copySize);
-		bytesRead += copySize;
-	}
-	return true;
-}
-
-uint32_t ATADevice::getClusterSector(uint32_t n)
-{
-	return ((n - 2) * mbr.sectorsPerCluster) + firstDataSector;
-}
-
 bool ATADevice::accessSectors(uint32_t sector, uint32_t count, bool read, void* data)
 {
 	if (count == 0)
@@ -444,53 +308,3 @@ bool ATADevice::writeSectors(uint32_t sector, uint32_t count, void* data)
 {
 	return accessSectors(sector, count, false, data);
 }
-
-uint32_t ATADevice::getFATSector(uint32_t number, uint32_t size, uint32_t sector)
-{
-	return (number * size) + sector;
-}
-
-FATEntryType ATADevice::getFATEntry(uint32_t index)
-{
-	uint32_t fatSector = mbr.reservedSectorCount + index;
-	uint8_t	 fatData[512];
-	uint32_t clusterCount = getClusterCount();
-	if (readSectors(fatSector, 1, fatData))
-	{
-		uint32_t record;
-		memcpy(&record, fatData, 4);
-		if (record == 0x0)
-		{
-			return Free;
-		}
-		else if (record >= 0x2 && record <= clusterCount)
-		{
-			return Allocated;
-		}
-		else if (record >= clusterCount + 1 && record <= 0xFFFFFF6)
-		{
-			return Reserved;
-		}
-		else if (record == 0xFFFFFF7)
-		{
-			return Defective;
-		}
-		else if (record >= 0xFFFFFF8 && record <= 0xFFFFFFE)
-		{
-			return Reserved;
-		}
-		else
-		{
-			return EOF;
-		}
-	}
-	return Defective;
-}
-
-uint32_t ATADevice::getClusterCount()
-{
-	uint32_t dataSectors = mbr.sectorCount - (mbr.reservedSectorCount + getFATSize());
-	return dataSectors / mbr.sectorsPerCluster;
-}
-
-uint32_t ATADevice::getFATSize() { return mbr.tableCount * mbr.bigSectorsPerTable; }

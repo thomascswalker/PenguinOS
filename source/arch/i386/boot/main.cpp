@@ -4,12 +4,10 @@ Main entry point into PengOS.
 
 #include <filesystem.h>
 #include <gdt.h>
-#include <ide.h>
 #include <keyboard.h>
 #include <memory.h>
 #include <multiboot.h>
 #include <pit.h>
-#include <string.h>
 
 EXTERN void kmain(MultibootInfo* info, uint32_t magic)
 {
@@ -33,9 +31,20 @@ EXTERN void kmain(MultibootInfo* info, uint32_t magic)
 	println("Welcome to PengOS!");
 
 	Memory::init(start, size);
+	FileSystem::init();
 
-	IDE::init();
-	// FileSystem::init();
+	// Entering user land
+
+	String path("/etc/longFile.txt");
+	File   file;
+	if (FileSystem::readFile(path, &file))
+	{
+		debug("File: %s\n%s", path.cstr(), (char*)file.data);
+	}
+	else
+	{
+		error("Failed to read file: %s", path.cstr());
+	}
 
 	while (1)
 	{

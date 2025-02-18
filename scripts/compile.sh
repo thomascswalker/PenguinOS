@@ -18,7 +18,7 @@ compile_source_file() {
     debug "Compiling '$1'..."
     BASE_FILENAME=$(basename $1 | sed 's/\.[^.]*$//')
     OUT_FILENAME="${BUILD_DIR}/${BASE_FILENAME}_cpp.o"
-    $GCC -std=$CPP_VERSION $CFLAGS -nostdlib -fno-builtin -Wno-unused-function -Wno-unused-parameter -Wno-unused-variable -Wno-parentheses $INCLUDE_ARGS -c -o $OUT_FILENAME $1
+    $GCC -std=$CPP_VERSION $CFLAGS -nostdlib -fno-builtin -Wno-unused-function -Wno-unused-parameter -Wno-unused-variable -Wno-parentheses -fno-exceptions $INCLUDE_ARGS -c -o $OUT_FILENAME $1
     verify_file $OUT_FILENAME
     OBJ_FILES+=($OUT_FILENAME)
 }

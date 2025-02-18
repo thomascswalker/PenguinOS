@@ -233,7 +233,6 @@ void* std::kmalloc(uint32_t size)
 {
 	if (size == 0)
 	{
-		warning("kmalloc: Size is 0.");
 		return nullptr;
 	}
 
@@ -247,13 +246,13 @@ void* std::kmalloc(uint32_t size)
 		}
 	}
 
-	if (order == BUCKET_COUNT)
+	if (order > MAX_ORDER)
 	{
 		warning("kmalloc: Order %d is greater than maximum order %d.", order, MAX_ORDER);
 		return nullptr;
 	}
 
-	int currentOrder = order;
+	uint32_t currentOrder = order;
 	while (currentOrder < BUCKET_COUNT && freeList[currentOrder] == nullptr)
 	{
 		currentOrder++;
@@ -290,7 +289,47 @@ void* std::kmalloc(uint32_t size)
 	return (void*)((uint8_t*)block + sizeof(Block));
 }
 
-void std::kfree(void* ptr) {}
+void std::kfree(void* ptr)
+{
+	if (ptr == nullptr)
+	{
+		return;
+	}
+
+	Block* block = (Block*)((char*)ptr - sizeof(Block));
+	block->isFree = true;
+
+	uint32_t order = block->order;
+	while (order < BUCKET_COUNT)
+	{
+		uintptr_t blockOffset = (uintptr_t)((char*)block - (char*)memoryPool);
+		size_t	  blockSize = bucketSizes[order];
+
+		uintptr_t buddyOffset = blockOffset ^ blockSize;
+		if (buddyOffset + blockSize > memorySize)
+		{
+			break; // Buddy is out of bounds
+		}
+
+		Block* buddy = (Block*)((char*)memoryPool + buddyOffset);
+		if (!buddy->isFree || buddy->order != order)
+		{
+			break; // Cannot merge
+		}
+
+		Memory::removeBlock(buddy, order);
+		if (buddyOffset < blockOffset)
+		{
+			block = buddy;
+			blockOffset = buddyOffset;
+		}
+
+		order++;
+		block->order = order;
+	}
+
+	Memory::addBlock(block);
+}
 
 void* operator new(size_t size)
 {
