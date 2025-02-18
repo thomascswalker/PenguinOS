@@ -12,7 +12,7 @@
 ATADevice  devices[4];
 ATADevice* currentDevice;
 
-FATShortEntry rootDirectory;
+FAT32::FATShortEntry rootDirectory;
 
 void IDE::init()
 {
@@ -181,26 +181,26 @@ void ATADevice::parseBootSector()
 
 #define BOOT_SECTOR(x, y) memcpy(&x, mbrData + y, sizeof(x));
 
-	memcpy(&mbr.oemIdentifier, (uint8_t*)mbrData + 0x03, 8);
-	mbr.oemIdentifier[8] = '\0'; // Null-terminate string
-	BOOT_SECTOR(mbr.bytesPerSector, 0x0B);
-	BOOT_SECTOR(mbr.sectorsPerCluster, 0x0D);
-	BOOT_SECTOR(mbr.reservedSectorCount, 0x0E);
-	BOOT_SECTOR(mbr.tableCount, 0x10);
-	BOOT_SECTOR(mbr.rootEntryCount, 0x11);
-	BOOT_SECTOR(mbr.sectorCount, 0x13);
-	BOOT_SECTOR(mbr.mediaType, 0x15);
-	BOOT_SECTOR(mbr.sectorsPerTable, 0x16);
-	BOOT_SECTOR(mbr.sectorsPerTrack, 0x18);
-	BOOT_SECTOR(mbr.heads, 0x1A);
-	BOOT_SECTOR(mbr.hiddenSectors, 0x1C);
-	BOOT_SECTOR(mbr.largeSectorCount, 0x20);
-	BOOT_SECTOR(mbr.bigSectorsPerTable, 0x24);
-	BOOT_SECTOR(mbr.extFlags, 0x28);
-	BOOT_SECTOR(mbr.fSVersion, 0x2A);
-	BOOT_SECTOR(mbr.rootDirectoryStart, 0x2C);
-	BOOT_SECTOR(mbr.fSInfoSector, 0x30);
-	BOOT_SECTOR(mbr.backupBootSector, 0x32);
+	memcpy(&bootSector.oemIdentifier, (uint8_t*)mbrData + 0x03, 8);
+	bootSector.oemIdentifier[8] = '\0'; // Null-terminate string
+	BOOT_SECTOR(bootSector.bytesPerSector, 0x0B);
+	BOOT_SECTOR(bootSector.sectorsPerCluster, 0x0D);
+	BOOT_SECTOR(bootSector.reservedSectorCount, 0x0E);
+	BOOT_SECTOR(bootSector.tableCount, 0x10);
+	BOOT_SECTOR(bootSector.rootEntryCount, 0x11);
+	BOOT_SECTOR(bootSector.sectorCount, 0x13);
+	BOOT_SECTOR(bootSector.mediaType, 0x15);
+	BOOT_SECTOR(bootSector.sectorsPerTable, 0x16);
+	BOOT_SECTOR(bootSector.sectorsPerTrack, 0x18);
+	BOOT_SECTOR(bootSector.heads, 0x1A);
+	BOOT_SECTOR(bootSector.hiddenSectors, 0x1C);
+	BOOT_SECTOR(bootSector.largeSectorCount, 0x20);
+	BOOT_SECTOR(bootSector.bigSectorsPerTable, 0x24);
+	BOOT_SECTOR(bootSector.extFlags, 0x28);
+	BOOT_SECTOR(bootSector.fSVersion, 0x2A);
+	BOOT_SECTOR(bootSector.rootDirectoryStart, 0x2C);
+	BOOT_SECTOR(bootSector.fSInfoSector, 0x30);
+	BOOT_SECTOR(bootSector.backupBootSector, 0x32);
 #undef BOOT_SECTOR
 
 	// Extract partition info
@@ -214,11 +214,13 @@ void ATADevice::parseBootSector()
 	ASSERT(lastTwoBytes[0] == 0x55);
 	ASSERT(lastTwoBytes[1] == 0xAA);
 
-	rootDirectorySector = mbr.reservedSectorCount + (mbr.tableCount * mbr.bigSectorsPerTable);
-	firstDataSector = mbr.reservedSectorCount + (mbr.tableCount * mbr.bigSectorsPerTable);
+	rootDirectorySector =
+		bootSector.reservedSectorCount + (bootSector.tableCount * bootSector.bigSectorsPerTable);
+	firstDataSector =
+		bootSector.reservedSectorCount + (bootSector.tableCount * bootSector.bigSectorsPerTable);
 
-	uint32_t rootDirSectors =
-		((mbr.rootEntryCount * 32) + (mbr.bytesPerSector - 1)) / mbr.bytesPerSector;
+	uint32_t rootDirSectors = ((bootSector.rootEntryCount * 32) + (bootSector.bytesPerSector - 1))
+		/ bootSector.bytesPerSector;
 	ASSERT(rootDirSectors == 0); // Should always be 0 on FAT32
 }
 

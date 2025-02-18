@@ -8,90 +8,14 @@
 #include <memory.h>
 #include <stdio.h>
 
-bool FAT32::isLongEntry(uint8_t* buffer)
-{
-	return *buffer == FA_LastEntry || *(buffer + 11) == FA_LongFileName;
-}
-
-void FAT32::parseLongEntry(FATLongEntry* entry, uint32_t count, char* filename)
-{
-	while (count)
-	{
-		count--;
-		uint32_t offset = count * 13;
-		char	 wdata[26];
-		memcpy(wdata, entry->data0, 10);
-		memcpy(wdata + 10, entry->data1, 12);
-		memcpy(wdata + 22, entry->data2, 4);
-		for (int i = 0; i < 13; i++)
-		{
-			*(filename + offset + i) = wdata[i * 2];
-		}
-		entry++;
-	}
-}
-
-bool FAT32::findEntry(uint32_t startCluster, const String& name, FATShortEntry* entry)
-{
-	auto	 d = IDE::getDevice(0);
-	String	 fname = FAT32::toShortName(name);
-	uint32_t cluster = startCluster;
-
-	uint8_t buffer[4096];
-	while (cluster < 0x0FFFFFF8)
-	{
-		uint32_t firstSector = FAT32::getClusterSector(cluster);
-		for (uint8_t sector = 0; sector < d->mbr.sectorsPerCluster; sector++)
-		{
-			if (!d->readSector(firstSector + sector, buffer + (sector * d->mbr.bytesPerSector)))
-			{
-				warning("Unable to read sector %d", firstSector + sector);
-				return false;
-			}
-		}
-
-		uint32_t entriesPerCluster =
-			(d->mbr.sectorsPerCluster * d->mbr.bytesPerSector) / sizeof(FATShortEntry);
-		FATShortEntry* entries = (FATShortEntry*)buffer;
-
-		for (uint32_t i = 0; i < entriesPerCluster; i++)
-		{
-			FATShortEntry* current = &entries[i];
-
-			if (current->name[0] == FA_Empty) // No more entries
-			{
-				return false;
-			}
-			if (current->name[0] == FA_Deleted) // Deleted entry
-			{
-				continue;
-			}
-			if (current->name[0] == '.'
-				&& (current->name[1] == ' ' || current->name[1] == '.')) // . & .. entries
-			{
-				continue;
-			}
-			if (isLongEntry((uint8_t*)current)) // Long file name entry
-			{
-				continue;
-			}
-
-			if (strncmp(fname.cstr(), (char*)current->name, 8))
-			{
-				memcpy(entry, current, 32);
-				return true;
-			}
-		}
-
-		cluster = FAT32::getNextCluster(cluster);
-	}
-
-	return false;
-}
+#define GET_DEVICE(index) ATADevice* d = IDE::getDevice(index)
 
 bool FAT32::openFile(const String& filename, void* file)
 {
-	auto		  d = IDE::getDevice(0);
+	GET_DEVICE(0);
+
+	// Split the filename by `/`. This will result in an
+	// array of each path component we need to search for.
 	Array<String> components = filename.split('/');
 
 	if (components.empty())
@@ -100,6 +24,7 @@ bool FAT32::openFile(const String& filename, void* file)
 		return false;
 	}
 
+	// TODO: Move this to global space as it's redundant
 	// Parse the root directory
 	FATShortEntry data[FAT_ENTRIES_PER_SECTOR];
 	if (!d->readSectors(d->rootDirectorySector, 1, &data))
@@ -107,11 +32,15 @@ bool FAT32::openFile(const String& filename, void* file)
 		panic("Failed to read root directory sector.");
 	}
 	FATShortEntry* rootDirectory = &data[0];
-	uint32_t	   currentCluster = rootDirectory->firstCluster();
+	uint32_t	   currentCluster = rootDirectory->cluster();
 
 	FATShortEntry entry;
 	uint32_t	  sector = 0;
 
+	// Iterate through the path components attempting to find
+	// the corresponding entry. If a component is a directory,
+	// step into that directory by setting the current cluster
+	// to that entry's cluster.
 	for (const auto& c : components)
 	{
 		if (!findEntry(currentCluster, c, &entry))
@@ -120,43 +49,51 @@ bool FAT32::openFile(const String& filename, void* file)
 			return false;
 		}
 
-		if (std::Bitmask::test(entry.attr, FA_Directory))
+		if (Bitmask::test((uint8_t)entry.attribute, (uint8_t)FATAttribute::Directory))
 		{
-			currentCluster = entry.firstClusterLow;
+			currentCluster = entry.cluster();
 			continue;
 		}
 		break;
 	}
+
+	// If the file entry indicates the file is empty, just return.
 	if (!entry.fileSize)
 	{
 		warning("File is empty.");
 		return false;
 	}
 
+	// Extract relevant file data and properties.
 	File* f = (File*)file;
 	f->size = entry.fileSize;
-	sector = FAT32::getClusterSector(entry.firstClusterLow);
+
+	// Get the corresponding sector for the entry's cluster.
+	sector = FAT32::getClusterSector(entry.cluster());
+
+	// Allocate memory for the file.
 	f->data = new char[entry.fileSize];
+
+	// Finally read the sector corresponding to this entry,
+	// storing the result in f->data.
 	return d->readSector(sector, f->data);
 }
 
-bool FAT32::isValidChar(char c)
-{
-	if (isalnum(c))
-	{
-		return true;
-	}
-	return !(c == '.' || c == '"' || c == '/' || c == '\\' || c == '[' || c == ']' || c == ':'
-		|| c == ';' || c == '=' || c == ',');
-}
-
+// Converts the given `longName` to a FAT 8.3 compatible
+// short name.
+// Examples:
+// [test.txt] (4)          => [TEST    TXT] (11)
+// [longFileName.txt] (12) => [LONGFI~1TXT] (11)
 String FAT32::toShortName(const String& longName)
 {
+	// Split the longname into its name and extension
 	auto components = FileSystem::splitExt(longName);
 	// Force null-terminate the NAME at 8 chars
 	components.a[8] = '\0';
 	// Force null-terminate the EXT at 3 chars
 	components.b[3] = '\0';
+
+	// Remove invalid characters and whitespace
 	String base = sanitize(components.a);
 	String ext = sanitize(components.b);
 
@@ -164,33 +101,40 @@ String FAT32::toShortName(const String& longName)
 	bool   useTilde = false;
 	String shortBase, shortExt;
 
+	// We use a tilde (~) if the base component resized.
 	if (base.size() > 8 || components.a.size() != base.size())
 	{
 		useTilde = true;
 	}
+	// Again, force resize to 8/3
 	base.resize(8, ' ');
 	ext.resize(3, ' ');
 
 	if (useTilde)
 	{
+		// If we're using a tilde, at most we can use 6 characters
+		// because (123456~N) == 8 characters.
 		size_t allowed = 6;
+
+		// If the base is smaller than 6 characters, set the
+		// allowed count to the size of the base.
 		if (base.size() < allowed)
 		{
 			allowed = base.size();
 		}
+
+		// Extract only [0..Allowed] count of chars from
+		// the base and append "~1" to it.
 		base = base.substr(0, allowed) + "~1";
-
-		if (base.size() > 8)
-		{
-			base = base.substr(0, 8);
-		}
-
-		base = ext.substr(0, 3);
 	}
 
+	// Return the concatenated base and extension.
 	return base + ext;
 }
 
+// Sanitizes the name component (either the base or the ext)
+// to remove invalid characters and force all characters
+// to uppercase.
 String FAT32::sanitize(const String& component)
 {
 	String result;
@@ -198,98 +142,206 @@ String FAT32::sanitize(const String& component)
 	for (size_t i = 0; i < component.size(); i++)
 	{
 		char c = component[i];
+
+		// We've hit the end, append a null-terminator
+		// and break.
 		if (c == '\0')
 		{
 			result.append('\0');
 			break;
 		}
+		// If this character is invalid, continue.
 		if (!isValidChar(c))
 		{
 			continue;
 		}
+		// Append an uppercase version of `c`.
 		result.append(toupper(c));
 	}
 	return result;
 }
 
-uint32_t FAT32::getNextCluster(uint32_t cluster)
+// Checks if the given char `c` is a valid FAT short name
+// character.
+bool FAT32::isValidChar(char c)
 {
-	ATADevice* d = IDE::getDevice(0);
+	// If the char is alpha-numeric (i.e. a-z || A-Z || 0-9)
+	if (isalnum(c))
+	{
+		return true;
+	}
 
-	uint32_t offset = cluster * 4;
-	uint32_t sector = d->mbr.reservedSectorCount + (offset / d->mbr.bytesPerSector);
-	uint32_t offsetInSector = offset % d->mbr.bytesPerSector;
+	// If the character is not one of the below allowed
+	// filename characters.
+	return !(c == '.' || c == '"' || c == '/' || c == '\\' || c == '[' || c == ']' || c == ':'
+		|| c == ';' || c == '=' || c == ',');
+}
 
+bool FAT32::findEntry(uint32_t startCluster, const String& name, FATShortEntry* entry)
+{
+	GET_DEVICE(0);
+
+	// Convert the input `name` to the FAT 8.3 short name specification.
+	String shortName = FAT32::toShortName(name);
+
+	// Start at `startCluster`. This will be updated as we traverse a cluster
+	// and do not (yet) find the matching entry.
+	uint32_t cluster = startCluster;
+
+	// Create a buffer which will hold all of the data for this cluster (all 16 sectors).
+	uint8_t buffer[8192];
+	while (cluster < FAT_END_OF_CLUSTER)
+	{
+		// Get the first sector of this cluster.
+		uint32_t firstSector = FAT32::getClusterSector(cluster);
+
+		// Read each sector (16 total) of this cluster into `buffer` at the offset
+		// [n * BPS] where `n` is the current sector index and BPS is the bytes
+		// per sector.
+		for (uint8_t sector = 0; sector < d->bootSector.sectorsPerCluster; sector++)
+		{
+			if (!d->readSector(
+					firstSector + sector, buffer + (sector * d->bootSector.bytesPerSector)))
+			{
+				warning("Unable to read sector %d", firstSector + sector);
+				return false;
+			}
+		}
+
+		// Compute the number of entries we will look through
+		// in this cluster.
+		uint32_t entriesPerCluster =
+			(d->bootSector.sectorsPerCluster * d->bootSector.bytesPerSector)
+			/ sizeof(FATShortEntry);
+
+		// Cast the raw buffer we read above to a short entry
+		// array we can iterate through.
+		FATShortEntry* entries = (FATShortEntry*)buffer;
+		for (uint32_t i = 0; i < entriesPerCluster; i++)
+		{
+			FATShortEntry* current = &entries[i];
+
+			// No more entries
+			if (!current->isValid())
+			{
+				continue;
+			}
+			// Ignore entries which are '. ' or '..' as this will cause an
+			// infinite recursion error.
+			else if (current->name[0] == '.'
+				&& (current->name[1] == ' ' || current->name[1] == '.')) // . & .. entries
+			{
+				continue;
+			}
+			// Ignore long filename entries
+			else if (isLongEntry((uint8_t*)current))
+			{
+				continue;
+			}
+
+			// Only compare the first 8 characters of each name
+			if (strncmp(shortName.cstr(), (char*)current->name, 8))
+			{
+				// If we have a match, we've found the corresponding
+				// entry. Copy `current` memory into our in/out `entry`.
+				memcpy(entry, current, 32);
+				return true;
+			}
+		}
+
+		// Move to the next cluster.
+		cluster = FAT32::getNextCluster(cluster);
+	}
+
+	return false;
+}
+
+bool FAT32::isLongEntry(uint8_t* buffer)
+{
+	// The entry is a long entry if either:
+	// - The first character of the entry is 0.
+	// - The 'attribute' component of a FAT entry is at offset 11 (0xB). This
+	// character is equal to 15 (0xF).
+	return *buffer == FATAttribute::LastEntry || *(buffer + 11) == FATAttribute::LongFileName;
+}
+
+void FAT32::parseLongEntry(FATLongEntry* entry, uint32_t count, char* filename)
+{
+	// While we still have entries to parse...
+	while (count)
+	{
+		// Decrement count
+		count--;
+
+		// Each entry's data is 26 bytes long with 'wchar_t',
+		// but it's 13 bytes long with 'char'. Compute
+		// the offset within the `filename` array for this loop.
+		uint32_t offset = count * 13;
+
+		// 26 bytes for wchar_t data.
+		char wdata[26];
+
+		// Copy each data segment into the wchar_t buffer.
+		// Data0 == 0..9
+		// Data1 == 10..21
+		// Data2 == 22..25
+		memcpy(wdata, entry->data0, 10);
+		memcpy(wdata + 10, entry->data1, 12);
+		memcpy(wdata + 22, entry->data2, 4);
+
+		// Copy every other char to the filename.
+		for (int i = 0; i < 13; i++)
+		{
+			*(filename + offset + i) = wdata[i * 2];
+		}
+
+		// Increment the entry pointer to move to the next
+		// long filename entry.
+		entry++;
+	}
+}
+
+// Given the cluster number `n`, get the next cluster.
+uint32_t FAT32::getNextCluster(uint32_t n)
+{
+	GET_DEVICE(0);
+	uint32_t offset = n * 4; // ??? why multiply by 4?
+	uint32_t sector = d->bootSector.reservedSectorCount + (offset / d->bootSector.bytesPerSector);
+	uint32_t offsetInSector = offset % d->bootSector.bytesPerSector;
+
+	// Assumes the sector is 512 bytes.
 	uint8_t buffer[512];
 	if (!d->readSector(sector, buffer))
 	{
-		return 0x0FFFFFFF; // End of chain
+		return FAT_END_OF_CLUSTER; // End of chain
 	}
 
 	uint32_t* entry = (uint32_t*)(buffer + offsetInSector);
-	uint32_t  next = *entry & 0x0FFFFFFF;
+	uint32_t  next = *entry & FAT_END_OF_CLUSTER;
 	return next;
 }
 
-uint32_t FAT32::getSector(uint32_t number, uint32_t size, uint32_t sector)
-{
-	return (number * size) + sector;
-}
-
-FATEntryType FAT32::getEntryType(uint32_t index)
-{
-	ATADevice* d = IDE::getDevice(0);
-	uint32_t   sector = d->mbr.reservedSectorCount + index;
-	uint8_t	   data[512];
-	uint32_t   clusterCount = FAT32::getClusterCount();
-
-	if (d->readSectors(sector, 1, data))
-	{
-		uint32_t record;
-		memcpy(&record, data, 4);
-		if (record == 0x0)
-		{
-			return Free;
-		}
-		else if (record >= 0x2 && record <= clusterCount)
-		{
-			return Allocated;
-		}
-		else if (record >= clusterCount + 1 && record <= 0xFFFFFF6)
-		{
-			return Reserved;
-		}
-		else if (record == 0xFFFFFF7)
-		{
-			return Defective;
-		}
-		else if (record >= 0xFFFFFF8 && record <= 0xFFFFFFE)
-		{
-			return Reserved;
-		}
-		else
-		{
-			return EOF;
-		}
-	}
-	return Defective;
-}
-
+// Given the cluster number `n`, get the corresponding
+// sector number.
 uint32_t FAT32::getClusterSector(uint32_t n)
 {
-	ATADevice* d = IDE::getDevice(0);
-	return ((n - 2) * d->mbr.sectorsPerCluster) + d->firstDataSector;
+	GET_DEVICE(0);
+	return ((n - 2) * d->bootSector.sectorsPerCluster) + d->firstDataSector;
 }
 
+// Returns the total number of clusters (sectors for data)
+// in this partition.
 uint32_t FAT32::getClusterCount()
 {
-	ATADevice* d = IDE::getDevice(0);
-	uint32_t   dataSectors = d->mbr.sectorCount - (d->mbr.reservedSectorCount + getSize());
-	return dataSectors / d->mbr.sectorsPerCluster;
+	GET_DEVICE(0);
+	uint32_t dataSectors =
+		d->bootSector.sectorCount - (d->bootSector.reservedSectorCount + getSize());
+	return dataSectors / d->bootSector.sectorsPerCluster;
 }
 
+// Returns the total number of sectors in this partition.
 uint32_t FAT32::getSize()
 {
-	ATADevice* d = IDE::getDevice(0);
-	return d->mbr.tableCount * d->mbr.bigSectorsPerTable;
+	GET_DEVICE(0);
+	return d->bootSector.tableCount * d->bootSector.bigSectorsPerTable;
 }

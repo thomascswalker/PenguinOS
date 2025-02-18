@@ -118,7 +118,7 @@ struct ATADevice
 	char	 model[41]; // Drive model string, 40 chars + null terminator
 
 	uint8_t		   bootCode[446];
-	BootSector	   mbr;
+	BootSector	   bootSector;
 	Partition	   partitions[4];
 	FileSystemInfo fsi;
 
