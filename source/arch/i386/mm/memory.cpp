@@ -233,7 +233,6 @@ void* std::kmalloc(uint32_t size)
 {
 	if (size == 0)
 	{
-		warning("kmalloc: Size is 0.");
 		return nullptr;
 	}
 
@@ -247,7 +246,7 @@ void* std::kmalloc(uint32_t size)
 		}
 	}
 
-	if (order == BUCKET_COUNT)
+	if (order > MAX_ORDER)
 	{
 		warning("kmalloc: Order %d is greater than maximum order %d.", order, MAX_ORDER);
 		return nullptr;

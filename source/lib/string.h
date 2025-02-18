@@ -23,9 +23,9 @@ public:
 	/* Constructors */
 
 	// Default constructor
-	String() : m_size(1), m_capacity(1)
+	String() : m_size(0), m_capacity(1)
 	{
-		m_data = m_allocator.allocate(m_size);
+		m_data = m_allocator.allocate(m_capacity);
 		m_data[0] = '\0';
 	}
 	String(const String& other)
@@ -50,15 +50,6 @@ public:
 	// Constructor from C-style string
 	String(const char* str)
 	{
-		if (str == nullptr || !strlen(str))
-		{
-			m_size = 1;
-			m_capacity = 1;
-			m_data = m_allocator.allocate(m_capacity);
-			m_data[0] = '\0';
-			return;
-		}
-
 		m_size = strlen(str);
 		reserve(m_size + 1);
 		m_data = m_allocator.allocate(m_size);
@@ -77,6 +68,12 @@ public:
 		m_data = m_allocator.allocate(size);
 		memset(m_data, c, strlen(m_data));
 	}
+	String(const char* str, size_t count) : m_size(count)
+	{
+		m_data = new char[count + 1];
+		memcpy(m_data, (char*)str, count);
+		m_data[count] = '\0';
+	}
 	~String()
 	{
 		if (m_data)
@@ -89,6 +86,7 @@ public:
 
 	char*  data() const { return m_data; }
 	size_t size() const { return m_size; }
+	size_t capacity() const { return m_capacity; }
 	void   reserve(size_t newCapacity)
 	{
 		if (m_capacity > newCapacity)
@@ -113,7 +111,7 @@ public:
 			size_t newCapacity = m_capacity == 0 ? 1 : m_capacity * 2;
 			reserve(newCapacity);
 		}
-		m_data[m_size - 1] = c;
+		m_data[m_size] = c;
 		m_size++;
 	}
 	Array<String> split(char delimiter) const
@@ -125,26 +123,26 @@ public:
 
 		while (end != npos)
 		{
-			if (end - start)
+			size_t diff = end - start;
+			if (diff)
 			{
-				tokens.add(substring(start, end - start));
+				String s = substr(start, diff);
+				tokens.add(s);
 			}
-			start = end + 1;
+			start = end + 1; // Skip delimiter
 			end = find(delimiter, start);
 		}
 
 		end = m_size;
-		tokens.add(substring(start, end - start));
+		tokens.add(substr(start, end - start));
 
 		return tokens;
 	}
 	void resize(size_t size, char c = '\0')
 	{
-		debug("Size:%d, NewSize:%d", m_size, size);
 		if (size < m_size)
 		{
 			m_size = size;
-			terminate();
 		}
 		else if (size > m_size)
 		{
@@ -170,21 +168,24 @@ public:
 			}
 			m_size = size;
 		}
+		terminate();
 	}
-	void   terminate() { m_data[m_size] = '\0'; }
-	String substring(size_t pos, size_t count = String::npos) const
+	void terminate() { m_data[m_size] = '\0'; }
+	void terminate(char c)
 	{
-		if (count == npos)
+		for (size_t i = 0; i < m_size; i++)
 		{
-			count = m_size - pos;
+			if (m_data[i] == c)
+			{
+				m_data[i] = '\0';
+				return;
+			}
 		}
-		String result;
-		for (size_t i = pos; i < pos + count; i++)
-		{
-			result.append(m_data[i]);
-		}
-		result[result.size() - 1] = '\0';
-		return result;
+	}
+	String substr(size_t pos, size_t count = String::npos) const
+	{
+		count = (count == npos || pos + count > m_size) ? m_size - pos : count;
+		return String(m_data + pos, count);
 	}
 
 	size_t find(char c, size_t start = 0) const
@@ -272,6 +273,22 @@ public:
 		*this = *this + other;
 		return *this;
 	}
+	bool operator==(const String& other)
+	{
+		if (m_size != other.size())
+		{
+			return false;
+		}
+		for (size_t i = 0; i < m_size; i++)
+		{
+			if (m_data[i] != other[i])
+			{
+				return false;
+			}
+		}
+		return true;
+	}
+	bool operator!=(const String& other) { return !(*this == other); }
 	operator char*() const { return m_data; }
 	char&		operator[](size_t index) { return m_data[index]; }
 	const char& operator[](size_t index) const { return m_data[index]; }

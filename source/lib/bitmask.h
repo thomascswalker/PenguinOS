@@ -1,5 +1,7 @@
 #pragma once
 
+#include <stdint.h>
+
 #define DEFINE_BITMASK_OPERATORS(T)                                                    \
 	inline constexpr T operator|(T a, T b)                                             \
 	{                                                                                  \

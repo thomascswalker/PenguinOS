@@ -2,15 +2,12 @@
 Main entry point into PengOS.
 */
 
-#include <array.h>
 #include <filesystem.h>
 #include <gdt.h>
-#include <ide.h>
 #include <keyboard.h>
 #include <memory.h>
 #include <multiboot.h>
 #include <pit.h>
-#include <string.h>
 
 EXTERN void kmain(MultibootInfo* info, uint32_t magic)
 {
@@ -42,12 +39,13 @@ EXTERN void kmain(MultibootInfo* info, uint32_t magic)
 	File   file;
 	if (FileSystem::readFile(path, &file))
 	{
-		debugs((char*)file.data);
+		debug("File: %s\n%s", path.cstr(), (char*)file.data);
 	}
 	else
 	{
 		error("Failed to read file: %s", path.cstr());
 	}
+
 	while (1)
 	{
 	}

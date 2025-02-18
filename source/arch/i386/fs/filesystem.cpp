@@ -1,5 +1,5 @@
+#include <fat.h>
 #include <filesystem.h>
-#include <ide.h>
 #include <math.h>
 #include <memory.h>
 #include <stdio.h>
@@ -14,33 +14,37 @@ void FileSystem::init()
 
 bool FileSystem::readFile(const Path& path, File* file)
 {
-	auto d = IDE::getDevice(0);
-	return d->readFile(path.string(), file);
+	return FAT32::readFile(path.string(), file);
 }
 
 bool FileSystem::isFile(const Path& path) { return path.string().split('.').size(); }
 
+bool FileSystem::isDirectory(const Path& path) { return !path.string().split('.').size(); }
+
 Pair<String, String> FileSystem::splitExt(const Path& path)
 {
 	String p = path.string();
-	size_t dot = p.findLast('.');
-	String basename, ext;
-	if (dot == String::npos || dot == 0)
+	size_t pos = p.findLast('.');
+
+	if (pos == String::npos || pos == p.size() - 1)
 	{
-		basename = p;
+		return { p, "" };
 	}
-	else
-	{
-		basename = p.substring(0, dot);
-		ext = p.substring(dot + 1);
-	}
-	return Pair(basename, ext);
+	return { p.substr(0, pos), p.substr(pos + 1) };
 }
 
 Path Path::parent() { return Path(); }
 
-String Path::filename() { return String(); }
+String Path::filename()
+{
+	size_t dot = path.findLast('.');
+	return path.substr(0, dot);
+}
 
-String Path::stem() { return String(); }
+String Path::stem()
+{
+	size_t dot = path.findLast('.');
+	return path.substr(dot + 1);
+}
 
 String Path::extension() { return String(); }

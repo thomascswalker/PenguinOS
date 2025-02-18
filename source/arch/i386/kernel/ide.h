@@ -38,13 +38,6 @@
 // Number of User Addressable Logical Sectors (QWord, 64)
 #define ATA_IDENT_MAX_LBA_EXT 100
 
-#define MBR_BYTE_SIZE 446
-#define FAT_BYTES_PER_SECTOR 512
-#define FAT_ENTRY_SIZE 32
-#define FAT_ENTRIES_PER_SECTOR (FAT_BYTES_PER_SECTOR / FAT_ENTRY_SIZE)
-#define MAX_FILENAME 256
-#define FAT_EOC 0x0FFFFFF8
-
 struct ATADevice;
 struct Partition;
 struct BootSector;
@@ -55,34 +48,6 @@ namespace IDE
 	void	   callback(Registers regs);
 	ATADevice* getDevice(uint32_t index);
 } // namespace IDE
-
-enum class FATType
-{
-	ExFAT,
-	FAT12,
-	FAT16,
-	FAT32
-};
-
-enum FATEntryType
-{
-	Free,
-	Allocated,
-	Reserved,
-	Defective,
-	EOF
-};
-
-struct Partition
-{
-	uint32_t sectorCount;
-	uint32_t lbaBegin;
-	uint32_t chsEnd;
-	uint8_t	 typeCode;
-	uint32_t chsBegin;
-	uint8_t	 bootFlag;
-	FATType	 fatType;
-} __attribute__((packed));
 
 struct BootSector
 {
@@ -118,70 +83,16 @@ struct FileSystemInfo
 	uint32_t signature2;
 } __attribute__((packed));
 
-struct FATShortEntry // 32 bytes
+struct Partition
 {
-	uint8_t	 shortName[8];
-	uint8_t	 ext[3];
-	uint8_t	 attr;
-	uint8_t	 ntRes;
-	uint8_t	 crtTimeTenth;
-	uint16_t crtTime;
-	uint16_t crtDate;
-	uint16_t lastAccDate;
-	uint16_t fstClusHI;
-	uint16_t wrtTime;
-	uint16_t wrtDate;
-	uint16_t fstClusLO;
-	uint32_t fileSize;
-
-	bool isValid() const { return shortName[0] != 0x0 && shortName[0] != 0xE5; }
+	uint32_t sectorCount;
+	uint32_t lbaBegin;
+	uint32_t chsEnd;
+	uint8_t	 typeCode;
+	uint32_t chsBegin;
+	uint8_t	 bootFlag;
+	uint8_t	 fatType;
 } __attribute__((packed));
-
-struct FATLongEntry // 32 bytes
-{
-	uint8_t	 id;
-	uint8_t	 data0[10];
-	uint8_t	 attr; // Should always be 0x0F
-	uint8_t	 longEntryType;
-	uint8_t	 checksum;
-	uint8_t	 data1[12];
-	uint16_t always0;
-	uint8_t	 data2[4];
-
-	bool isLast() const { return (id & 0x40) == 0x40; }
-
-} __attribute__((packed));
-
-enum FileAttribute
-{
-	FA_Empty = 0,
-	FA_ReadOnly = (1 << 0),
-	FA_Hidden = (1 << 1),
-	FA_System = (1 << 2),
-	FA_VolumeID = (1 << 3),
-	FA_LongFileName = 0x0F,
-	FA_Directory = (1 << 4),
-	FA_Archive = (1 << 5),
-	FA_LastEntry = 0x41,
-	FA_Deleted = 0xE5,
-};
-
-struct FATEntry
-{
-	size_t	 size;
-	char	 name[64];
-	char	 ext[3];
-	uint16_t sector;
-	uint8_t	 attr;
-};
-
-struct Directory
-{
-	uint32_t fileCount;
-	FATEntry files[16];
-
-	Directory() { memset(files, 0, sizeof(FATEntry) * FAT_ENTRIES_PER_SECTOR); }
-};
 
 struct ATADevice
 {
@@ -211,10 +122,8 @@ struct ATADevice
 	Partition	   partitions[4];
 	FileSystemInfo fsi;
 
-	uint32_t	  rootDirectorySector;
-	uint32_t	  firstDataSector;
-	uint32_t	  rootDataSector;
-	FATShortEntry rootDirectory;
+	uint32_t rootDirectorySector;
+	uint32_t firstDataSector;
 
 	void init(bool inPrimary, bool inMaster);
 	void wait4ns() const;
@@ -226,14 +135,6 @@ struct ATADevice
 
 	void parseBootSector();
 	void parseFileSystemInfoSector();
-	void parseDirectory(uint32_t sector, Directory* directory);
-
-	bool getEntry(const char* name, FATEntry* entry);
-	bool isLongEntry(uint8_t* buffer);
-	void parseLongEntry(FATLongEntry* entry, uint32_t count, char* filename);
-
-	bool findEntry(uint32_t startCluster, const String& name, FATShortEntry* entry);
-	bool readFile(const String& filename, File* file);
 
 	bool accessSectors(uint32_t sector, uint32_t count, bool read, void* data);
 	bool readSector(uint32_t sector, void* data);
@@ -242,18 +143,5 @@ struct ATADevice
 	bool writeSectors(uint32_t sector, uint32_t count, void* data);
 
 	// Returns the drive size in bytes.
-	uint32_t size() const { return sectorCount * FAT_BYTES_PER_SECTOR; }
+	uint32_t size() const { return sectorCount * 512; }
 } __attribute__((packed));
-
-namespace FAT32
-{
-	String		 toShortName(const String& longName);
-	String		 sanitize(const String& longName);
-	bool		 isValidChar(char c);
-	uint32_t	 getNextCluster(uint32_t cluster);
-	uint32_t	 getClusterSector(uint32_t n);
-	uint32_t	 getSector(uint32_t FATNumber, uint32_t FATSize, uint32_t FATSector);
-	FATEntryType getEntryType(uint32_t index);
-	uint32_t	 getClusterCount();
-	uint32_t	 getSize();
-} // namespace FAT32
