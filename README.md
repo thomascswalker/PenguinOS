@@ -1,5 +1,7 @@
 # Penguin OS
 
+Developed in C++ and NASM-style Assembly.
+
 ## Requirements
 
 ### Windows
