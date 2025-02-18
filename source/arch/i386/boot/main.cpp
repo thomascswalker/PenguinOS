@@ -1,5 +1,5 @@
 /*
-Main entry point into PengOS.
+Main entry point into PenguinOS.
 */
 
 #include <filesystem.h>
@@ -12,7 +12,7 @@ Main entry point into PengOS.
 EXTERN void kmain(MultibootInfo* info, uint32_t magic)
 {
 	VGA::init();
-	println("Initializing PengOS...");
+	println("Initializing PenguinOS...");
 	if (magic != MULTIBOOT_BOOTLOADER_MAGIC)
 	{
 		panic("Invalid Multiboot magic value.");
