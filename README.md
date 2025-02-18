@@ -1,4 +1,4 @@
-# PengOS (Penguin OS)
+# Penguin OS
 
 ## Requirements
 
