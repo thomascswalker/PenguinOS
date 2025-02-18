@@ -168,19 +168,7 @@ public:
 			}
 			m_size = size;
 		}
-		terminate();
-	}
-	void terminate() { m_data[m_size] = '\0'; }
-	void terminate(char c)
-	{
-		for (size_t i = 0; i < m_size; i++)
-		{
-			if (m_data[i] == c)
-			{
-				m_data[i] = '\0';
-				return;
-			}
-		}
+		m_data[m_size] = '\0';
 	}
 	String substr(size_t pos, size_t count = String::npos) const
 	{
@@ -246,7 +234,7 @@ public:
 		{
 			temp.append(c);
 		}
-		temp.terminate();
+		temp[temp.m_size] = '\0';
 		return temp;
 	}
 	String& operator+=(const String& other)
@@ -255,18 +243,18 @@ public:
 		{
 			append(c);
 		}
-		terminate();
+		m_data[m_size] = '\0';
 		return *this;
 	}
 	String operator+(const char* other)
 	{
-		String out = *this;
+		String temp = *this;
 		for (uint32_t i = 0; i < strlen(other); i++)
 		{
-			out.append(other[i]);
+			temp.append(other[i]);
 		}
-		out.terminate();
-		return out;
+		temp[temp.m_size] = '\0';
+		return temp;
 	}
 	String& operator+=(const char* other)
 	{

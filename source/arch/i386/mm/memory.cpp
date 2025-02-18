@@ -114,7 +114,6 @@ void Memory::init(uint32_t start, uint32_t size)
 	memoryEnd = PAGE_ALIGN(memoryStart + (size - PAGE_SIZE - DIR_SIZE));
 	memorySize = memoryEnd - memoryStart;
 	memoryPool = (uint8_t*)memoryStart;
-	debug("Memory Pool: %x => %x (%dB)", memoryStart, memoryEnd, memorySize);
 
 	// Buddy allocator
 	size_t offset = 0;
@@ -132,8 +131,6 @@ void Memory::init(uint32_t start, uint32_t size)
 			offset += blockSize;
 		}
 	}
-
-	debug("Memory initialized.");
 }
 
 void Memory::identityMapTable(uint32_t index)

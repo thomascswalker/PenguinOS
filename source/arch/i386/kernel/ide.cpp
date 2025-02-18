@@ -183,7 +183,7 @@ void ATADevice::parseBootSector()
 #define BOOT_SECTOR(x, y) memcpy(&x, mbrData + y, sizeof(x));
 
 	memcpy(&mbr.oemIdentifier, (uint8_t*)mbrData + 0x03, 8);
-	mbr.oemIdentifier[8] = 0; // Null-terminate string
+	mbr.oemIdentifier[8] = '\0'; // Null-terminate string
 	BOOT_SECTOR(mbr.bytesPerSector, 0x0B);
 	BOOT_SECTOR(mbr.sectorsPerCluster, 0x0D);
 	BOOT_SECTOR(mbr.reservedSectorCount, 0x0E);

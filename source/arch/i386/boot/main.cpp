@@ -37,9 +37,10 @@ EXTERN void kmain(MultibootInfo* info, uint32_t magic)
 
 	String path("/etc/longFile.txt");
 	File   file;
-	if (FileSystem::readFile(path, &file))
+	if (FileSystem::openFile(path, &file))
 	{
-		debug("File: %s\n%s", path.cstr(), (char*)file.data);
+		printf("File: %s\n", path.cstr());
+		printf("%s\n", (char*)file.data);
 	}
 	else
 	{

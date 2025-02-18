@@ -104,6 +104,6 @@ namespace FAT32
 	bool		 isLongEntry(uint8_t* buffer);
 	void		 parseLongEntry(FATLongEntry* entry, uint32_t count, char* filename);
 	bool		 findEntry(uint32_t startCluster, const String& name, FATShortEntry* entry);
-	bool		 readFile(const String& filename, void* file);
+	bool		 openFile(const String& filename, void* file);
 
 } // namespace FAT32

@@ -64,7 +64,7 @@ bool strcmp(const char* lhs, const char* rhs)
 	return true;
 }
 
-bool strcmp(const char* lhs, const char* rhs, size_t count)
+bool strncmp(const char* lhs, const char* rhs, size_t count)
 {
 	if (strlen(lhs) < count || strlen(rhs) < count)
 	{

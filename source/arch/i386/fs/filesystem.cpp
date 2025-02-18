@@ -12,9 +12,9 @@ void FileSystem::init()
 	device = IDE::getDevice(0);
 }
 
-bool FileSystem::readFile(const Path& path, File* file)
+bool FileSystem::openFile(const Path& path, File* file)
 {
-	return FAT32::readFile(path.string(), file);
+	return FAT32::openFile(path.string(), file);
 }
 
 bool FileSystem::isFile(const Path& path) { return path.string().split('.').size(); }

@@ -76,7 +76,7 @@ bool FAT32::findEntry(uint32_t startCluster, const String& name, FATShortEntry* 
 				continue;
 			}
 
-			if (strcmp(fname.cstr(), (char*)current->name, 8))
+			if (strncmp(fname.cstr(), (char*)current->name, 8))
 			{
 				memcpy(entry, current, 32);
 				return true;
@@ -89,7 +89,7 @@ bool FAT32::findEntry(uint32_t startCluster, const String& name, FATShortEntry* 
 	return false;
 }
 
-bool FAT32::readFile(const String& filename, void* file)
+bool FAT32::openFile(const String& filename, void* file)
 {
 	auto		  d = IDE::getDevice(0);
 	Array<String> components = filename.split('/');
@@ -111,7 +111,6 @@ bool FAT32::readFile(const String& filename, void* file)
 
 	FATShortEntry entry;
 	uint32_t	  sector = 0;
-	uint32_t	  count = 0;
 
 	for (const auto& c : components)
 	{
@@ -137,7 +136,6 @@ bool FAT32::readFile(const String& filename, void* file)
 	File* f = (File*)file;
 	f->size = entry.fileSize;
 	sector = FAT32::getClusterSector(entry.firstClusterLow);
-	count = CEILDIV(entry.fileSize, d->mbr.bytesPerSector);
 	f->data = new char[entry.fileSize];
 	return d->readSector(sector, f->data);
 }
@@ -155,7 +153,10 @@ bool FAT32::isValidChar(char c)
 String FAT32::toShortName(const String& longName)
 {
 	auto components = FileSystem::splitExt(longName);
-	components.b.terminate();
+	// Force null-terminate the NAME at 8 chars
+	components.a[8] = '\0';
+	// Force null-terminate the EXT at 3 chars
+	components.b[3] = '\0';
 	String base = sanitize(components.a);
 	String ext = sanitize(components.b);
 
