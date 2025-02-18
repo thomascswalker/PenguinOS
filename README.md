@@ -2,6 +2,8 @@
 
 Developed in C++ and NASM-style Assembly.
 
+![Example Image](images/example.png)
+
 ## Requirements
 
 ### Windows
@@ -29,7 +31,7 @@ Developed in C++ and NASM-style Assembly.
 - [x] IDT
 - [x] Keyboard
 - [x] Timer
-- [x] System calls
+- [x] System Calls
 - [x] Paging
 - [x] Simple memory management (kmalloc/kfree)
 - [ ] Data Types
@@ -37,7 +39,7 @@ Developed in C++ and NASM-style Assembly.
   - [x] std::vector (called Array)
   - [ ] std::map (called Map)
   - [ ] std::list (called LinkedList)
-- [ ] Filesystem
+- [ ] File System
   - [ ] FAT32
     - [x] Read
     - [ ] Write
@@ -45,5 +47,6 @@ Developed in C++ and NASM-style Assembly.
     - [ ] File stream
   - [ ] NTFS
     - [ ] ???
+- [ ] Stack trace dump on error/panic
 - [ ] Shell
 - [ ] Graphical Display

@@ -16,7 +16,6 @@ FATShortEntry rootDirectory;
 
 void IDE::init()
 {
-	info("Initializing IDE/ATA...");
 	devices[0].init(true, true);
 	currentDevice = &devices[0];
 	IDT::registerInterruptHandler(IRQ14, IDE::callback);

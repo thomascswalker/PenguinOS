@@ -35,7 +35,7 @@ EXTERN void kmain(MultibootInfo* info, uint32_t magic)
 
 	// Entering user land
 
-	String path("/etc/longFile.txt");
+	String path("/home/docs/lorem.txt");
 	File   file;
 	if (FileSystem::openFile(path, &file))
 	{

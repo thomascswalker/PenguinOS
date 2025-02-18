@@ -6,5 +6,5 @@
 DISK=disk.img
 dd if=/dev/zero of=${DISK} bs=1M count=2
 mformat -i ${DISK} -F
-mcopy -i ${DISK} -s ./image/ ::/
+mcopy -i ${DISK} -s ./base/ ::/
 mdir -i ${DISK} -/
