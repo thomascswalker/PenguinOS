@@ -1,23 +1,24 @@
+#include <shell.h>
 #include <stdio.h>
-#include <vga.h>
 
-using namespace VGA;
+void putc(char c) { Shell::putNext(c); }
+
+char getc() { return 0; }
 
 // Prints the specified character array to the terminal view.
 void print(const char* str)
 {
 	for (size_t i = 0; i < strlen(str); i++)
 	{
-		put(str[i]);
+		putc(str[i]);
 	}
-	updateCursorPosition();
+	// Shell::updateDisplayPosition();
 }
 
 void println(const char* str)
 {
 	print(str);
 	print("\n");
-	updateCursorPosition();
 }
 
 /*
@@ -96,7 +97,7 @@ uint32_t sprintf(char* stream, const char* format, va_list args)
 					}
 				default:
 					{
-						VGA::setForeColor(VGA_COLOR_RED);
+						Shell::setForeColor(VGA_COLOR_RED);
 						print("Invalid specifier!");
 						halt();
 					}
@@ -119,7 +120,6 @@ uint32_t sprintf(char* stream, const char* format, va_list args)
 
 void printf(const char* format, ...)
 {
-	VGA::setForeColor(VGA_COLOR_DEFAULT);
 	va_list args;
 	va_start(args, format);
 	char buffer[512];
@@ -130,7 +130,7 @@ void printf(const char* format, ...)
 
 void debug(const char* format, ...)
 {
-	VGA::setForeColor(VGA_COLOR_LIGHT_GREY);
+	Shell::setForeColor(VGA_COLOR_LIGHT_GREY);
 	va_list args;
 	va_start(args, format);
 	print("[DEBUG  ] ");
@@ -138,12 +138,12 @@ void debug(const char* format, ...)
 	sprintf(buffer, format, args);
 	println(buffer);
 	va_end(args);
-	VGA::resetColor();
+	Shell::resetColor();
 }
 
 void info(const char* format, ...)
 {
-	VGA::setForeColor(VGA_COLOR_WHITE);
+	Shell::setForeColor(VGA_COLOR_WHITE);
 	va_list args;
 	va_start(args, format);
 	print("[INFO   ] ");
@@ -151,12 +151,12 @@ void info(const char* format, ...)
 	sprintf(buffer, format, args);
 	println(buffer);
 	va_end(args);
-	VGA::resetColor();
+	Shell::resetColor();
 }
 
 void warning(const char* format, ...)
 {
-	VGA::setForeColor(VGA_COLOR_YELLOW);
+	Shell::setForeColor(VGA_COLOR_YELLOW);
 	va_list args;
 	va_start(args, format);
 	print("[WARNING] ");
@@ -164,12 +164,12 @@ void warning(const char* format, ...)
 	sprintf(buffer, format, args);
 	println(buffer);
 	va_end(args);
-	VGA::resetColor();
+	Shell::resetColor();
 }
 
 void error(const char* format, ...)
 {
-	VGA::setForeColor(VGA_COLOR_LIGHT_RED);
+	Shell::setForeColor(VGA_COLOR_LIGHT_RED);
 	va_list args;
 	va_start(args, format);
 	print("[ERROR  ] ");
@@ -177,12 +177,12 @@ void error(const char* format, ...)
 	sprintf(buffer, format, args);
 	println(buffer);
 	va_end(args);
-	VGA::resetColor();
+	Shell::resetColor();
 }
 
 void success(const char* format, ...)
 {
-	VGA::setForeColor(VGA_COLOR_LIGHT_GREEN);
+	Shell::setForeColor(VGA_COLOR_LIGHT_GREEN);
 	va_list args;
 	va_start(args, format);
 	print("[SUCCESS] ");
@@ -190,12 +190,12 @@ void success(const char* format, ...)
 	sprintf(buffer, format, args);
 	println(buffer);
 	va_end(args);
-	VGA::resetColor();
+	Shell::resetColor();
 }
 
 void panic(const char* format, ...)
 {
-	VGA::setForeColor(VGA_COLOR_LIGHT_RED);
+	Shell::setForeColor(VGA_COLOR_LIGHT_RED);
 	va_list args;
 	va_start(args, format);
 	print("[PANIC  ] ");

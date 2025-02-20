@@ -1,5 +1,6 @@
 #include <pic.h>
 #include <stdio.h>
+#include <sys.h>
 
 void PIC::irqMask(uint8_t index)
 {

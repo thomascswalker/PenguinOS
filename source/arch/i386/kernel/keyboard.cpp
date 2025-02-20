@@ -1,8 +1,7 @@
 #include <keyboard.h>
 #include <pic.h>
+#include <shell.h>
 #include <stdio.h>
-
-using namespace VGA;
 
 namespace Keyboard
 {
@@ -106,13 +105,12 @@ namespace Keyboard
 				}
 			case SC_ENTER:
 				{
-					VGA::insertNewLine();
+					Shell::input('\n');
 					return;
 				}
 			case SC_BACKSPACE:
 				{
-					VGA::remchar();
-					VGA::updateCursorPosition();
+					Shell::input('\b');
 					return;
 				}
 			default:
@@ -120,8 +118,7 @@ namespace Keyboard
 		}
 
 		char c = isShiftDown() ? kc->upper : kc->lower;
-		VGA::put(c);
-		VGA::updateCursorPosition();
+		Shell::input(c);
 	}
 
 	bool isShiftDown() { return g_modifierKey & MOD_SHIFT; }

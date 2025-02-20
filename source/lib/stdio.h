@@ -2,7 +2,6 @@
 
 #include <stdarg.h>
 #include <stdlib.h>
-#include <vga.h>
 
 // Printing
 
@@ -13,6 +12,9 @@ enum FormatSpec
 	FMT_INT = 'd',
 	FMT_HEX = 'x'
 };
+
+void putc(char c);
+char getc();
 
 void	 print(const char* str);
 void	 println(const char* str);

@@ -218,6 +218,21 @@ public:
 		m_capacity = 1;
 		m_data = m_allocator.allocate(1);
 	}
+	void trim(char c)
+	{
+		int pos = m_size - 1;
+		while (m_data[pos] == c)
+		{
+			m_data[pos] = '\0';
+			m_size--;
+		}
+	}
+	void trimWhitespace()
+	{
+		trim(' ');
+		trim('\n');
+		trim('\t');
+	}
 
 	char* cstr() const { return m_data; }
 
@@ -276,6 +291,22 @@ public:
 		}
 		return true;
 	}
+	bool operator==(const char* other)
+	{
+		if (m_size != strlen(other))
+		{
+			return false;
+		}
+		for (size_t i = 0; i < m_size; i++)
+		{
+			if (m_data[i] != other[i])
+			{
+				return false;
+			}
+		}
+		return true;
+	}
+	bool operator!=(const char* other) { return !(*this == other); }
 	bool operator!=(const String& other) { return !(*this == other); }
 	operator char*() const { return m_data; }
 	char&		operator[](size_t index) { return m_data[index]; }

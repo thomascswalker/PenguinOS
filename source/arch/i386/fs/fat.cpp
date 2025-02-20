@@ -45,7 +45,6 @@ bool FAT32::openFile(const String& filename, void* file)
 	{
 		if (!findEntry(currentCluster, c, &entry))
 		{
-			warning("No entry for %s.", c.cstr());
 			return false;
 		}
 
