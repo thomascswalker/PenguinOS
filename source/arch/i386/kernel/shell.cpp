@@ -1,3 +1,4 @@
+#include <cmd.h>
 #include <shell.h>
 #include <stdio.h>
 #include <string.h>
@@ -85,6 +86,8 @@ void Shell::clearDisplay()
 			g_displayBuffer[index] = TEXT_BLANK;
 		}
 	}
+	g_displayRow = 0;
+	g_displayColumn = 0;
 }
 
 void Shell::clearInput()
@@ -128,12 +131,11 @@ void Shell::putNext(char c)
 	if (++g_displayColumn == VGA_WIDTH)
 	{
 		g_displayColumn = 0;
-		if (++g_displayRow >= DISPLAY_HEIGHT)
+		if (++g_displayRow == DISPLAY_HEIGHT)
 		{
 			scroll();
 		}
 	}
-	setDisplayPosition(g_displayColumn, g_displayRow);
 }
 
 void Shell::putAt(char c, uint32_t pos) { g_displayBuffer[pos] = createEntry(c, g_displayColor); }
@@ -171,14 +173,14 @@ void Shell::scroll()
 
 void Shell::input(char c)
 {
-	char text[INPUT_MAX_SIZE];
-	memset(text, 0, INPUT_MAX_SIZE);
+	char* text = (char*)std::kmalloc(INPUT_MAX_SIZE + 1);
+	memset(text, 0, INPUT_MAX_SIZE + 1);
 
 	g_inputBuffer[g_inputCursor] = createEntry(c, g_displayColor);
 	switch (c)
 	{
 		default:
-			if (g_inputCursor >= INPUT_MAX_SIZE)
+			if (g_inputCursor > INPUT_MAX_SIZE)
 			{
 				return;
 			}
@@ -197,16 +199,23 @@ void Shell::input(char c)
 			break;
 			// Enter
 		case '\n':
+			if (g_inputCursor == 0)
+			{
+				return;
+			}
 
 			// TODO: Process the actual text
-			for (uint32_t i = 0; i < INPUT_MAX_SIZE; i++)
+			for (uint32_t i = 0; i < g_inputCursor; i++)
 			{
 				text[i] = g_inputBuffer[i];
 			}
-			text[INPUT_MAX_SIZE - 1] = '\0';
-			printf("Input: %s\n", text);
-
+			text[g_inputCursor] = '\0';
+			printf(">>> %s\n", text);
 			clearInput();
+
+			String		  cmd = String(text);
+			Array<String> args = cmd.split(' ');
+			CMD::processCmd(args);
 
 			return;
 	}

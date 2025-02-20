@@ -120,7 +120,6 @@ uint32_t sprintf(char* stream, const char* format, va_list args)
 
 void printf(const char* format, ...)
 {
-	Shell::setForeColor(VGA_COLOR_DEFAULT);
 	va_list args;
 	va_start(args, format);
 	char buffer[512];

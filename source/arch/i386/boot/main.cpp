@@ -13,7 +13,7 @@ Main entry point into PenguinOS.
 EXTERN void kmain(MultibootInfo* info, uint32_t magic)
 {
 	Shell::init();
-	println("Initializing PenguinOS...");
+	println("Initializing...");
 	if (magic != MULTIBOOT_BOOTLOADER_MAGIC)
 	{
 		panic("Invalid Multiboot magic value.");
@@ -29,7 +29,7 @@ EXTERN void kmain(MultibootInfo* info, uint32_t magic)
 
 	// Once everything is initialized, enable interrupts.
 	enableInterrupts();
-	println("Welcome to PengOS!");
+	println("Welcome to PengOS");
 
 	Memory::init(start, size);
 	FileSystem::init();

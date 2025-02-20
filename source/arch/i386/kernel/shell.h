@@ -17,9 +17,9 @@
 #define VGA_HEIGHT 25
 #define VGA_SIZE (VGA_WIDTH * VGA_HEIGHT)
 
-#define DISPLAY_HEIGHT 22
+#define DISPLAY_HEIGHT 23
 
-#define INPUT_PROMPT ("PengOS > ")
+#define INPUT_PROMPT ("/ > ")
 #define INPUT_OFFSET ((VGA_WIDTH * (VGA_HEIGHT - 1)) + strlen(INPUT_PROMPT))
 #define INPUT_MAX_SIZE 72
 
