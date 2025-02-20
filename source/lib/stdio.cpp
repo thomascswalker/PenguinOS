@@ -1,23 +1,24 @@
 #include <shell.h>
 #include <stdio.h>
 
-using namespace Shell;
+void putc(char c) { Shell::putNext(c); }
+
+char getc() { return 0; }
 
 // Prints the specified character array to the terminal view.
 void print(const char* str)
 {
 	for (size_t i = 0; i < strlen(str); i++)
 	{
-		put(str[i]);
+		putc(str[i]);
 	}
-	updateCursorPosition();
+	// Shell::updateDisplayPosition();
 }
 
 void println(const char* str)
 {
 	print(str);
 	print("\n");
-	updateCursorPosition();
 }
 
 /*

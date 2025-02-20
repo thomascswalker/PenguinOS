@@ -17,6 +17,12 @@
 #define VGA_HEIGHT 25
 #define VGA_SIZE (VGA_WIDTH * VGA_HEIGHT)
 
+#define DISPLAY_HEIGHT 22
+
+#define INPUT_PROMPT ("PengOS > ")
+#define INPUT_OFFSET ((VGA_WIDTH * (VGA_HEIGHT - 1)) + strlen(INPUT_PROMPT))
+#define INPUT_MAX_SIZE 72
+
 // The starting point of the terminal's text buffer in memory.
 #define VGA_ADDRESS 0xB8000
 #define VGA_BUFFER_START (uint16_t*)VGA_ADDRESS
@@ -47,24 +53,29 @@ enum EVGAColor : uint8_t
 
 namespace Shell
 {
-	static uint16_t* buffer;
-	static uint8_t	 color;
-	static int32_t	 row;
-	static int32_t	 column;
 
-	void	 init();
+	void init();
+
 	uint16_t createEntry(char character, uint8_t color);
-	uint32_t getCursorPosition();
-	void	 setCursorPosition(int32_t x, int32_t y);
-	void	 updateCursorPosition();
-	void	 enableCursor(uint32_t start, uint32_t end);
-	void	 disableCursor();
-	void	 clear();
 	void	 setForeColor(uint8_t newColor);
 	void	 setBackColor(uint8_t newColor);
+	void	 clearDisplay();
+	void	 clearInput();
 	void	 resetColor();
-	void	 put(char c);
-	void	 remchar();
-	void	 insertNewLine();
-	void	 scroll();
+
+	uint32_t getDisplayPosition();
+	void	 setDisplayPosition(uint32_t x, uint32_t y);
+
+	void setCursorPosition(int32_t x);
+	void updateCursorPosition();
+	void enableCursor(uint32_t start, uint32_t end);
+	void disableCursor();
+
+	void putNext(char c);
+	void putAt(char c, uint32_t pos);
+
+	void insertNewLine();
+	void scroll();
+
+	void input(char c);
 } // namespace Shell

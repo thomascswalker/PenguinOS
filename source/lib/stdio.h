@@ -13,6 +13,9 @@ enum FormatSpec
 	FMT_HEX = 'x'
 };
 
+void putc(char c);
+char getc();
+
 void	 print(const char* str);
 void	 println(const char* str);
 uint32_t sprintf(char* stream, const char* format, va_list args);

@@ -193,7 +193,7 @@ void wtoc(char* dest, wchar_t* source, size_t length)
 	uint32_t i = 0;
 	while (length--)
 	{
-		*dest++ = source[i]; // | (source[1] << 8);
+		*dest++ = source[i];
 		i += 2;
 	}
 }

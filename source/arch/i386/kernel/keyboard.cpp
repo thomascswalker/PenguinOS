@@ -3,8 +3,6 @@
 #include <shell.h>
 #include <stdio.h>
 
-using namespace Shell;
-
 namespace Keyboard
 {
 	// Tracks the state of any modifier keys (Shift, Alt, Ctrl)
@@ -107,13 +105,12 @@ namespace Keyboard
 				}
 			case SC_ENTER:
 				{
-					Shell::insertNewLine();
+					Shell::input('\n');
 					return;
 				}
 			case SC_BACKSPACE:
 				{
-					Shell::remchar();
-					Shell::updateCursorPosition();
+					Shell::input('\b');
 					return;
 				}
 			default:
@@ -121,8 +118,7 @@ namespace Keyboard
 		}
 
 		char c = isShiftDown() ? kc->upper : kc->lower;
-		Shell::put(c);
-		Shell::updateCursorPosition();
+		Shell::input(c);
 	}
 
 	bool isShiftDown() { return g_modifierKey & MOD_SHIFT; }
