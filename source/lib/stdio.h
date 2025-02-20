@@ -2,7 +2,6 @@
 
 #include <stdarg.h>
 #include <stdlib.h>
-#include <vga.h>
 
 // Printing
 

@@ -8,10 +8,11 @@ Main entry point into PenguinOS.
 #include <memory.h>
 #include <multiboot.h>
 #include <pit.h>
+#include <shell.h>
 
 EXTERN void kmain(MultibootInfo* info, uint32_t magic)
 {
-	VGA::init();
+	Shell::init();
 	println("Initializing PenguinOS...");
 	if (magic != MULTIBOOT_BOOTLOADER_MAGIC)
 	{
@@ -32,20 +33,6 @@ EXTERN void kmain(MultibootInfo* info, uint32_t magic)
 
 	Memory::init(start, size);
 	FileSystem::init();
-
-	// Entering user land
-
-	String path("/etc/reallyLongFileName.txt");
-	File   file;
-	if (FileSystem::openFile(path, &file))
-	{
-		printf("File: %s\n", path.cstr());
-		printf("%s\n", (char*)file.data);
-	}
-	else
-	{
-		error("Failed to read file: %s", path.cstr());
-	}
 
 	while (1)
 	{

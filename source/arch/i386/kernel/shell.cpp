@@ -1,6 +1,6 @@
-#include <vga.h>
+#include <shell.h>
 
-void VGA::init()
+void Shell::init()
 {
 	buffer = VGA_BUFFER_START;
 	setForeColor(VGA_COLOR_LIGHT_GREY);
@@ -8,17 +8,14 @@ void VGA::init()
 	enableCursor(0, VGA_HEIGHT - 1);
 }
 
-uint16_t VGA::createEntry(char character, uint8_t color)
+uint16_t Shell::createEntry(char character, uint8_t color)
 {
 	return (uint16_t)character | (uint16_t)color << 8;
 }
 
-uint32_t VGA::getCursorPosition()
-{
-	return (row * VGA_WIDTH) + column;
-}
+uint32_t Shell::getCursorPosition() { return (row * VGA_WIDTH) + column; }
 
-void VGA::setCursorPosition(int32_t x, int32_t y)
+void Shell::setCursorPosition(int32_t x, int32_t y)
 {
 	uint16_t pos = y * VGA_WIDTH + x;
 	outb(0x3D4, 0x0F);
@@ -27,12 +24,9 @@ void VGA::setCursorPosition(int32_t x, int32_t y)
 	outb(0x3D5, (uint8_t)((pos >> 8) & 0xFF));
 }
 
-void VGA::updateCursorPosition()
-{
-	setCursorPosition(column, row);
-}
+void Shell::updateCursorPosition() { setCursorPosition(column, row); }
 
-void VGA::enableCursor(uint32_t start, uint32_t end)
+void Shell::enableCursor(uint32_t start, uint32_t end)
 {
 	outb(0x3D4, 0x0A);
 	outb(0x3D5, (inb(0x3D5) & 0xC0) | start);
@@ -41,14 +35,14 @@ void VGA::enableCursor(uint32_t start, uint32_t end)
 	outb(0x3D5, (inb(0x3D5) & 0xE0) | end);
 }
 
-void VGA::disableCursor()
+void Shell::disableCursor()
 {
 	outb(0x3D4, 0x0A);
 	outb(0x3D5, 0x20);
 }
 
 // Clears all text in the terminal buffer.
-void VGA::clear()
+void Shell::clear()
 {
 	for (uint32_t y = 0; y < VGA_HEIGHT; y++)
 	{
@@ -62,25 +56,16 @@ void VGA::clear()
 }
 
 // Sets the current color to write with.
-void VGA::setForeColor(uint8_t newColor)
-{
-	color = newColor;
-}
+void Shell::setForeColor(uint8_t newColor) { color = newColor; }
 
-void VGA::setBackColor(uint8_t newColor)
-{
-	color = color | newColor << 4;
-}
+void Shell::setBackColor(uint8_t newColor) { color = color | newColor << 4; }
 
 // Resets the current color to the default.
-void VGA::resetColor()
-{
-	setForeColor(VGA_COLOR_LIGHT_GREY);
-}
+void Shell::resetColor() { setForeColor(VGA_COLOR_LIGHT_GREY); }
 
 // Writes char `c` to the text buffer. This is written
 // at the current cursor position.
-void VGA::put(char c)
+void Shell::put(char c)
 {
 	// Handle special characters
 	switch (c)
@@ -114,7 +99,7 @@ void VGA::put(char c)
 }
 
 // Removes the current character from the text buffer.
-void VGA::remchar()
+void Shell::remchar()
 {
 	const uint32_t pos = getCursorPosition();
 	for (uint32_t i = pos - 1; i < VGA_WIDTH * VGA_HEIGHT; i++)
@@ -131,7 +116,7 @@ void VGA::remchar()
 
 // Insert a new line into the text buffer, scrolling the
 // terminal view as needed.
-void VGA::insertNewLine()
+void Shell::insertNewLine()
 {
 	column = 0;
 	if (++row == VGA_HEIGHT)
@@ -144,7 +129,7 @@ void VGA::insertNewLine()
 
 // Shift the terminal view down one row. This moves all entries
 // up one row and clears the last row.
-void VGA::scroll()
+void Shell::scroll()
 {
 	// Move the lines up
 	for (uint32_t i = 0; i < VGA_WIDTH * VGA_HEIGHT; i++)

@@ -45,7 +45,7 @@ enum EVGAColor : uint8_t
 	VGA_COLOR_BACKGROUND = VGA_COLOR_BLACK,
 };
 
-namespace VGA
+namespace Shell
 {
 	static uint16_t* buffer;
 	static uint8_t	 color;
@@ -67,4 +67,4 @@ namespace VGA
 	void	 remchar();
 	void	 insertNewLine();
 	void	 scroll();
-} // namespace VGA
+} // namespace Shell
