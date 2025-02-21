@@ -21,7 +21,7 @@ section .text
 global _start
 _start:
     mov esp, (stack + STACKSIZE)                            ; Move stack pointer into esp
-    
+
     push eax                                                ; Multiboot header
     push ebx                                                ; Multiboot magic
     xor ebp, ebp

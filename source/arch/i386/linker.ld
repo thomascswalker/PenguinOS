@@ -24,6 +24,13 @@ SECTIONS
 		*(.text)
 	}
 
+	.init_array :
+	{
+		__init_array_start = .;
+		KEEP(*(.init_array))
+		__init_array_end = .;
+	}
+
 	.data ALIGN(4K) :
 	{
 		*(.data)
