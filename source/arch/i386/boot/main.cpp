@@ -2,6 +2,7 @@
 Main entry point into PenguinOS.
 */
 
+#include <crt.h>
 #include <filesystem.h>
 #include <gdt.h>
 #include <keyboard.h>
@@ -10,30 +11,8 @@ Main entry point into PenguinOS.
 #include <pit.h>
 #include <shell.h>
 
-EXTERN typedef void (*ConstructorType)();
-EXTERN ConstructorType __init_array_start[];
-EXTERN ConstructorType __init_array_end[];
-EXTERN void			   callConstructors()
-{
-	for (ConstructorType* func = __init_array_start; func < __init_array_end; ++func)
-	{
-		(*func)();
-	}
-}
-
-// TODO: Replace __cxa_atexit and __dso_handle with proper implementations
-// to handle global destructors.
-EXTERN int __cxa_atexit(void (*)(void*), void*, void*)
-{
-	// Not registering destructors in a freestanding environment.
-	return 0;
-}
-EXTERN void* __dso_handle = nullptr;
-
 EXTERN void kmain(MultibootInfo* info, uint32_t magic)
 {
-	callConstructors();
-
 	Shell::init();
 	println("Initializing...");
 	if (magic != MULTIBOOT_BOOTLOADER_MAGIC)
@@ -54,6 +33,12 @@ EXTERN void kmain(MultibootInfo* info, uint32_t magic)
 	println("Welcome to PengOS");
 
 	Memory::init(start, size);
+
+	// This needs to be called AFTER memory has been initialized.
+	// Some constructors (like String, Array, etc.) which use
+	// allocators need to use std::kmalloc.
+	callConstructors();
+
 	FileSystem::init();
 
 	while (1)

@@ -5,5 +5,5 @@
 
 namespace CMD
 {
-	int processCmd(const Array<String>& args);
+	void processCmd(const Array<String>& args);
 }

@@ -24,12 +24,13 @@ SECTIONS
 		*(.text)
 	}
 
-	.init_array :
-	{
-		__init_array_start = .;
-		KEEP(*(.init_array))
-		__init_array_end = .;
+    /* Global constructors: mark the beginning and end so they can be iterated over. */
+	.ctors : {
+		__ctor_start = .;
+		KEEP(*(SORT(.ctors*)))
+		__ctor_end = .;
 	}
+
 
 	.data ALIGN(4K) :
 	{
