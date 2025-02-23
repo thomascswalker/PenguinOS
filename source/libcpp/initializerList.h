@@ -2,33 +2,25 @@
 
 #include <ctype.h>
 
-namespace std
+template <typename T>
+class InitializerList
 {
-	template <typename T>
-	class initializer_list
-	{
-	public:
-		typedef T		 value_type;
-		typedef const T& reference;
-		typedef const T& const_reference;
-		typedef size_t	 size_type;
-		typedef const T* iterator;
-		typedef const T* const_iterator;
+public:
+	typedef T		 ValueType;
+	typedef const T& Reference;
+	typedef const T& ConstReference;
+	typedef size_t	 SizeType;
+	typedef const T* Iterator;
+	typedef const T* ConstIterator;
 
-	private:
-		iterator  _begin;
-		size_type _size;
+private:
+	Iterator m_begin;
+	SizeType m_size;
 
-	public:
-		// Default constructor
-		constexpr initializer_list() noexcept : _begin(nullptr), _size(0) {}
-
-		// Constructor used by the compiler to create initializer_list objects
-		constexpr initializer_list(const T* b, size_type s) noexcept : _begin(b), _size(s) {}
-
-		// Accessors
-		constexpr size_type		 size() const noexcept { return _size; }
-		constexpr const_iterator begin() const noexcept { return _begin; }
-		constexpr const_iterator end() const noexcept { return _begin + _size; }
-	};
-}
+public:
+	constexpr InitializerList() noexcept : m_begin(nullptr), m_size(0) {}
+	constexpr InitializerList(const T* b, SizeType s) noexcept : m_begin(b), m_size(s) {}
+	constexpr SizeType		size() const noexcept { return m_size; }
+	constexpr ConstIterator begin() const noexcept { return m_begin; }
+	constexpr ConstIterator end() const noexcept { return m_begin + m_size; }
+};
