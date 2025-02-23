@@ -33,13 +33,12 @@ EXTERN void kmain(MultibootInfo* info, uint32_t magic)
 	println("Welcome to PengOS");
 
 	Memory::init(start, size);
+	FileSystem::init();
 
 	// This needs to be called AFTER memory has been initialized.
 	// Some constructors (like String, Array, etc.) which use
 	// allocators need to use std::kmalloc.
-	callConstructors();
-
-	FileSystem::init();
+	// callConstructors();
 
 	while (1)
 	{

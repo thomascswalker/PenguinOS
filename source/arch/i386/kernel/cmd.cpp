@@ -3,7 +3,7 @@
 #include <shell.h>
 #include <sys.h>
 
-static const Array<String> g_commands = {
+static const char* g_commands[] = {
 	"exit",
 	"help",
 	"clear",
@@ -12,6 +12,7 @@ static const Array<String> g_commands = {
 	"cwd",
 	"ls",
 };
+static const size_t g_commandsCount = sizeof(g_commands) / sizeof(const char*);
 
 void CMD::processCmd(const Array<String>& args)
 {
@@ -22,9 +23,9 @@ void CMD::processCmd(const Array<String>& args)
 	}
 	String exe = args[0];
 	bool   present = false;
-	for (const auto& cmd : g_commands)
+	for (size_t i = 0; i < g_commandsCount; i++)
 	{
-		if (exe == cmd)
+		if (exe == g_commands[i])
 		{
 			present = true;
 			break;
@@ -60,13 +61,13 @@ void CMD::processCmd(const Array<String>& args)
 			warning("Invalid number of arguments for 'cat'. Wanted 2, got %d.", args.size());
 			return;
 		}
-		String filename = args[1];
-		File   f;
-		if (!FileSystem::openFile(filename, &f))
+		File		file;
+		const char* filename = args[1].cstr();
+		if (!FileSystem::openFile(Path(filename), &file))
 		{
-			warning("cat: %s: No such file or directory", filename.cstr());
+			warning("cat: %s: No such file or directory", filename);
 			return;
 		}
-		printf("%s\n", f.data);
+		printf("%s\n", file.data);
 	}
 }

@@ -136,6 +136,11 @@ public:
 		end = m_size;
 		tokens.add(substr(start, end - start));
 
+		for (auto& t : tokens)
+		{
+			t.m_data[t.m_size] = '\0';
+		}
+
 		return tokens;
 	}
 	void resize(size_t size, char c = '\0')
