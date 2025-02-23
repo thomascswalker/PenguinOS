@@ -1,6 +1,7 @@
 #pragma once
 
 #include <allocator.h>
+#include <initializerList.h>
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -17,6 +18,17 @@ class Array
 
 public:
 	Array() : m_data(nullptr), m_size(0), m_capacity(0) {}
+	Array(std::initializer_list<T> data)
+	{
+		m_size = data.size();
+		m_capacity = data.size();
+		m_data = m_allocator.allocate(m_capacity);
+		const T* p = data.begin();
+		for (uint32_t i = 0; i < m_size; i++)
+		{
+			new (&m_data[i]) T(p[i]);
+		}
+	}
 	~Array()
 	{
 		for (size_t i = 0; i < m_size; i++)

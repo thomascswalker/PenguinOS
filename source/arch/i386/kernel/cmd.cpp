@@ -3,13 +3,15 @@
 #include <shell.h>
 #include <sys.h>
 
-static const char* cmds[] = {
+static const Array<String> cmds = {
 	"exit",
 	"help",
 	"clear",
 	"cat",
+	"cd",
+	"cwd",
+	"ls",
 };
-static size_t cmdCount = sizeof(cmds) / sizeof(const char*);
 
 int CMD::processCmd(const Array<String>& args)
 {
@@ -20,7 +22,7 @@ int CMD::processCmd(const Array<String>& args)
 	}
 	String exe = args[0];
 	bool   present = false;
-	for (uint32_t i = 0; i < cmdCount; i++)
+	for (uint32_t i = 0; i < cmds.size(); i++)
 	{
 		String cmd(cmds[i]);
 		if (exe == cmd)
@@ -63,7 +65,7 @@ int CMD::processCmd(const Array<String>& args)
 		File   f;
 		if (!FileSystem::openFile(filename, &f))
 		{
-			warning("Unable to find file '%s'.", filename.cstr());
+			warning("cat: %s: No such file or directory", filename.cstr());
 			return 1;
 		}
 		printf("%s\n", f.data);
