@@ -34,7 +34,7 @@ build_include_args() {
         result+=" -I${dir}"
     done
     
-    echo -e "-I./source/ -I./source/lib -I./source/fs ${result# }"
+    echo -e "-I./source/ -I./source/libc -I./source/libcpp -I./source/fs ${result# }"
 }
 
 debug() {

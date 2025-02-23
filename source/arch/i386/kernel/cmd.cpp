@@ -3,7 +3,7 @@
 #include <shell.h>
 #include <sys.h>
 
-static const Array<String> cmds = {
+static const char* cmds[] = {
 	"exit",
 	"help",
 	"clear",
@@ -12,6 +12,7 @@ static const Array<String> cmds = {
 	"cwd",
 	"ls",
 };
+size_t cmdsCount = sizeof(cmds) / sizeof(const char*);
 
 int CMD::processCmd(const Array<String>& args)
 {
@@ -22,10 +23,9 @@ int CMD::processCmd(const Array<String>& args)
 	}
 	String exe = args[0];
 	bool   present = false;
-	for (uint32_t i = 0; i < cmds.size(); i++)
+	for (uint32_t i = 0; i < cmdsCount; i++)
 	{
-		String cmd(cmds[i]);
-		if (exe == cmd)
+		if (exe == cmds[i])
 		{
 			present = true;
 			break;
