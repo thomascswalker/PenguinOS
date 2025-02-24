@@ -36,11 +36,11 @@ See the PTE enum for details.
 
 */
 
-#include <bitarray.h>
 #include <math.h>
 #include <memory.h>
 #include <stdio.h>
 
+// Defined in linker.ld
 EXTERN uint32_t kernelStart;
 EXTERN uint32_t kernelEnd;
 

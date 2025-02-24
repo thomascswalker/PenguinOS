@@ -23,9 +23,6 @@ struct GDTPtr
 
 namespace GDT
 {
-	static GDTEntry entries[GDT_ENTRY_COUNT];
-	static GDTPtr	ptr;
-
 	void		init();
 	void		setGate(int32_t entry, uint32_t base, uint32_t limit, uint8_t access, uint8_t gran);
 	EXTERN void loadGDT(GDTPtr* gdtPtr); // Defined in gdt.s

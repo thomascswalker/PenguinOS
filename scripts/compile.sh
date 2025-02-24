@@ -45,7 +45,7 @@ done
 # Link the kernel and all source files
 info "Linking kernel..."
 debug "Objects: [${OBJ_FILES[*]}]"
-$GCC -T "${SOURCE_DIR}/arch/${ARCH}/linker.ld" -g -o "${BOOT_DIR}/${KERNEL}" $CFLAGS -nostdlib $INCLUDE_ARGS ${OBJ_FILES[*]} -lgcc 
+$GCC -T "${SOURCE_DIR}/arch/${ARCH}/linker.ld" -g -o "${BOOT_DIR}/${KERNEL}"  $CFLAGS -nostdlib $INCLUDE_ARGS ${OBJ_FILES[*]} -lgcc 
 verify_file "${BOOT_DIR}/${KERNEL}"
 
 success "Compiled and linked kernel."

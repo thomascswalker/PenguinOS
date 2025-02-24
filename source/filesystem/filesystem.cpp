@@ -4,23 +4,6 @@
 #include <memory.h>
 #include <stdio.h>
 
-ATADevice* device;
-
-void FileSystem::init()
-{
-	IDE::init();
-	device = IDE::getDevice(0);
-}
-
-bool FileSystem::openFile(const Path& path, File* file)
-{
-	return FAT32::openFile(path.string(), file);
-}
-
-bool FileSystem::isFile(const Path& path) { return path.string().split('.').size(); }
-
-bool FileSystem::isDirectory(const Path& path) { return !path.string().split('.').size(); }
-
 Pair<String, String> FileSystem::splitExt(const Path& path)
 {
 	String p = path.string();
@@ -48,3 +31,14 @@ String Path::stem()
 }
 
 String Path::extension() { return String(); }
+
+void FileSystem::init() { IDE::init(); }
+
+bool FileSystem::openFile(const Path& path, File* file)
+{
+	return FAT32::openFile(path.string(), file);
+}
+
+bool FileSystem::isFile(const Path& path) { return path.string().split('.').size(); }
+
+bool FileSystem::isDirectory(const Path& path) { return !path.string().split('.').size(); }

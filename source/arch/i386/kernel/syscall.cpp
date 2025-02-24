@@ -3,6 +3,32 @@
 #include <stdio.h>
 #include <syscall.h>
 
+static SysCallFunc syscalls[] = {
+	sysFork,
+	sysExit,
+	sysWait,
+	sysPipe,
+	sysRead,
+	sysKill,
+	sysExec,
+	sysFstat,
+	sysChdir,
+	sysDup,
+	sysGetpid,
+	sysSbrk,
+	sysSleep,
+	sysUptime,
+	sysOpen,
+	sysWrite,
+	sysMknod,
+	sysUnlink,
+	sysLink,
+	sysMkdir,
+	sysClose,
+	sysMalloc,
+	sysFree,
+};
+
 /*
 Dispatches the arguments held in registers `ebx`, `ecx`,
  `edx`, `esi`, `edi` to the respective system call. The
@@ -45,54 +71,18 @@ void sysCallDispatcher(Registers regs)
 		: "r"(regs.edi), "r"(regs.esi), "r"(regs.edx), "r"(regs.ecx), "r"(regs.ebx), "r"(syscall));
 }
 
-int32_t sysFork(SysCallRegisters regs)
-{
-	return 0;
-}
-int32_t sysExit(SysCallRegisters regs)
-{
-	return 0;
-}
-int32_t sysWait(SysCallRegisters regs)
-{
-	return 0;
-}
-int32_t sysPipe(SysCallRegisters regs)
-{
-	return 0;
-}
-int32_t sysRead(SysCallRegisters regs)
-{
-	return 0;
-}
-int32_t sysKill(SysCallRegisters regs)
-{
-	return 0;
-}
-int32_t sysExec(SysCallRegisters regs)
-{
-	return 0;
-}
-int32_t sysFstat(SysCallRegisters regs)
-{
-	return 0;
-}
-int32_t sysChdir(SysCallRegisters regs)
-{
-	return 0;
-}
-int32_t sysDup(SysCallRegisters regs)
-{
-	return 0;
-}
-int32_t sysGetpid(SysCallRegisters regs)
-{
-	return 0;
-}
-int32_t sysSbrk(SysCallRegisters regs)
-{
-	return 0;
-}
+int32_t sysFork(SysCallRegisters regs) { return 0; }
+int32_t sysExit(SysCallRegisters regs) { return 0; }
+int32_t sysWait(SysCallRegisters regs) { return 0; }
+int32_t sysPipe(SysCallRegisters regs) { return 0; }
+int32_t sysRead(SysCallRegisters regs) { return 0; }
+int32_t sysKill(SysCallRegisters regs) { return 0; }
+int32_t sysExec(SysCallRegisters regs) { return 0; }
+int32_t sysFstat(SysCallRegisters regs) { return 0; }
+int32_t sysChdir(SysCallRegisters regs) { return 0; }
+int32_t sysDup(SysCallRegisters regs) { return 0; }
+int32_t sysGetpid(SysCallRegisters regs) { return 0; }
+int32_t sysSbrk(SysCallRegisters regs) { return 0; }
 int32_t sysSleep(SysCallRegisters regs)
 {
 	// Get the milliseconds to sleep for from the ecx
@@ -120,38 +110,14 @@ int32_t sysSleep(SysCallRegisters regs)
 
 	return 0;
 }
-int32_t sysUptime(SysCallRegisters regs)
-{
-	return 0;
-}
-int32_t sysOpen(SysCallRegisters regs)
-{
-	return 0;
-}
-int32_t sysWrite(SysCallRegisters regs)
-{
-	return 0;
-}
-int32_t sysMknod(SysCallRegisters regs)
-{
-	return 0;
-}
-int32_t sysUnlink(SysCallRegisters regs)
-{
-	return 0;
-}
-int32_t sysLink(SysCallRegisters regs)
-{
-	return 0;
-}
-int32_t sysMkdir(SysCallRegisters regs)
-{
-	return 0;
-}
-int32_t sysClose(SysCallRegisters regs)
-{
-	return 0;
-}
+int32_t sysUptime(SysCallRegisters regs) { return 0; }
+int32_t sysOpen(SysCallRegisters regs) { return 0; }
+int32_t sysWrite(SysCallRegisters regs) { return 0; }
+int32_t sysMknod(SysCallRegisters regs) { return 0; }
+int32_t sysUnlink(SysCallRegisters regs) { return 0; }
+int32_t sysLink(SysCallRegisters regs) { return 0; }
+int32_t sysMkdir(SysCallRegisters regs) { return 0; }
+int32_t sysClose(SysCallRegisters regs) { return 0; }
 int32_t sysMalloc(SysCallRegisters regs)
 {
 	size_t bytes = regs.ecx;

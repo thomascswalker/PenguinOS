@@ -2,6 +2,12 @@
 #include <pit.h>
 #include <stdio.h>
 
+// Global ticks for the timer.
+static uint32_t g_ticks = 0;
+
+// Initialize `g_sleepTicks` at specific location.
+static uint32_t* g_sleepTicks = (uint32_t*)SLEEP_TICK_LOCATION;
+
 void PIT::init()
 {
 	IDT::registerInterruptHandler(IRQ0, &callback);

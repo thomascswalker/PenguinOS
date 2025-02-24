@@ -6,75 +6,82 @@
 #include <math.h>
 #include <memory.h>
 
-class String
+template <typename T>
+class BasicString
 {
-	using Iterator = char*;
-	using ConstIterator = const char*;
+	using ValueType = T;
+	using SizeType = size_t;
 
-	char*			m_data;
-	size_t			m_size;
-	size_t			m_capacity;
-	Allocator<char> m_allocator;
+	using PointerType = T*;
+	using ConstPointerType = const T*;
+
+	using IterType = T*;
+	using ConstIterType = const T*;
+
+	PointerType	 m_data;
+	SizeType	 m_size;
+	SizeType	 m_capacity;
+	Allocator<T> m_allocator;
 
 public:
-	static const size_t npos = -1;
+	static const SizeType npos = -1;
 
 public:
 	/* Constructors */
 
 	// Default constructor
-	String() : m_size(0), m_capacity(1)
+	BasicString() : m_size(0), m_capacity(1)
 	{
 		m_data = m_allocator.allocate(m_capacity);
 		m_data[0] = '\0';
 	}
-	String(const String& other)
+	BasicString(const BasicString<T>& other)
 	{
 		m_size = other.m_size;
 		m_capacity = other.m_capacity;
 		m_data = m_allocator.allocate(m_size);
 		memcpy(m_data, other.m_data, m_size);
 	}
-	String& operator=(const String& other)
+	BasicString<T>& operator=(const BasicString<T>& other)
 	{
 		if (this == &other)
 		{
 			return *this;
 		}
-		String tmp(other);
+		BasicString<T> tmp(other);
 		std::swap(m_data, tmp.m_data);
 		std::swap(m_size, tmp.m_size);
 		std::swap(m_capacity, tmp.m_capacity);
 		return *this;
 	}
 	// Constructor from C-style string
-	String(const char* str)
+	BasicString(const char* str)
 	{
 		m_size = strlen(str);
 		reserve(m_size + 1);
 		m_data = m_allocator.allocate(m_size);
-		for (size_t i = 0; i < m_size; i++)
+		for (SizeType i = 0; i < m_size; i++)
 		{
 			m_data[i] = str[i];
 		}
 	}
-	String(size_t size) : m_size(size), m_capacity(size + 1)
+	BasicString(SizeType size) : m_size(size), m_capacity(size + 1)
 	{
 		m_data = m_allocator.allocate(size);
 		memset(m_data, '\0', strlen(m_data) + 1);
 	}
-	String(size_t size, char c) : m_size(size), m_capacity(size + 1)
+	BasicString(SizeType size, T c) : m_size(size), m_capacity(size + 1)
 	{
 		m_data = m_allocator.allocate(size);
 		memset(m_data, c, strlen(m_data));
 	}
-	String(const char* str, size_t count) : m_size(count)
+	BasicString(const T* str, SizeType count) : m_size(count)
 	{
-		m_data = new char[count + 1];
-		memcpy(m_data, (char*)str, count);
+		m_data = new T[count + 1];
+		memcpy(m_data, (T*)str, count);
 		m_data[count] = '\0';
 	}
-	~String()
+	~BasicString()
 	{
 		if (m_data)
 		{
@@ -84,17 +91,17 @@ public:
 
 	/* Methods */
 
-	char*  data() const { return m_data; }
-	size_t size() const { return m_size; }
-	size_t capacity() const { return m_capacity; }
-	void   reserve(size_t newCapacity)
+	T*		 data() const { return m_data; }
+	SizeType size() const { return m_size; }
+	SizeType capacity() const { return m_capacity; }
+	void	 reserve(SizeType newCapacity)
 	{
 		if (m_capacity > newCapacity)
 		{
 			return;
 		}
 
-		char* newData = new char[newCapacity];
+		T* newData = new T[newCapacity];
 		if (m_data != nullptr)
 		{
 			memcpy(newData, m_data, m_size);
@@ -104,29 +111,29 @@ public:
 		m_data = newData;
 		m_capacity = newCapacity;
 	}
-	void append(char c)
+	void append(T c)
 	{
 		if (m_size == m_capacity)
 		{
-			size_t newCapacity = m_capacity == 0 ? 1 : m_capacity * 2;
+			SizeType newCapacity = m_capacity == 0 ? 1 : m_capacity * 2;
 			reserve(newCapacity);
 		}
 		m_data[m_size] = c;
 		m_size++;
 	}
-	Array<String> split(char delimiter) const
+	Array<BasicString<T>> split(T delimiter) const
 	{
-		Array<String> tokens;
+		Array<BasicString<T>> tokens;
 
-		size_t start = 0;
-		size_t end = find(delimiter);
+		SizeType start = 0;
+		SizeType end = find(delimiter);
 
 		while (end != npos)
 		{
-			size_t diff = end - start;
+			SizeType diff = end - start;
 			if (diff)
 			{
-				String s = substr(start, diff);
+				BasicString<T> s = substr(start, diff);
 				tokens.add(s);
 			}
 			start = end + 1; // Skip delimiter
@@ -136,9 +143,14 @@ public:
 		end = m_size;
 		tokens.add(substr(start, end - start));
 
+		for (auto& t : tokens)
+		{
+			t.m_data[t.m_size] = '\0';
+		}
+
 		return tokens;
 	}
-	void resize(size_t size, char c = '\0')
+	void resize(SizeType size, T c = '\0')
 	{
 		if (size < m_size)
 		{
@@ -149,9 +161,9 @@ public:
 			if (size > m_capacity)
 			{
 				m_capacity = size;
-				char* newData = new char[m_capacity + 1];
+				T* newData = new T[m_capacity + 1];
 				memcpy(newData, m_data, m_size);
-				for (size_t i = m_size; i < size; i++)
+				for (SizeType i = m_size; i < size; i++)
 				{
 					newData[i] = c;
 				}
@@ -160,7 +172,7 @@ public:
 			}
 			else
 			{
-				for (size_t i = m_size; i < size; i++)
+				for (SizeType i = m_size; i < size; i++)
 				{
 					m_data[i] = c;
 				}
@@ -170,25 +182,25 @@ public:
 		}
 		m_data[m_size] = '\0';
 	}
-	String substr(size_t pos, size_t count = String::npos) const
+	BasicString<T> substr(SizeType pos, SizeType count = BasicString<T>::npos) const
 	{
 		count = (count == npos || pos + count > m_size) ? m_size - pos : count;
-		return String(m_data + pos, count);
+		return BasicString<T>(m_data + pos, count);
 	}
 
-	size_t find(char c, size_t start = 0) const
+	SizeType find(T c, SizeType start = 0) const
 	{
-		for (size_t i = start; i < m_size; i++)
+		for (SizeType i = start; i < m_size; i++)
 		{
 			if (m_data[i] == c)
 			{
 				return i;
 			}
 		}
-		return String::npos;
+		return BasicString<T>::npos;
 	}
-	size_t findFirst(char c) const { return find(c, 0); }
-	size_t findLast(char c, size_t pos = String::npos) const
+	SizeType findFirst(T c) const { return find(c, 0); }
+	SizeType findLast(T c, SizeType pos = BasicString<T>::npos) const
 	{
 		if (m_size == 0)
 		{
@@ -201,7 +213,7 @@ public:
 			pos = m_size - 1;
 		}
 
-		for (size_t i = pos; i > 0; i--)
+		for (SizeType i = pos; i > 0; i--)
 		{
 			if (m_data[i] == c)
 			{
@@ -218,7 +230,7 @@ public:
 		m_capacity = 1;
 		m_data = m_allocator.allocate(1);
 	}
-	void trim(char c)
+	void trim(T c)
 	{
 		int pos = m_size - 1;
 		while (m_data[pos] == c)
@@ -234,36 +246,36 @@ public:
 		trim('\t');
 	}
 
-	char* cstr() const { return m_data; }
+	T* cstr() const { return m_data; }
 
-	Iterator	  begin() { return m_data; }
-	ConstIterator begin() const { return m_data; }
-	Iterator	  end() { return m_data + m_size; }
-	ConstIterator end() const { return m_data + m_size; }
+	IterType	  begin() { return IterType(m_data); }
+	ConstIterType begin() const { return ConstIterType(m_data); }
+	IterType	  end() { return IterType(m_data + m_size); }
+	ConstIterType end() const { return ConstIterType(m_data + m_size); }
 	/* Operators */
 
-	String operator+(const String& other)
+	BasicString<T> operator+(const BasicString<T>& other)
 	{
-		String temp(*this);
-		for (char c : other)
+		BasicString<T> temp(*this);
+		for (T c : other)
 		{
 			temp.append(c);
 		}
 		temp[temp.m_size] = '\0';
 		return temp;
 	}
-	String& operator+=(const String& other)
+	BasicString<T>& operator+=(const BasicString<T>& other)
 	{
-		for (char c : other)
+		for (T c : other)
 		{
 			append(c);
 		}
 		m_data[m_size] = '\0';
 		return *this;
 	}
-	String operator+(const char* other)
+	BasicString<T> operator+(const T* other)
 	{
-		String temp = *this;
+		BasicString<T> temp = *this;
 		for (uint32_t i = 0; i < strlen(other); i++)
 		{
 			temp.append(other[i]);
@@ -271,18 +283,18 @@ public:
 		temp[temp.m_size] = '\0';
 		return temp;
 	}
-	String& operator+=(const char* other)
+	BasicString<T>& operator+=(const T* other)
 	{
 		*this = *this + other;
 		return *this;
 	}
-	bool operator==(const String& other)
+	bool operator==(const BasicString<T>& other)
 	{
 		if (m_size != other.size())
 		{
 			return false;
 		}
-		for (size_t i = 0; i < m_size; i++)
+		for (SizeType i = 0; i < m_size; i++)
 		{
 			if (m_data[i] != other[i])
 			{
@@ -291,13 +303,13 @@ public:
 		}
 		return true;
 	}
-	bool operator==(const char* other)
+	bool operator==(const T* other)
 	{
 		if (m_size != strlen(other))
 		{
 			return false;
 		}
-		for (size_t i = 0; i < m_size; i++)
+		for (SizeType i = 0; i < m_size; i++)
 		{
 			if (m_data[i] != other[i])
 			{
@@ -306,19 +318,23 @@ public:
 		}
 		return true;
 	}
-	bool operator!=(const char* other) { return !(*this == other); }
-	bool operator!=(const String& other) { return !(*this == other); }
-	operator char*() const { return m_data; }
-	char&		operator[](size_t index) { return m_data[index]; }
-	const char& operator[](size_t index) const { return m_data[index]; }
+	bool operator!=(const T* other) { return !(*this == other); }
+	bool operator!=(const BasicString<T>& other) { return !(*this == other); }
+	operator T*() const { return m_data; }
+	T&		 operator[](SizeType index) { return m_data[index]; }
+	const T& operator[](SizeType index) const { return m_data[index]; }
 };
 
-static String operator+(const char* lhs, const String& rhs)
+template <typename T>
+static BasicString<T> operator+(const T* lhs, const BasicString<T>& rhs)
 {
-	String result(lhs);
+	BasicString<T> result(lhs);
 	for (auto c : rhs)
 	{
 		result.append(c);
 	}
 	return result;
 }
+
+typedef BasicString<char>	 String;
+typedef BasicString<wchar_t> WideString;
