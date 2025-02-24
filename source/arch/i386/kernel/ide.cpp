@@ -180,7 +180,6 @@ void ATADevice::parseBootSector()
 	memcpy(bootCode, mbrData, MBR_BYTE_SIZE);
 
 #define BOOT_SECTOR(x, y) memcpy(&x, mbrData + y, sizeof(x));
-
 	memcpy(&bootSector.oemIdentifier, (uint8_t*)mbrData + 0x03, 8);
 	bootSector.oemIdentifier[8] = '\0'; // Null-terminate string
 	BOOT_SECTOR(bootSector.bytesPerSector, 0x0B);
@@ -260,7 +259,6 @@ bool ATADevice::accessSectors(uint32_t sector, uint32_t count, bool read, void* 
 	{
 		for (uint32_t i = count; i > 0; i--)
 		{
-			// debug("Reading sector %d.", sector);
 			waitBusy();
 			// Read 256 words
 			for (uint32_t j = 0; j < 256; j++)
@@ -274,7 +272,6 @@ bool ATADevice::accessSectors(uint32_t sector, uint32_t count, bool read, void* 
 	{
 		for (uint32_t i = count; i > 0; i--)
 		{
-			debug("Writing sector %d.", sector);
 			waitBusy();
 			// Write 256 words
 			for (uint32_t j = 0; j < 256; j++)
