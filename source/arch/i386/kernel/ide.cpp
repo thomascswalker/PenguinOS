@@ -12,7 +12,7 @@
 ATADevice  devices[4];
 ATADevice* currentDevice;
 
-FAT32::FATShortEntry rootDirectory;
+FAT32::ShortEntry rootDirectory;
 
 void IDE::init()
 {
