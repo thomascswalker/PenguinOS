@@ -359,3 +359,63 @@ uint32_t FAT32::getSize()
 }
 
 FAT32::ShortEntry* FAT32::getRootEntry() { return g_rootEntry; }
+
+bool FAT32::readDirectory(ShortEntry* entry, Array<ShortEntry>& entries)
+{
+	GET_DEVICE(0);
+
+	// Start at `startCluster`. This will be updated as we traverse a cluster
+	// and do not (yet) find the matching entry.
+	uint32_t cluster = entry->cluster();
+	uint8_t	 buffer[8192];
+
+	while (cluster < FAT_END_OF_CLUSTER)
+	{
+		// Get the first sector of this cluster.
+		uint32_t firstSector = FAT32::getClusterSector(cluster);
+
+		// Read each sector (16 total) of this cluster into `buffer` at the offset
+		// [n * BPS] where `n` is the current sector index and BPS is the bytes
+		// per sector.
+		for (uint8_t sector = 0; sector < d->bootSector.sectorsPerCluster; sector++)
+		{
+			if (!d->readSector(
+					firstSector + sector, buffer + (sector * d->bootSector.bytesPerSector)))
+			{
+				warning("Unable to read sector %d", firstSector + sector);
+				return false;
+			}
+		}
+
+		// Compute the number of entries we will look through
+		// in this cluster.
+		uint32_t entriesPerCluster =
+			(d->bootSector.sectorsPerCluster * d->bootSector.bytesPerSector) / sizeof(ShortEntry);
+
+		// Cast the raw buffer we read above to a short entry
+		// array we can iterate through.
+		ShortEntry* entryBuffer = (ShortEntry*)buffer;
+		for (uint32_t i = 0; i < entriesPerCluster; i++)
+		{
+			ShortEntry* current = &entryBuffer[i];
+
+			// No more entries
+			if (!current->isValid())
+			{
+				continue;
+			}
+			// Ignore long filename entries
+			else if (isLongEntry((uint8_t*)current))
+			{
+				continue;
+			}
+
+			entries.add(*current);
+		}
+
+		// Move to the next cluster.
+		cluster = FAT32::getNextCluster(cluster);
+	}
+
+	return true;
+}

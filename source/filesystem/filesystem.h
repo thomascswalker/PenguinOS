@@ -34,6 +34,7 @@ public:
 namespace FileSystem
 {
 	void init();
+
 	bool openFile(const Path& path, File* file);
 
 	bool isFile(const Path& path);

@@ -2,6 +2,7 @@
 
 #pragma once
 
+#include <array.h>
 #include <bitmask.h>
 #include <cstring.h>
 #include <ide.h>
@@ -109,5 +110,6 @@ namespace FAT32
 	uint32_t getSize();
 
 	ShortEntry* getRootEntry();
+	bool		readDirectory(ShortEntry* entry, Array<ShortEntry>& entries);
 
 } // namespace FAT32

@@ -4,6 +4,8 @@
 #include <shell.h>
 #include <sys.h>
 
+using namespace FAT32;
+
 #define CHECK_ARGS(e, n)                                                                        \
 	if (args.size() != n)                                                                       \
 	{                                                                                           \
@@ -28,7 +30,7 @@ static CMD::CWD g_cwd;
 void CMD::init()
 {
 	g_cwd.path = "/";
-	g_cwd.entry = FAT32::getRootEntry();
+	g_cwd.entry = getRootEntry();
 }
 
 void CMD::processCmd(const Array<String>& args)
@@ -90,6 +92,27 @@ void CMD::processCmd(const Array<String>& args)
 		CHECK_ARGS("cwd", 1);
 		printf("cwd: %s\n", g_cwd.path.cstr());
 		return;
+	}
+	if (exe == "cd")
+	{
+		CHECK_ARGS("cd", 2);
+		error("'cd' not implemented yet.");
+		return;
+	}
+	if (exe == "ls")
+	{
+		CHECK_ARGS("cwd", 1);
+		Array<ShortEntry> entries;
+		if (readDirectory(g_cwd.entry, entries))
+		{
+			for (const auto& entry : entries)
+			{
+				char name[9];
+				memcpy(name, (void*)entry.name, 8);
+				name[8] = 0;
+				printf("%s | %x\n", name, entry.attribute);
+			}
+		}
 	}
 }
 
