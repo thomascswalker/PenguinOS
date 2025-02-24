@@ -78,28 +78,3 @@ int32_t sysFree(SysCallRegisters regs);
 
 // Syscall table
 typedef int32_t (*SysCallFunc)(SysCallRegisters);
-static SysCallFunc syscalls[] = {
-	sysFork,
-	sysExit,
-	sysWait,
-	sysPipe,
-	sysRead,
-	sysKill,
-	sysExec,
-	sysFstat,
-	sysChdir,
-	sysDup,
-	sysGetpid,
-	sysSbrk,
-	sysSleep,
-	sysUptime,
-	sysOpen,
-	sysWrite,
-	sysMknod,
-	sysUnlink,
-	sysLink,
-	sysMkdir,
-	sysClose,
-	sysMalloc,
-	sysFree,
-};

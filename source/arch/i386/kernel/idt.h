@@ -83,43 +83,6 @@ struct IDTPtr
 					// interrupt handler array
 } __attribute__((packed));
 
-static const char* idt_messages[] = {
-	"Division by zero",				 // 0
-	"Single-step Interrupt",		 // 1
-	"NMI",							 // 2
-	"Breakpoint",					 // 3
-	"Overflow",						 // 4
-	"Bound Range Exceeded",			 // 5
-	"Invalid Opcode",				 // 6
-	"Coprocessor not available",	 // 7
-	"Double fault",					 // 8
-	"Coprocessor segment overrun",	 // 9
-	"Invalid task state segment",	 // 10
-	"Segment not present",			 // 11
-	"Stack segment fault",			 // 12
-	"General protection fault",		 // 13
-	"Page fault",					 // 14
-	"Unknown",						 // 15
-	"x87 floating point exception",	 // 16
-	"Alignment check",				 // 17
-	"Machine check",				 // 18
-	"SIMD floating point exception", // 19
-	"Virtualization exception",		 // 20
-	"Control protection exception",	 // 21
-	"Reserved",						 // 22
-	"Reserved",						 // 23
-	"Reserved",						 // 24
-	"Reserved",						 // 25
-	"Reserved",						 // 26
-	"Reserved",						 // 27
-	"Reserved",						 // 28
-	"Reserved",						 // 29
-	"Reserved",						 // 30
-	"Reserved",						 // 31
-	"Timer",						 // 32
-	"Keyboard",						 // 33
-};
-
 namespace IDT
 {
 	void init();

@@ -12,7 +12,6 @@ void print(const char* str)
 	{
 		putc(str[i]);
 	}
-	// Shell::updateDisplayPosition();
 }
 
 void println(const char* str)
