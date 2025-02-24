@@ -1,7 +1,15 @@
 #include <cmd.h>
+#include <fat.h>
 #include <filesystem.h>
 #include <shell.h>
 #include <sys.h>
+
+#define CHECK_ARGS(e, n)                                                                        \
+	if (args.size() != n)                                                                       \
+	{                                                                                           \
+		warning("Invalid number of arguments for '%s'. Wanted %d, got %d.", e, n, args.size()); \
+		return;                                                                                 \
+	}
 
 static const char* g_commands[] = {
 	"exit",
@@ -13,6 +21,9 @@ static const char* g_commands[] = {
 	"ls",
 };
 static const size_t g_commandsCount = sizeof(g_commands) / sizeof(const char*);
+
+// Current working directory
+static FAT32::ShortEntry g_cwd;
 
 void CMD::processCmd(const Array<String>& args)
 {
@@ -41,11 +52,13 @@ void CMD::processCmd(const Array<String>& args)
 
 	if (exe == "exit")
 	{
+		CHECK_ARGS("exit", 1);
 		exit();
 		return;
 	}
 	if (exe == "help")
 	{
+		CHECK_ARGS("help", 1);
 		printf("HELP: exit - Exit the system.\n");
 		return;
 	}
@@ -56,11 +69,7 @@ void CMD::processCmd(const Array<String>& args)
 	}
 	if (exe == "cat")
 	{
-		if (args.size() != 2)
-		{
-			warning("Invalid number of arguments for 'cat'. Wanted 2, got %d.", args.size());
-			return;
-		}
+		CHECK_ARGS("cat", 2);
 		File		file;
 		const char* filename = args[1].cstr();
 		if (!FileSystem::openFile(Path(filename), &file))
@@ -69,5 +78,9 @@ void CMD::processCmd(const Array<String>& args)
 			return;
 		}
 		printf("%s\n", file.data);
+	}
+	if (exe == "cwd")
+	{
+		CHECK_ARGS("cwd", 1);
 	}
 }

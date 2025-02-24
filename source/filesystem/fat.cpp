@@ -26,16 +26,16 @@ bool FAT32::openFile(const String& filename, void* file)
 
 	// TODO: Move this to global space as it's redundant
 	// Parse the root directory
-	FATShortEntry data[FAT_ENTRIES_PER_SECTOR];
+	ShortEntry data[FAT_ENTRIES_PER_SECTOR];
 	if (!d->readSectors(d->rootDirectorySector, 1, &data))
 	{
 		panic("Failed to read root directory sector.");
 	}
-	FATShortEntry* rootDirectory = &data[0];
-	uint32_t	   currentCluster = rootDirectory->cluster();
+	ShortEntry* rootDirectory = &data[0];
+	uint32_t	currentCluster = rootDirectory->cluster();
 
-	FATShortEntry entry;
-	uint32_t	  sector = 0;
+	ShortEntry entry;
+	uint32_t   sector = 0;
 
 	// Iterate through the path components attempting to find
 	// the corresponding entry. If a component is a directory,
@@ -48,7 +48,7 @@ bool FAT32::openFile(const String& filename, void* file)
 			return false;
 		}
 
-		if (Bitmask::test((uint8_t)entry.attribute, (uint8_t)FATAttribute::Directory))
+		if (Bitmask::test((uint8_t)entry.attribute, (uint8_t)Attribute::Directory))
 		{
 			currentCluster = entry.cluster();
 			continue;
@@ -176,7 +176,7 @@ bool FAT32::isValidChar(char c)
 		|| c == ';' || c == '=' || c == ',');
 }
 
-bool FAT32::findEntry(uint32_t startCluster, const String& name, FATShortEntry* entry)
+bool FAT32::findEntry(uint32_t startCluster, const String& name, ShortEntry* entry)
 {
 	GET_DEVICE(0);
 
@@ -210,15 +210,14 @@ bool FAT32::findEntry(uint32_t startCluster, const String& name, FATShortEntry* 
 		// Compute the number of entries we will look through
 		// in this cluster.
 		uint32_t entriesPerCluster =
-			(d->bootSector.sectorsPerCluster * d->bootSector.bytesPerSector)
-			/ sizeof(FATShortEntry);
+			(d->bootSector.sectorsPerCluster * d->bootSector.bytesPerSector) / sizeof(ShortEntry);
 
 		// Cast the raw buffer we read above to a short entry
 		// array we can iterate through.
-		FATShortEntry* entries = (FATShortEntry*)buffer;
+		ShortEntry* entries = (ShortEntry*)buffer;
 		for (uint32_t i = 0; i < entriesPerCluster; i++)
 		{
-			FATShortEntry* current = &entries[i];
+			ShortEntry* current = &entries[i];
 
 			// No more entries
 			if (!current->isValid())
@@ -261,10 +260,10 @@ bool FAT32::isLongEntry(uint8_t* buffer)
 	// - The first character of the entry is 0.
 	// - The 'attribute' component of a FAT entry is at offset 11 (0xB). This
 	// character is equal to 15 (0xF).
-	return *buffer == FATAttribute::LastEntry || *(buffer + 11) == FATAttribute::LongFileName;
+	return *buffer == Attribute::LastEntry || *(buffer + 11) == Attribute::LongFileName;
 }
 
-void FAT32::parseLongEntry(FATLongEntry* entry, uint32_t count, char* filename)
+void FAT32::parseLongEntry(LongEntry* entry, uint32_t count, char* filename)
 {
 	// While we still have entries to parse...
 	while (count)

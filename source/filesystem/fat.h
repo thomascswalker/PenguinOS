@@ -19,7 +19,7 @@
 
 namespace FAT32
 {
-	enum class FATType
+	enum class Type
 	{
 		ExFAT,
 		FAT12,
@@ -27,7 +27,7 @@ namespace FAT32
 		FAT32
 	};
 
-	enum class FATEntryType
+	enum class EntryType
 	{
 		Free,
 		Allocated,
@@ -36,7 +36,7 @@ namespace FAT32
 		EOF
 	};
 
-	enum class FATAttribute : uint8_t
+	enum class Attribute : uint8_t
 	{
 		Empty = 0,
 		ReadOnly = (1 << 0),
@@ -49,34 +49,34 @@ namespace FAT32
 		LastEntry = 0x41,
 		Deleted = 0xE5,
 	};
-	DEFINE_BITMASK_OPERATORS(FATAttribute);
+	DEFINE_BITMASK_OPERATORS(Attribute);
 
-	struct FATShortEntry // 32 bytes
+	struct ShortEntry // 32 bytes
 	{
-		uint8_t		 name[8];
-		uint8_t		 ext[3];
-		FATAttribute attribute;
-		uint8_t		 ntRes;
-		uint8_t		 creationTimeSeconds;
-		uint16_t	 creationTime;
-		uint16_t	 creationDate;
-		uint16_t	 lastAccDate;
-		uint16_t	 clusterHigh;
-		uint16_t	 writeTime;
-		uint16_t	 writeDate;
-		uint16_t	 clusterLow;
-		uint32_t	 fileSize = 0;
+		uint8_t	  name[8];
+		uint8_t	  ext[3];
+		Attribute attribute;
+		uint8_t	  ntRes;
+		uint8_t	  creationTimeSeconds;
+		uint16_t  creationTime;
+		uint16_t  creationDate;
+		uint16_t  lastAccDate;
+		uint16_t  clusterHigh;
+		uint16_t  writeTime;
+		uint16_t  writeDate;
+		uint16_t  clusterLow;
+		uint32_t  fileSize = 0;
 
 		bool isValid() const
 		{
-			return name[0] != FATAttribute::Empty && name[0] != FATAttribute::Deleted;
+			return name[0] != Attribute::Empty && name[0] != Attribute::Deleted;
 		}
 		// Returns the full 32-bit cluster number composed of the low 16 bits
 		// of `clusterLow` and high 16 bits of `clusterHigh`.
 		uint32_t cluster() const { return clusterLow | (clusterHigh << 16); }
 	} __attribute__((packed));
 
-	struct FATLongEntry // 32 bytes
+	struct LongEntry // 32 bytes
 	{
 		uint8_t	 id;
 		uint8_t	 data0[10];
@@ -97,9 +97,9 @@ namespace FAT32
 	String sanitize(const String& longName);
 	bool   isValidChar(char c);
 
-	bool findEntry(uint32_t startCluster, const String& name, FATShortEntry* entry);
+	bool findEntry(uint32_t startCluster, const String& name, ShortEntry* entry);
 	bool isLongEntry(uint8_t* buffer);
-	void parseLongEntry(FATLongEntry* entry, uint32_t count, char* filename);
+	void parseLongEntry(LongEntry* entry, uint32_t count, char* filename);
 
 	uint32_t getNextCluster(uint32_t cluster);
 	uint32_t getClusterSector(uint32_t n);
