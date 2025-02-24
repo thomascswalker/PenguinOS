@@ -67,7 +67,13 @@ void CMD::processCmd(const Array<String>& args)
 	if (exe == "help")
 	{
 		CHECK_ARGS("help", 1);
-		printf("HELP: exit - Exit the system.\n");
+		printf("HELP: exit - Exit the system.\n"
+			   "      help - Display list of commands.\n"
+			   "      clear - Clear the display of text.\n"
+			   "      cat - Print the contents of the specified file.\n"
+			   "      cwd - Print the current directory.\n"
+			   "      cd - Change to the specified directory.\n"
+			   "      ls - Print the files within the current directory.\n");
 		return;
 	}
 	if (exe == "clear")

@@ -34,7 +34,6 @@ EXTERN void kmain(MultibootInfo* info, uint32_t magic)
 	println("Welcome to Penguin OS!");
 
 	Memory::init(start, size);
-	FileSystem::init();
 
 	// This needs to be called AFTER memory has been initialized.
 	// Some constructors (like String, Array, etc.) which use
@@ -42,6 +41,7 @@ EXTERN void kmain(MultibootInfo* info, uint32_t magic)
 	// TODO: Fix this!
 	callConstructors();
 
+	FileSystem::init();
 	CMD::init();
 
 	while (1)
