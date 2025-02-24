@@ -32,7 +32,11 @@ String Path::stem()
 
 String Path::extension() { return String(); }
 
-void FileSystem::init() { IDE::init(); }
+void FileSystem::init()
+{
+	IDE::init();
+	FAT32::init();
+}
 
 bool FileSystem::openFile(const Path& path, File* file)
 {

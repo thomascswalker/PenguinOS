@@ -23,7 +23,13 @@ static const char* g_commands[] = {
 static const size_t g_commandsCount = sizeof(g_commands) / sizeof(const char*);
 
 // Current working directory
-static FAT32::ShortEntry g_cwd;
+static CMD::CWD g_cwd;
+
+void CMD::init()
+{
+	g_cwd.path = "/";
+	g_cwd.entry = FAT32::getRootEntry();
+}
 
 void CMD::processCmd(const Array<String>& args)
 {
@@ -82,5 +88,9 @@ void CMD::processCmd(const Array<String>& args)
 	if (exe == "cwd")
 	{
 		CHECK_ARGS("cwd", 1);
+		printf("cwd: %s\n", g_cwd.path.cstr());
+		return;
 	}
 }
+
+String CMD::getCWD() { return g_cwd.path; }

@@ -2,6 +2,8 @@
 Main entry point into PenguinOS.
 */
 
+#include <cmd.h>
+#include <crt.h>
 #include <filesystem.h>
 #include <gdt.h>
 #include <keyboard.h>
@@ -38,7 +40,9 @@ EXTERN void kmain(MultibootInfo* info, uint32_t magic)
 	// Some constructors (like String, Array, etc.) which use
 	// allocators need to use std::kmalloc.
 	// TODO: Fix this!
-	// callConstructors();
+	callConstructors();
+
+	CMD::init();
 
 	while (1)
 	{

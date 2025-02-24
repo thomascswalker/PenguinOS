@@ -91,6 +91,8 @@ namespace FAT32
 
 	} __attribute__((packed));
 
+	void init();
+
 	bool openFile(const String& filename, void* file);
 
 	String toShortName(const String& longName);
@@ -105,5 +107,7 @@ namespace FAT32
 	uint32_t getClusterSector(uint32_t n);
 	uint32_t getClusterCount();
 	uint32_t getSize();
+
+	ShortEntry* getRootEntry();
 
 } // namespace FAT32
