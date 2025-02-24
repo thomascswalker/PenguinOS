@@ -8,41 +8,38 @@ EXTERN void	 free(const void* ptr);
 
 namespace std
 {
-	// Minimal implementation of remove_reference
 	template <typename T>
-	struct removeReference
+	struct RemoveReference
 	{
-		typedef T type;
+		typedef T Type;
 	};
 
 	template <typename T>
-	struct removeReference<T&>
+	struct RemoveReference<T&>
 	{
-		typedef T type;
+		typedef T Type;
 	};
 
 	template <typename T>
-	struct removeReference<T&&>
+	struct RemoveReference<T&&>
 	{
-		typedef T type;
+		typedef T Type;
 	};
 
-	// Implementation of std::move
 	template <typename T>
-	constexpr typename removeReference<T>::type&& move(T&& t) noexcept
+	constexpr typename RemoveReference<T>::Type&& move(T&& t) noexcept
 	{
-		return static_cast<typename removeReference<T>::type&&>(t);
+		return static_cast<typename RemoveReference<T>::Type&&>(t);
 	}
 
-	// Implementation of std::forward
 	template <typename T>
-	constexpr T&& forward(typename removeReference<T>::type& t) noexcept
+	constexpr T&& forward(typename RemoveReference<T>::Type& t) noexcept
 	{
 		return static_cast<T&&>(t);
 	}
 
 	template <typename T>
-	constexpr T&& forward(typename removeReference<T>::type&& t) noexcept
+	constexpr T&& forward(typename RemoveReference<T>::Type&& t) noexcept
 	{
 		return static_cast<T&&>(t);
 	}

@@ -36,7 +36,6 @@ See the PTE enum for details.
 
 */
 
-#include <bitarray.h>
 #include <math.h>
 #include <memory.h>
 #include <stdio.h>
