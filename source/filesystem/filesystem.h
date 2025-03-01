@@ -24,10 +24,20 @@ public:
 	String extension();
 
 	Path() = default;
+	Path(const char* inPath) : path(inPath) {}
 	Path(const String& inPath) : path(inPath) {}
 
+	void append(const String& p)
+	{
+		if ((path[path.size() - 1]) != '/')
+		{
+			path.append('/');
+		}
+		path.append(p);
+	}
+
 	String string() const { return path; }
-	char*  cstr() const { return path.cstr(); }
+	char*  cstr() const { return path.data(); }
 	operator String() { return path; }
 };
 
@@ -35,11 +45,11 @@ namespace FileSystem
 {
 	void init();
 
-	bool openFile(const Path& path, File* file);
+	bool openFile(const String& path, File* file);
+	bool isFile(const String& path);
+	bool isDirectory(const String& path);
 
-	bool isFile(const Path& path);
-	bool isDirectory(const Path& path);
-
-	Pair<String, String> splitExt(const Path& path);
+	Pair<String, String> splitExt(const String& path);
+	String				 join(const Array<String>& components);
 
 } // namespace FileSystem

@@ -60,8 +60,9 @@ struct Block
 
 namespace std
 {
-	void* kmalloc(uint32_t size);
+	void* kmalloc(size_t size);
 	void  kfree(void* ptr);
+	void* krealloc(void* ptr, size_t newSize);
 } // namespace std
 
 namespace Memory

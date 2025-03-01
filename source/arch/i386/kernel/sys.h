@@ -52,14 +52,14 @@ static inline void disableInterrupts() { asm("cli"); }
 
 static inline void enableInterrupts() { asm("sti"); }
 
-static inline void pause()
+static inline void syspause()
 {
 	while (true)
 	{
 	}
 }
 
-static inline void halt()
+static inline void syshalt()
 {
 	asm("hlt");
 	while (true)
@@ -67,7 +67,7 @@ static inline void halt()
 	}
 }
 
-static inline void exit()
+static inline void sysexit()
 {
 	outw(0x604, 0x2000); // QEMU
 }

@@ -1,4 +1,5 @@
 #include <cstring.h>
+#include <memory.h>
 
 // 	Copies one buffer to another.
 void* memcpy(void* dest, void* source, size_t size)
@@ -103,6 +104,7 @@ char* strcat(char* dest, const char* source)
 	while (dest[j] != '\0')
 	{
 		dest[i + j] = source[j];
+		j++;
 	}
 	dest[i + j] = '\0';
 
@@ -138,6 +140,62 @@ EXTERN char* strrchr(const char* str, char c)
 	}
 	// If searching for the null terminator, return pointer to it.
 	return (c == '\0') ? const_cast<char*>(str) : const_cast<char*>(last);
+}
+
+char* strdup(const char* str)
+{
+	size_t size = strlen(str) + 1;
+	char*  copy = (char*)std::kmalloc(size);
+	if (copy)
+	{
+		memcpy(copy, const_cast<char*>(str), size);
+	}
+	return copy;
+}
+
+char* strtok(char* str, const char delim)
+{
+	static size_t pos = 0;
+	static char*  buffer = nullptr;
+	static char*  token = nullptr;
+
+	if (str)
+	{
+		pos = 0;
+		buffer = str;
+
+		if (token)
+		{
+			delete token;
+		}
+		token = new char[strlen(buffer) + 1];
+	}
+
+	if (!buffer)
+	{
+		return nullptr;
+	}
+
+	if (pos >= strlen(buffer))
+	{
+		return nullptr;
+	}
+
+	memset(token, 0, strlen(buffer) + 1);
+
+	size_t i = 0;
+	while (pos < strlen(buffer))
+	{
+		if (buffer[pos] == delim)
+		{
+			pos++;
+			return token;
+		}
+		token[i] = buffer[pos];
+		i++;
+		pos++;
+	}
+	return token;
 }
 
 char toupper(char c)

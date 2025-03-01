@@ -34,7 +34,7 @@ bool FAT32::openFile(const String& filename, void* file)
 
 	if (components.empty())
 	{
-		warning("No components in path %s", filename.cstr());
+		warning("No components in path %s", filename.data());
 		return false;
 	}
 
@@ -107,15 +107,15 @@ String FAT32::toShortName(const String& longName)
 	components.b[3] = '\0';
 
 	// Remove invalid characters and whitespace
-	String base = sanitize(components.a);
-	String ext = sanitize(components.b);
+	String base = sanitize(components.a, 8);
+	String ext = sanitize(components.b, 3);
 
 	// TODO: Account for unique tilde incrementation
 	bool   useTilde = false;
 	String shortBase, shortExt;
 
 	// We use a tilde (~) if the base component resized.
-	if (base.size() > 8 || components.a.size() != base.size())
+	if (base.size() > 8)
 	{
 		useTilde = true;
 	}
@@ -148,29 +148,27 @@ String FAT32::toShortName(const String& longName)
 // Sanitizes the name component (either the base or the ext)
 // to remove invalid characters and force all characters
 // to uppercase.
-String FAT32::sanitize(const String& component)
+char* FAT32::sanitize(const String& component, size_t count)
 {
-	String result;
-
-	for (size_t i = 0; i < component.size(); i++)
+	char*  result = (char*)std::kmalloc(count);
+	size_t j = 0;
+	for (size_t i = 0; i < count; i++)
 	{
 		char c = component[i];
 
 		// We've hit the end, append a null-terminator
 		// and break.
-		if (c == '\0')
-		{
-			result.append('\0');
-			break;
-		}
 		// If this character is invalid, continue.
 		if (!isValidChar(c))
 		{
 			continue;
 		}
 		// Append an uppercase version of `c`.
-		result.append(toupper(c));
+		c = toupper(c);
+		result[j] = c;
+		j++;
 	}
+	result[count] = '\0';
 	return result;
 }
 
@@ -196,6 +194,7 @@ bool FAT32::findEntry(uint32_t startCluster, const String& name, ShortEntry* ent
 
 	// Convert the input `name` to the FAT 8.3 short name specification.
 	String shortName = FAT32::toShortName(name);
+	debug("[%s] => [%s]", name.data(), shortName.data());
 
 	// Start at `startCluster`. This will be updated as we traverse a cluster
 	// and do not (yet) find the matching entry.
@@ -238,13 +237,6 @@ bool FAT32::findEntry(uint32_t startCluster, const String& name, ShortEntry* ent
 			{
 				continue;
 			}
-			// Ignore entries which are '. ' or '..' as this will cause an
-			// infinite recursion error.
-			else if (current->name[0] == '.'
-				&& (current->name[1] == ' ' || current->name[1] == '.')) // . & .. entries
-			{
-				continue;
-			}
 			// Ignore long filename entries
 			else if (isLongEntry((uint8_t*)current))
 			{
@@ -252,7 +244,8 @@ bool FAT32::findEntry(uint32_t startCluster, const String& name, ShortEntry* ent
 			}
 
 			// Only compare the first 8 characters of each name
-			if (strncmp(shortName.cstr(), (char*)current->name, 8))
+
+			if (strncmp(shortName.data(), (char*)current->name, 8))
 			{
 				// If we have a match, we've found the corresponding
 				// entry. Copy `current` memory into our in/out `entry`.
@@ -360,19 +353,28 @@ uint32_t FAT32::getSize()
 
 FAT32::ShortEntry* FAT32::getRootEntry() { return g_rootEntry; }
 
-bool FAT32::readDirectory(ShortEntry* entry, Array<ShortEntry>& entries)
+bool FAT32::readDirectory(const ShortEntry& entry, Array<ShortEntry>& entries)
 {
 	GET_DEVICE(0);
 
 	// Start at `startCluster`. This will be updated as we traverse a cluster
 	// and do not (yet) find the matching entry.
-	uint32_t cluster = entry->cluster();
-	uint8_t	 buffer[8192];
+	uint32_t cluster = entry.cluster();
+	if (!cluster)
+	{
+		return false;
+	}
+	uint8_t buffer[8192];
 
 	while (cluster < FAT_END_OF_CLUSTER)
 	{
 		// Get the first sector of this cluster.
 		uint32_t firstSector = FAT32::getClusterSector(cluster);
+
+		if (!firstSector)
+		{
+			return false;
+		}
 
 		// Read each sector (16 total) of this cluster into `buffer` at the offset
 		// [n * BPS] where `n` is the current sector index and BPS is the bytes

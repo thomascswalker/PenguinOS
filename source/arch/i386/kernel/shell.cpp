@@ -173,51 +173,50 @@ void Shell::scroll()
 
 void Shell::input(char c)
 {
-	char* text = (char*)std::kmalloc(INPUT_MAX_SIZE + 1);
-	memset(text, 0, INPUT_MAX_SIZE + 1);
+	size_t size = INPUT_MAX_SIZE + 1;
+	String cmd(size);
 
-	g_inputBuffer[g_inputCursor] = createEntry(c, g_displayColor);
 	switch (c)
 	{
 		default:
-			if (g_inputCursor > INPUT_MAX_SIZE)
 			{
+				if (g_inputCursor > INPUT_MAX_SIZE)
+				{
+					return;
+				}
+				g_inputBuffer[g_inputCursor] = createEntry(c, g_displayColor);
+				g_inputCursor++;
+				break;
+			}
+		case '\b': // Backspace
+			{
+				if (g_inputCursor == 0)
+				{
+					g_inputBuffer[g_inputCursor] = TEXT_BLANK;
+					return;
+				}
+				g_inputBuffer[g_inputCursor] = TEXT_BLANK; // Erase current
+				g_inputCursor--;
+				g_inputBuffer[g_inputCursor] = TEXT_BLANK; // Erase previous
+				break;
+			}
+		case '\n': // Enter
+			{
+				if (g_inputCursor == 0)
+				{
+					return;
+				}
+
+				for (size_t i = 0; i < g_inputCursor; i++)
+				{
+					cmd[i] = g_inputBuffer[i];
+				}
+				cmd[g_inputCursor] = '\0';
+
+				CMD::processCmd(cmd);
+				clearInput();
 				return;
 			}
-			g_inputCursor++;
-			break;
-			// Backspace
-		case '\b':
-			if (g_inputCursor == 0)
-			{
-				g_inputBuffer[g_inputCursor] = TEXT_BLANK;
-				return;
-			}
-			g_inputBuffer[g_inputCursor] = TEXT_BLANK; // Erase current
-			g_inputCursor--;
-			g_inputBuffer[g_inputCursor] = TEXT_BLANK; // Erase previous
-			break;
-			// Enter
-		case '\n':
-			if (g_inputCursor == 0)
-			{
-				return;
-			}
-
-			// TODO: Process the actual text
-			for (uint32_t i = 0; i < g_inputCursor; i++)
-			{
-				text[i] = g_inputBuffer[i];
-			}
-			text[g_inputCursor] = '\0';
-			printf(">>> %s\n", text);
-			clearInput();
-
-			String		  cmd = String(text);
-			Array<String> args = cmd.split(' ');
-			CMD::processCmd(args);
-
-			return;
 	}
 	updateCursorPosition();
 }

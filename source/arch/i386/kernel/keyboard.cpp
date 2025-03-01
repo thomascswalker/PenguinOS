@@ -81,7 +81,7 @@ namespace Keyboard
 				}
 			case SC_ESC:
 				{
-					exit();
+					sysexit();
 				}
 			default:
 				return;
@@ -94,7 +94,7 @@ namespace Keyboard
 		{
 			case SC_ESC:
 				{
-					exit();
+					sysexit();
 					return;
 				}
 			case SC_SHIFTLEFT:

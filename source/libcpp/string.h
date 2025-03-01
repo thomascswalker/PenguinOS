@@ -30,33 +30,38 @@ public:
 	/* Constructors */
 
 	// Default constructor
-	BasicString() : m_size(0), m_capacity(1)
-	{
-		m_data = m_allocator.allocate(m_capacity);
-		m_data[0] = '\0';
-	}
+	BasicString() : m_size(0), m_capacity(1) { m_data = m_allocator.allocate(1); }
 	BasicString(const BasicString<T>& other)
 	{
 		m_size = other.m_size;
 		m_capacity = other.m_capacity;
 		m_data = m_allocator.allocate(m_size);
 		memcpy(m_data, other.m_data, m_size);
+		m_data[m_size] = '\0';
 	}
+	// Assignment constructor
 	BasicString<T>& operator=(const BasicString<T>& other)
 	{
 		if (this == &other)
 		{
 			return *this;
 		}
-		BasicString<T> tmp(other);
-		std::swap(m_data, tmp.m_data);
-		std::swap(m_size, tmp.m_size);
-		std::swap(m_capacity, tmp.m_capacity);
+		reserve(other.size());
+		memcpy(m_data, other.data(), other.size());
+		m_size = other.size();
+		m_data[m_size] = '\0';
 		return *this;
 	}
 	// Constructor from C-style string
 	BasicString(const char* str)
 	{
+		if (strlen(str) == 1)
+		{
+			m_size = 0;
+			m_data = nullptr;
+			m_capacity = 1;
+			return;
+		}
 		m_size = strlen(str);
 		reserve(m_size + 1);
 		m_data = m_allocator.allocate(m_size);
@@ -64,6 +69,23 @@ public:
 		{
 			m_data[i] = str[i];
 		}
+	}
+	BasicString(const T* str, SizeType count) : m_size(count), m_capacity(count + 1)
+	{
+		if (strlen(str) == 1)
+		{
+			m_size = 0;
+			m_data = nullptr;
+			m_capacity = 1;
+			return;
+		}
+		reserve(m_size + 1);
+		m_data = m_allocator.allocate(m_size);
+		for (SizeType i = 0; i < m_size; i++)
+		{
+			m_data[i] = str[i];
+		}
+		m_data[m_size] = '\0';
 	}
 	BasicString(SizeType size) : m_size(size), m_capacity(size + 1)
 	{
@@ -74,20 +96,9 @@ public:
 	{
 		m_data = m_allocator.allocate(size);
 		memset(m_data, c, strlen(m_data));
+		m_data[m_size] = '\0';
 	}
-	BasicString(const T* str, SizeType count) : m_size(count)
-	{
-		m_data = new T[count + 1];
-		memcpy(m_data, (T*)str, count);
-		m_data[count] = '\0';
-	}
-	~BasicString()
-	{
-		if (m_data)
-		{
-			m_allocator.deallocate(m_data, m_capacity);
-		}
-	}
+	~BasicString() { m_allocator.deallocate(m_data, m_capacity); }
 
 	/* Methods */
 
@@ -102,14 +113,35 @@ public:
 		}
 
 		T* newData = new T[newCapacity];
+
+		// Copy old data
 		if (m_data != nullptr)
 		{
 			memcpy(newData, m_data, m_size);
-			delete[] m_data;
+			m_allocator.deallocate(m_data, m_size);
 		}
 
 		m_data = newData;
 		m_capacity = newCapacity;
+	}
+	void erase(SizeType pos, SizeType count = npos)
+	{
+		SizeType offset = pos + count;
+		if (pos > m_size)
+		{
+			return;
+		}
+		if (count > m_size - pos || count == npos)
+		{
+			count = m_size - pos;
+		}
+
+		for (SizeType i = pos; i + count < m_size + 1; i++)
+		{
+			m_data[i] = m_data[i + count];
+		}
+		m_size -= count;
+		m_data[m_size] = '\0';
 	}
 	void append(T c)
 	{
@@ -120,6 +152,13 @@ public:
 		}
 		m_data[m_size] = c;
 		m_size++;
+	}
+	void append(const BasicString<T>& p)
+	{
+		for (T c : p)
+		{
+			append(c);
+		}
 	}
 	Array<BasicString<T>> split(T delimiter) const
 	{
@@ -143,10 +182,10 @@ public:
 		end = m_size;
 		tokens.add(substr(start, end - start));
 
-		for (auto& t : tokens)
-		{
-			t.m_data[t.m_size] = '\0';
-		}
+		// for (auto& t : tokens)
+		// {
+		// 	t.m_data[t.m_size] = '\0';
+		// }
 
 		return tokens;
 	}
@@ -185,7 +224,8 @@ public:
 	BasicString<T> substr(SizeType pos, SizeType count = BasicString<T>::npos) const
 	{
 		count = (count == npos || pos + count > m_size) ? m_size - pos : count;
-		return BasicString<T>(m_data + pos, count);
+		BasicString<T> result(m_data + pos, count);
+		return result;
 	}
 
 	SizeType find(T c, SizeType start = 0) const
@@ -223,6 +263,16 @@ public:
 
 		return m_data[0] == c ? 0 : npos;
 	}
+
+	bool startsWith(char c) const { return m_data[0] == c; }
+	bool endsWith(char c) const { return m_data[m_size - 1] == c; }
+	bool startsWith(const char* str) const { return strncmp(m_data, str, strlen(str)); }
+	bool endsWith(const char* str) const
+	{
+		size_t i = m_size - strlen(str);
+		return strncmp(m_data + i, str, strlen(str));
+	}
+
 	bool empty() const { return m_size != 0; }
 	void clear()
 	{
@@ -246,7 +296,12 @@ public:
 		trim('\t');
 	}
 
-	T* cstr() const { return m_data; }
+	T* cstr() const
+	{
+		T* result = (T*)std::kmalloc(m_size);
+		result[m_size + 1] = '\0';
+		return result;
+	}
 
 	IterType	  begin() { return IterType(m_data); }
 	ConstIterType begin() const { return ConstIterType(m_data); }
@@ -288,38 +343,12 @@ public:
 		*this = *this + other;
 		return *this;
 	}
-	bool operator==(const BasicString<T>& other)
-	{
-		if (m_size != other.size())
-		{
-			return false;
-		}
-		for (SizeType i = 0; i < m_size; i++)
-		{
-			if (m_data[i] != other[i])
-			{
-				return false;
-			}
-		}
-		return true;
-	}
-	bool operator==(const T* other)
-	{
-		if (m_size != strlen(other))
-		{
-			return false;
-		}
-		for (SizeType i = 0; i < m_size; i++)
-		{
-			if (m_data[i] != other[i])
-			{
-				return false;
-			}
-		}
-		return true;
-	}
-	bool operator!=(const T* other) { return !(*this == other); }
-	bool operator!=(const BasicString<T>& other) { return !(*this == other); }
+	bool operator==(const BasicString<T>& other) const { return strcmp(m_data, other.data()); }
+	bool operator==(T* other) const { return strcmp(m_data, other); }
+	bool operator==(const T* other) const { return strcmp(m_data, other); }
+	bool operator!=(T* other) const { return !(*this == other); }
+	bool operator!=(const T* other) const { return !(*this == other); }
+	bool operator!=(const BasicString<T>& other) const { return !(*this == other); }
 	operator T*() const { return m_data; }
 	T&		 operator[](SizeType index) { return m_data[index]; }
 	const T& operator[](SizeType index) const { return m_data[index]; }
