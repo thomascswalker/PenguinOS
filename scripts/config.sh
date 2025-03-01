@@ -14,7 +14,7 @@ export SOURCE_DIR="./source"
 export BUILD_DIR="./build"
 export BOOT_DIR="$BUILD_DIR/boot"
 
-export CFLAGS="-O0 -g -ffreestanding -Wall -Wextra"
+export CFLAGS="-O0 -g -ffreestanding -Wall -Wextra -fno-omit-frame-pointer"
 export ASFLAGS="-felf32 -g"
 
 export KERNEL="PengOS.bin"

@@ -4,16 +4,34 @@
 #include <memory.h>
 #include <stdio.h>
 
-Pair<String, String> FileSystem::splitExt(const Path& path)
+Pair<String, String> FileSystem::splitExt(const String& path)
 {
-	String p = path.string();
-	size_t pos = p.findLast('.');
-
-	if (pos == String::npos || pos == p.size() - 1)
+	size_t pos = path.findLast('.');
+	if (pos == String::npos || pos == path.size() - 1)
 	{
-		return { p, "" };
+		return { path, "" };
 	}
-	return { p.substr(0, pos), p.substr(pos + 1) };
+	return { path.substr(0, pos), path.substr(pos + 1) };
+}
+
+String FileSystem::join(const Array<String>& components)
+{
+	String path("/");
+	for (size_t i = 0; i < components.size(); i++)
+	{
+		String comp = components[i];
+		if (comp.startsWith('/'))
+		{
+			comp.erase(0, 1);
+		}
+		path.append(comp);
+		if (i < components.size() - 1)
+		{
+			path.append('/');
+		}
+	}
+	path[path.size()] = 0;
+	return path;
 }
 
 Path Path::parent() { return Path(); }
@@ -38,11 +56,8 @@ void FileSystem::init()
 	FAT32::init();
 }
 
-bool FileSystem::openFile(const Path& path, File* file)
-{
-	return FAT32::openFile(path.string(), file);
-}
+bool FileSystem::openFile(const String& path, File* file) { return FAT32::openFile(path, file); }
 
-bool FileSystem::isFile(const Path& path) { return path.string().split('.').size(); }
+bool FileSystem::isFile(const String& path) { return path.split('.').size(); }
 
-bool FileSystem::isDirectory(const Path& path) { return !path.string().split('.').size(); }
+bool FileSystem::isDirectory(const String& path) { return !path.split('.').size(); }

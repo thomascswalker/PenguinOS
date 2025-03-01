@@ -189,8 +189,30 @@ namespace IDT
 	void dumpRegisters(Registers* reg)
 	{
 		warning("Dumping registers:");
-		warning("edi: %d, esi: %d, ebp: %d, esp: %d, ebx: %d, edx: %d, ecx: %d, eax: %d", reg->edi,
+		warning("edi: %x, esi: %x, ebp: %x, esp: %x, ebx: %x, edx: %x, ecx: %x, eax: %x", reg->edi,
 			reg->esi, reg->ebp, reg->esp, reg->ebx, reg->edx, reg->ecx, reg->eax);
 		warning("int_no: %d, err_code: %d", reg->int_no, reg->err_code);
+		warning("Instruction Pointer (eip): %x", reg->eip);
+
+		// Obtain the current frame pointer
+		void** frame;
+		asm("mov %%ebp, %0" : "=r"(frame));
+
+		// Walk the frame pointer chain.
+		while (frame)
+		{
+			// The return address is stored right above the saved frame pointer.
+			void* return_addr = *(frame + 1);
+			if (!return_addr)
+			{
+				break;
+			}
+
+			// Print the return address; replace kprintf with your debug printing function.
+			printf("Return address: %x\n", return_addr);
+
+			// Move to the previous frame pointer.
+			frame = (void**)*frame;
+		}
 	}
 } // namespace IDT

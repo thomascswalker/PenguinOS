@@ -97,7 +97,7 @@ namespace FAT32
 	bool openFile(const String& filename, void* file);
 
 	String toShortName(const String& longName);
-	String sanitize(const String& longName);
+	char*  sanitize(const String& component, size_t count);
 	bool   isValidChar(char c);
 
 	bool findEntry(uint32_t startCluster, const String& name, ShortEntry* entry);
@@ -110,6 +110,6 @@ namespace FAT32
 	uint32_t getSize();
 
 	ShortEntry* getRootEntry();
-	bool		readDirectory(ShortEntry* entry, Array<ShortEntry>& entries);
+	bool		readDirectory(const ShortEntry& entry, Array<ShortEntry>& entries);
 
 } // namespace FAT32

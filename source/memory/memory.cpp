@@ -226,7 +226,7 @@ void Memory::removeBlock(Block* block, uint32_t order)
 	}
 }
 
-void* std::kmalloc(uint32_t size)
+void* std::kmalloc(size_t size)
 {
 	if (size == 0)
 	{
@@ -326,6 +326,50 @@ void std::kfree(void* ptr)
 	}
 
 	Memory::addBlock(block);
+}
+
+void* std::krealloc(void* ptr, size_t newSize)
+{
+	if (ptr == nullptr)
+	{
+		return kmalloc(newSize);
+	}
+
+	if (newSize == 0)
+	{
+		kfree(ptr);
+		return nullptr;
+	}
+
+	Block* header = (Block*)((char*)ptr - sizeof(Block));
+
+	size_t currentTotalSize = bucketSizes[header->order];
+	size_t currentDataSize = currentTotalSize - sizeof(Block);
+
+	// New size is smaller than currently-allocated size,
+	// we can just return the existing pointer
+	if (newSize <= currentDataSize)
+	{
+		return ptr;
+	}
+
+	void* newPtr = kmalloc(newSize);
+	// Out of memory
+	if (newPtr == nullptr)
+	{
+		return nullptr;
+	}
+
+	size_t copySize = std::min(currentDataSize, newSize);
+
+	// Copy available data
+	char* src = (char*)ptr;
+	char* dst = (char*)newPtr;
+	memcpy(dst, src, copySize);
+
+	kfree(ptr);
+
+	return newPtr;
 }
 
 void* operator new(size_t size)

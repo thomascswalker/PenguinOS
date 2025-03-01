@@ -98,7 +98,7 @@ uint32_t sprintf(char* stream, const char* format, va_list args)
 					{
 						Shell::setForeColor(VGA_COLOR_RED);
 						print("Invalid specifier!");
-						halt();
+						syshalt();
 					}
 			}
 		}
@@ -203,5 +203,5 @@ void panic(const char* format, ...)
 	println(buffer);
 	println("\nSYSTEM HALTED\n");
 	va_end(args);
-	halt();
+	syshalt();
 }
