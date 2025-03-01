@@ -149,62 +149,59 @@ void CMD::pwd() { printf("pwd: %s\n", g_cwd.path.data()); }
 
 void CMD::cd(const String& path)
 {
-	ShortEntry entry;
+	FATFile file;
 
-	if (!findEntry(g_cwd.entry.cluster(), path, &entry))
+	if (!findEntry(g_cwd.entry.cluster(), path, &file))
 	{
 		warning("cd: %s: No such directory", path.data());
 		return;
 	}
 
-	if (!entry.isValid())
+	if (!file.entry.isValid())
 	{
-		warning("cd: Entry found is invalid: %s, %x", entry.name, entry.attribute);
+		warning("cd: Entry found is invalid: %s, %x", file.name.data(), file.entry.attribute);
 		return;
 	}
 
-	if (!Bitmask::test((uint8_t)entry.attribute, (uint8_t)Attribute::Directory))
+	if (!Bitmask::test((uint8_t)file.entry.attribute, (uint8_t)Attribute::Directory))
 	{
 		warning("cd: %s: Not a directory", path.data());
 		return;
 	}
 
-	memcpy(&g_cwd.entry, &entry, sizeof(ShortEntry));
+	memcpy(&g_cwd.entry, &file.entry, sizeof(ShortEntry));
 }
 
 void CMD::ls()
 {
-	Array<ShortEntry> entries;
-	if (!readDirectory(g_cwd.entry, entries))
+	Array<FATFile> files;
+	if (!readDirectory(g_cwd.entry, files))
 	{
 		warning("ls: Invalid current directory: %x, Attr:%x, Clus:%d", g_cwd.entry,
 			g_cwd.entry.attribute, g_cwd.entry.cluster());
 		return;
 	}
 
-	debug("Entry count: %d", entries.size());
-	for (const auto& entry : entries)
+	debug("Entry count: %d", files.size());
+	for (const auto& file : files)
 	{
-		if (!entry.isValid())
+		if (!file.entry.isValid())
 		{
 			continue;
 		}
-		char name[9];
-		memcpy(name, (void*)entry.name, 8);
-		name[8] = 0;
-		switch (entry.attribute)
+		switch (file.entry.attribute)
 		{
 			case Attribute::Directory: // Folders
 				{
 					Shell::setForeColor(VGA_COLOR_CYAN);
-					printf(" %s\n", name);
+					printf(" %s\n", file.name.data());
 					Shell::resetColor();
 					break;
 				}
 			default: // Files and other types
 				{
 					Shell::setForeColor(VGA_COLOR_GREEN);
-					printf(" %s\n", name);
+					printf(" %s\n", file.name.data());
 					Shell::resetColor();
 					break;
 				}

@@ -92,6 +92,12 @@ namespace FAT32
 
 	} __attribute__((packed));
 
+	struct FATFile
+	{
+		String	   name;
+		ShortEntry entry;
+	};
+
 	void init();
 
 	bool openFile(const String& filename, void* file);
@@ -100,8 +106,8 @@ namespace FAT32
 	char*  sanitize(const String& component, size_t count);
 	bool   isValidChar(char c);
 
-	bool findEntry(uint32_t startCluster, const String& name, ShortEntry* entry);
-	bool isLongEntry(uint8_t* buffer);
+	bool findEntry(uint32_t startCluster, const String& name, FATFile* file);
+	bool isLongEntry(void* buffer);
 	void parseLongEntry(LongEntry* entry, uint32_t count, char* filename);
 
 	uint32_t getNextCluster(uint32_t cluster);
@@ -110,6 +116,6 @@ namespace FAT32
 	uint32_t getSize();
 
 	ShortEntry* getRootEntry();
-	bool		readDirectory(const ShortEntry& entry, Array<ShortEntry>& entries);
+	bool		readDirectory(const ShortEntry& entry, Array<FATFile>& files);
 
 } // namespace FAT32
