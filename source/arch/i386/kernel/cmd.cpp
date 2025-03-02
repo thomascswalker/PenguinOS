@@ -151,7 +151,7 @@ void CMD::cd(const String& path)
 {
 	FATFile file;
 
-	if (!findEntry(g_cwd.entry.cluster(), path, &file))
+	if (!findFile(g_cwd.entry.cluster(), path, &file))
 	{
 		warning("cd: %s: No such directory", path.data());
 		return;

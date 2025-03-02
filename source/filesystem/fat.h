@@ -103,10 +103,11 @@ namespace FAT32
 	bool openFile(const String& filename, void* file);
 
 	String toShortName(const String& longName);
+	String toLongName(char* shortName);
 	char*  sanitize(const String& component, size_t count);
 	bool   isValidChar(char c);
 
-	bool findEntry(uint32_t startCluster, const String& name, FATFile* file);
+	bool findFile(uint32_t startCluster, const String& name, FATFile* file);
 	bool isLongEntry(void* buffer);
 	void parseLongEntry(LongEntry* entry, uint32_t count, char* filename);
 
