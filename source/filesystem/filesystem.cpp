@@ -34,6 +34,8 @@ String FileSystem::join(const Array<String>& components)
 	return path;
 }
 
+String FileSystem::join(const String& str0, const String& str1) { return str0 + "/" + str1; }
+
 Path Path::parent() { return Path(); }
 
 String Path::filename()

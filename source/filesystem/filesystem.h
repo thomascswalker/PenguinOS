@@ -50,6 +50,8 @@ namespace FileSystem
 	bool isDirectory(const String& path);
 
 	Pair<String, String> splitExt(const String& path);
-	String				 join(const Array<String>& components);
+
+	String join(const Array<String>& components);
+	String join(const String& str0, const String& str1);
 
 } // namespace FileSystem

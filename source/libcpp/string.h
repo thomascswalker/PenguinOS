@@ -3,8 +3,10 @@
 #include <array.h>
 #include <assert.h>
 #include <cstring.h>
+#include <idt.h>
 #include <math.h>
 #include <memory.h>
+#include <stdio.h>
 
 template <typename T>
 class BasicString
@@ -70,7 +72,7 @@ public:
 			m_data[i] = str[i];
 		}
 	}
-	BasicString(const T* str, SizeType count) : m_size(count), m_capacity(count + 1)
+	BasicString(const T* str, SizeType count) : m_capacity(count + 1)
 	{
 		if (strlen(str) == 1)
 		{
@@ -79,6 +81,8 @@ public:
 			m_capacity = 1;
 			return;
 		}
+		SizeType newSize = std::min(strlen(str), count);
+		m_size = newSize;
 		reserve(m_size + 1);
 		m_data = m_allocator.allocate(m_size);
 		for (SizeType i = 0; i < m_size; i++)
@@ -98,7 +102,11 @@ public:
 		memset(m_data, c, strlen(m_data));
 		m_data[m_size] = '\0';
 	}
-	~BasicString() { m_allocator.deallocate(m_data, m_capacity); }
+	~BasicString()
+	{
+		memset(m_data, 0, m_size);
+		m_allocator.deallocate(m_data, m_capacity);
+	}
 
 	/* Methods */
 
@@ -181,11 +189,6 @@ public:
 
 		end = m_size;
 		tokens.add(substr(start, end - start));
-
-		// for (auto& t : tokens)
-		// {
-		// 	t.m_data[t.m_size] = '\0';
-		// }
 
 		return tokens;
 	}
@@ -319,6 +322,7 @@ public:
 		temp[temp.m_size] = '\0';
 		return temp;
 	}
+	BasicString<T>	operator+(const BasicString<T>& other) const { return *this + other; }
 	BasicString<T>& operator+=(const BasicString<T>& other)
 	{
 		for (T c : other)
@@ -338,6 +342,7 @@ public:
 		temp[temp.m_size] = '\0';
 		return temp;
 	}
+	BasicString<T>	operator+(const T* other) const { return *this + other; }
 	BasicString<T>& operator+=(const T* other)
 	{
 		*this = *this + other;

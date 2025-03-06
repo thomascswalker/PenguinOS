@@ -1,4 +1,5 @@
 #include <cstring.h>
+#include <math.h>
 #include <memory.h>
 
 // 	Copies one buffer to another.
@@ -81,6 +82,18 @@ bool strncmp(const char* lhs, const char* rhs, size_t count)
 	}
 
 	return true;
+}
+
+EXTERN bool strccmp(const char* lhs, const char* rhs, char c)
+{
+	char*  ltok = strtok(const_cast<char*>(lhs), c);
+	size_t lsize = ltok - lhs;
+	char*  rtok = strtok(const_cast<char*>(rhs), c);
+	size_t rsize = rtok - rhs;
+
+	size_t toki = std::min(lsize, rsize);
+
+	return strncmp(lhs, rhs, toki);
 }
 
 // Copies one string to another

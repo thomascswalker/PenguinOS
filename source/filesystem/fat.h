@@ -107,7 +107,7 @@ namespace FAT32
 	char*  sanitize(const String& component, size_t count);
 	bool   isValidChar(char c);
 
-	bool findFile(uint32_t startCluster, const String& name, FATFile* file);
+	bool findFile(ShortEntry* current, const String& name, FATFile* file);
 	bool isLongEntry(void* buffer);
 	void parseLongEntry(LongEntry* entry, uint32_t count, char* filename);
 

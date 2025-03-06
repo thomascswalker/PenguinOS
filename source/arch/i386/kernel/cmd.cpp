@@ -2,8 +2,6 @@
 #include <shell.h>
 #include <sys.h>
 
-using namespace FAT32;
-
 #define CHECK_ARGS(e, n)                                                                        \
 	if (args.size() != n)                                                                       \
 	{                                                                                           \
@@ -33,24 +31,26 @@ void CMD::init()
 	g_cwd.path = "/";
 
 	// Start at root entry
-	g_cwd.entry = *getRootEntry();
+	g_cwd.entry = *FAT32::getRootEntry();
 }
 
 void CMD::processCmd(const String& cmd)
 {
-	// Print the entire command to the terminal
-	printf(">>> %s\n", cmd.data());
-
 	// Extract all of the arguments from the command line string
 	Array<String> args = parseCmdArgs(cmd);
-	debug("Arg count: %d", args.size());
 	if (args.size() == 0)
 	{
 		return;
 	}
 
 	// Check if the command is valid
-	String exe = args[0];
+	String exe = *args.at(0);
+	for (int i = 0; i < exe.size(); i++)
+	{
+		printf("%d|", exe[i]);
+	}
+
+	debug("%d => %s", args.size(), exe.data());
 	if (!isValidExecutable(exe))
 	{
 		Shell::setForeColor(VGA_COLOR_LIGHT_RED);
@@ -117,7 +117,7 @@ bool CMD::isValidExecutable(const String& exe)
 	return false;
 }
 
-const char* CMD::getCWD() { return g_cwd.path; }
+String CMD::getCWD() { return g_cwd.path; }
 
 void CMD::exit() { sysexit(); }
 
@@ -149,9 +149,9 @@ void CMD::pwd() { printf("pwd: %s\n", g_cwd.path.data()); }
 
 void CMD::cd(const String& path)
 {
-	FATFile file;
+	FAT32::FATFile file;
 
-	if (!findFile(g_cwd.entry.cluster(), path, &file))
+	if (!findFile(&g_cwd.entry, path, &file))
 	{
 		warning("cd: %s: No such directory", path.data());
 		return;
@@ -163,18 +163,18 @@ void CMD::cd(const String& path)
 		return;
 	}
 
-	if (!Bitmask::test((uint8_t)file.entry.attribute, (uint8_t)Attribute::Directory))
+	if (!Bitmask::test((uint8_t)file.entry.attribute, (uint8_t)FAT32::Attribute::Directory))
 	{
 		warning("cd: %s: Not a directory", path.data());
 		return;
 	}
 
-	memcpy(&g_cwd.entry, &file.entry, sizeof(ShortEntry));
+	memcpy(&g_cwd.entry, &file.entry, sizeof(FAT32::ShortEntry));
 }
 
 void CMD::ls()
 {
-	Array<FATFile> files;
+	Array<FAT32::FATFile> files;
 	if (!readDirectory(g_cwd.entry, files))
 	{
 		warning("ls: Invalid current directory: %x, Attr:%x, Clus:%d", g_cwd.entry,
@@ -182,7 +182,6 @@ void CMD::ls()
 		return;
 	}
 
-	debug("Entry count: %d", files.size());
 	for (const auto& file : files)
 	{
 		if (!file.entry.isValid())
@@ -191,17 +190,17 @@ void CMD::ls()
 		}
 		switch (file.entry.attribute)
 		{
-			case Attribute::Directory: // Folders
+			case FAT32::Attribute::Directory: // Folders
 				{
 					Shell::setForeColor(VGA_COLOR_CYAN);
-					printf(" %s\n", file.name.data());
+					printf(" - %s\n", file.name.data());
 					Shell::resetColor();
 					break;
 				}
 			default: // Files and other types
 				{
 					Shell::setForeColor(VGA_COLOR_GREEN);
-					printf(" %s\n", file.name.data());
+					printf(" - %s\n", file.name.data());
 					Shell::resetColor();
 					break;
 				}

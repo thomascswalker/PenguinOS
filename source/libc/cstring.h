@@ -14,6 +14,7 @@ EXTERN size_t strlen(const char* string);
 // Compares two strings.
 EXTERN bool strcmp(const char* lhs, const char* rhs);
 EXTERN bool strncmp(const char* lhs, const char* rhs, size_t count);
+EXTERN bool strccmp(const char* lhs, const char* rhs, char c);
 // Copies one string to another
 EXTERN char* strcpy(char* dest, const char* source);
 // Appends one string to another

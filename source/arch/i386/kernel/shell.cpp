@@ -94,7 +94,7 @@ void Shell::clearInput()
 {
 	wmemset(g_inputBuffer, TEXT_BLANK, VGA_WIDTH * (sizeof(uint16_t)));
 	g_inputCursor = 0;
-	updateCursorPosition();
+	setCursorPosition(0);
 }
 
 // Sets the current color to write with.
@@ -174,7 +174,6 @@ void Shell::scroll()
 void Shell::input(char c)
 {
 	size_t size = INPUT_MAX_SIZE + 1;
-	String cmd(size);
 
 	switch (c)
 	{
@@ -207,14 +206,22 @@ void Shell::input(char c)
 					return;
 				}
 
+				String cmd;
 				for (size_t i = 0; i < g_inputCursor; i++)
 				{
-					cmd[i] = g_inputBuffer[i];
+					cmd.append(g_inputBuffer[i]);
 				}
 				cmd[g_inputCursor] = '\0';
+				g_inputBuffer[INPUT_MAX_SIZE] = 0;
+				clearInput();
+				debugx(&cmd);
+
+				// Print the entire command to the terminal
+				debugc(cmd[0]);
+				debugc(cmd[1]);
+				printf(">>> %s\n", cmd.data());
 
 				CMD::processCmd(cmd);
-				clearInput();
 				return;
 			}
 	}
