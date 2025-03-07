@@ -69,7 +69,7 @@ static Block* freeList[BUCKET_COUNT];
 // 0x110000 is the (likely) location in memory.
 static uint32_t pageDirectory[1024] __attribute__((aligned(PAGE_SIZE)));
 
-void Memory::init(uint32_t start, uint32_t size)
+void Memory::init(uint64_t start, uint32_t size)
 {
 	// Zero out all entries in the page directory.
 	memset(pageDirectory, 0, 1024 * sizeof(uint32_t));
@@ -150,7 +150,7 @@ void Memory::identityMapTable(uint32_t index)
 	}
 }
 
-uint32_t* Memory::getTableFromAddress(uint32_t address)
+uint32_t* Memory::getTableFromAddress(uint64_t address)
 {
 	return (uint32_t*)(pageDirectory[PD_INDEX(address)] & PAGE_MASK);
 }
@@ -162,7 +162,7 @@ uint32_t* Memory::getTableFromIndex(uint32_t index)
 
 void Memory::enablePaging()
 {
-	uint32_t cr0;
+	uint64_t cr0;
 	asm("mov %%cr0, %0" : "=r"(cr0));
 	cr0 |= 0x80000001; // Paging + Protected Mode
 	asm("mov %0, %%cr0" ::"r"(cr0));
@@ -170,12 +170,12 @@ void Memory::enablePaging()
 
 void Memory::setPageDirectory(uint32_t* directory)
 {
-	asm("mov %0, %%cr3" ::"r"((uint32_t)directory));
+	asm("mov %0, %%cr3" ::"r"((uint64_t)directory));
 }
 
 void Memory::setLargePaging(bool state)
 {
-	uint32_t cr4;
+	uint64_t cr4;
 	asm("mov %%cr4, %0" : "=r"(cr4));
 	if (state)
 	{

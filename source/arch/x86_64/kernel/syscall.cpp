@@ -41,34 +41,32 @@ void sysCallDispatcher(Registers regs)
 	uint32_t count = sizeof(syscalls) / sizeof(SysCallFunc);
 
 	// System call code is stored in EAX
-	if (regs.eax >= count)
+	if (regs.rax >= count)
 	{
-		panic("Invalid syscall %d.", regs.eax);
+		panic("Invalid syscall %d.", regs.rax);
 		return;
 	}
 
 	// Arguments for the respective system call function are
 	// in order from ebx, ecx, edx, esi, edi.
-	SysCallFunc syscall = syscalls[regs.eax];
+	SysCallFunc syscall = syscalls[regs.rax];
 	uint32_t	ret;
-	asm("push %1\n"
-		"push %2\n"
-		"push %3\n"
-		"push %4\n"
-		"push %5\n"
-
-		"call %6\n"
-
-		"pop %%eax\n"
-		"pop %%ebx\n"
-		"pop %%ecx\n"
-		"pop %%edx\n"
-		"pop %%esi\n"
-		"pop %%edi\n"
-
-		"iret\n"
-		: "=a"(ret)
-		: "r"(regs.edi), "r"(regs.esi), "r"(regs.edx), "r"(regs.ecx), "r"(regs.ebx), "r"(syscall));
+	asm("push %%rdi\n"		 // Save rdi
+		"push %%rsi\n"		 // Save rsi
+		"push %%rdx\n"		 // Save rdx
+		"push %%rcx\n"		 // Save rcx
+		"push %%rbx\n"		 // Save rbx
+		"call *%[syscall]\n" // Call the syscall function pointer
+		"pop %%rbx\n"		 // Restore rbx
+		"pop %%rcx\n"		 // Restore rcx
+		"pop %%rdx\n"		 // Restore rdx
+		"pop %%rsi\n"		 // Restore rsi
+		"pop %%rdi\n"		 // Restore rdi
+		"iretq\n"			 // Return from interrupt in long mode
+		: "=a"(ret)			 // Return value in RAX
+		: [syscall] "r"(syscall), "D"(regs.rdi), "S"(regs.rsi), "d"(regs.rdx), "c"(regs.rcx),
+		"b"(regs.rbx)
+		: "memory");
 }
 
 int32_t sysFork(SysCallRegisters regs) { return 0; }

@@ -6,10 +6,6 @@
 #define __i386__
 #endif
 
-#if !defined(__i386__)
-#error "This needs to be compiled with ix86-elf."
-#endif
-
 #include <cstring.h>
 #include <sys.h>
 

@@ -154,7 +154,7 @@ struct MultibootInfo
 
 	/* Boot-Module list */
 	uint32_t moduleCount;
-	uint32_t moduleAddress;
+	uint64_t moduleAddress;
 
 	union
 	{
@@ -164,7 +164,7 @@ struct MultibootInfo
 
 	/* Memory Mapping buffer */
 	uint32_t mmapLength;
-	uint32_t mmapAddress;
+	uint64_t mmapAddress;
 
 	/* Drive Info buffer */
 	uint32_t drivesLength;
@@ -279,12 +279,12 @@ namespace Multiboot
 	static uint8_t part2;
 	static uint8_t part3;
 
-	static void init(MultibootInfo* info, uint32_t* address, uint32_t* size)
+	static void init(MultibootInfo* info, uint64_t* address, uint32_t* size)
 	{
 
 		if ((info->flags & MULTIBOOT_INFO_MODS) == MULTIBOOT_INFO_MODS)
 		{
-			uint32_t mod1 = *(uint32_t*)(info->moduleAddress + 4);
+			uint64_t mod1 = *(uint64_t*)(info->moduleAddress + 4);
 			*address = (mod1 + 0xFFF) & ~0xFFF;
 			*size = (info->memUpper * 1024) - *address;
 			return;

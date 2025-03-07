@@ -14,14 +14,14 @@ git clone git://gcc.gnu.org/git/gcc.git
 
 # Environment variables
 export PREFIX="$HOME/opt/cross_compiler"
-export TARGET=i686-elf
+export TARGET=x86_64-elf # i686-elf
 export PATH="$PREFIX/bin:$PATH"
 
 # Build binutils
 cd $HOME/source
 mkdir binutils-build
 cd binutils-build
-../binutils-gdb/configure --target=$TARGET --prefix="$PREFIX" --with-sysroot --disable-nls --disable-werror
+../binutils-gdb/configure --target=$TARGET --with-sysroot --disable-nls --disable-werror
 make
 make install
 
@@ -40,4 +40,5 @@ make install-target-libstdc++-v3
 # Add build directory to profile
 line="export PATH=\"$HOME/opt/cross_compiler/bin:$PATH\""
 profile="~/.profile"
+touch $profile
 grep -qF --"$line" "$profile" || echo "$line" >> "$profile"

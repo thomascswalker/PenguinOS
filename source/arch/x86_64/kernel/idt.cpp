@@ -1,0 +1,199 @@
+#include <idt.h>
+#include <pic.h>
+#include <stdio.h>
+#include <syscall.h>
+
+#define PAGE_FAULT_MESSAGE  \
+	"Page fault. Code %x\n" \
+	"\t\t  Attempted to access %x which caused a %s violation."
+#define GENERAL_PROTECTION_FAULT_MESSAGE  \
+	"General protection fault. Code %x\n" \
+	"\t\t  Attempted to access %x which caused a violation."
+
+static const char* idt_messages[] = {
+	"Division by zero",				 // 0
+	"Single-step Interrupt",		 // 1
+	"NMI",							 // 2
+	"Breakpoint",					 // 3
+	"Overflow",						 // 4
+	"Bound Range Exceeded",			 // 5
+	"Invalid Opcode",				 // 6
+	"Coprocessor not available",	 // 7
+	"Double fault",					 // 8
+	"Coprocessor segment overrun",	 // 9
+	"Invalid task state segment",	 // 10
+	"Segment not present",			 // 11
+	"Stack segment fault",			 // 12
+	"General protection fault",		 // 13
+	"Page fault",					 // 14
+	"Unknown",						 // 15
+	"x87 floating point exception",	 // 16
+	"Alignment check",				 // 17
+	"Machine check",				 // 18
+	"SIMD floating point exception", // 19
+	"Virtualization exception",		 // 20
+	"Control protection exception",	 // 21
+	"Reserved",						 // 22
+	"Reserved",						 // 23
+	"Reserved",						 // 24
+	"Reserved",						 // 25
+	"Reserved",						 // 26
+	"Reserved",						 // 27
+	"Reserved",						 // 28
+	"Reserved",						 // 29
+	"Reserved",						 // 30
+	"Reserved",						 // 31
+	"Timer",						 // 32
+	"Keyboard",						 // 33
+};
+
+namespace IDT
+{
+
+	IDTEntry entries[IDT_ENTRY_COUNT];
+	IDTPtr	 ptr;
+	Handler	 handlers[IDT_ENTRY_COUNT];
+
+	void init()
+	{
+		// Setup PIC
+		PIC::remap();
+
+		ptr.limit = (sizeof(IDTEntry) * IDT_ENTRY_COUNT) - 1;
+		ptr.base = (uint64_t)&entries;
+
+		memset(&entries, 0, sizeof(IDTEntry) * IDT_ENTRY_COUNT);
+
+		setGate(ISR0, (uint64_t)isr0, 0x08, 0x8E);
+		setGate(ISR1, (uint64_t)isr1, 0x08, 0x8E);
+		setGate(ISR2, (uint64_t)isr2, 0x08, 0x8E);
+		setGate(ISR3, (uint64_t)isr3, 0x08, 0x8E);
+		setGate(ISR4, (uint64_t)isr4, 0x08, 0x8E);
+		setGate(ISR5, (uint64_t)isr5, 0x08, 0x8E);
+		setGate(ISR6, (uint64_t)isr6, 0x08, 0x8E);
+		setGate(ISR7, (uint64_t)isr7, 0x08, 0x8E);
+		setGate(ISR8, (uint64_t)isr8, 0x08, 0x8E);
+		setGate(ISR9, (uint64_t)isr9, 0x08, 0x8E);
+		setGate(ISR10, (uint64_t)isr10, 0x08, 0x8E);
+		setGate(ISR11, (uint64_t)isr11, 0x08, 0x8E);
+		setGate(ISR12, (uint64_t)isr12, 0x08, 0x8E);
+		setGate(ISR13, (uint64_t)isr13, 0x08, 0x8E);
+		setGate(ISR14, (uint64_t)isr14, 0x08, 0x8E);
+		setGate(ISR15, (uint64_t)isr15, 0x08, 0x8E);
+		setGate(ISR16, (uint64_t)isr16, 0x08, 0x8E);
+		setGate(ISR17, (uint64_t)isr17, 0x08, 0x8E);
+		setGate(ISR18, (uint64_t)isr18, 0x08, 0x8E);
+		setGate(ISR19, (uint64_t)isr19, 0x08, 0x8E);
+		setGate(ISR20, (uint64_t)isr20, 0x08, 0x8E);
+		setGate(ISR21, (uint64_t)isr21, 0x08, 0x8E);
+		setGate(ISR22, (uint64_t)isr22, 0x08, 0x8E);
+		setGate(ISR23, (uint64_t)isr23, 0x08, 0x8E);
+		setGate(ISR24, (uint64_t)isr24, 0x08, 0x8E);
+		setGate(ISR25, (uint64_t)isr25, 0x08, 0x8E);
+		setGate(ISR26, (uint64_t)isr26, 0x08, 0x8E);
+		setGate(ISR27, (uint64_t)isr27, 0x08, 0x8E);
+		setGate(ISR28, (uint64_t)isr28, 0x08, 0x8E);
+		setGate(ISR29, (uint64_t)isr29, 0x08, 0x8E);
+		setGate(ISR30, (uint64_t)isr30, 0x08, 0x8E);
+		setGate(ISR31, (uint64_t)isr31, 0x08, 0x8E);
+
+		setGate(ISR128, (uint64_t)isr128, 0x08, 0x8E);
+
+		setGate(IRQ0, (uint64_t)irq0, 0x08, 0x8E);
+		setGate(IRQ1, (uint64_t)irq1, 0x08, 0x8E);
+		setGate(IRQ2, (uint64_t)irq2, 0x08, 0x8E);
+		setGate(IRQ3, (uint64_t)irq3, 0x08, 0x8E);
+		setGate(IRQ4, (uint64_t)irq4, 0x08, 0x8E);
+		setGate(IRQ5, (uint64_t)irq5, 0x08, 0x8E);
+		setGate(IRQ6, (uint64_t)irq6, 0x08, 0x8E);
+		setGate(IRQ7, (uint64_t)irq7, 0x08, 0x8E);
+		setGate(IRQ8, (uint64_t)irq8, 0x08, 0x8E);
+		setGate(IRQ9, (uint64_t)irq9, 0x08, 0x8E);
+		setGate(IRQ10, (uint64_t)irq10, 0x08, 0x8E);
+		setGate(IRQ11, (uint64_t)irq11, 0x08, 0x8E);
+		setGate(IRQ12, (uint64_t)irq12, 0x08, 0x8E);
+		setGate(IRQ13, (uint64_t)irq13, 0x08, 0x8E);
+		setGate(IRQ14, (uint64_t)irq14, 0x08, 0x8E);
+		setGate(IRQ15, (uint64_t)irq15, 0x08, 0x8E);
+
+		loadIDT((uint64_t)&ptr);
+	}
+
+	void setGate(uint8_t num, uint64_t base, uint16_t sel, uint8_t flags, uint8_t ist)
+	{
+		IDTEntry* entry = &entries[num];
+		entry->base_low = base & 0xFFFF; // Lower 16 bits.
+		entry->sel = sel;				 // Kernel segment selector.
+		entry->ist = ist & 0x7;			 // Only lower 3 bits are used.
+		entry->type_attr = flags;		 // Set type and attributes (e.g. present, DPL, gate type).
+		entry->base_mid = (base >> 16) & 0xFFFF;	  // Middle 16 bits.
+		entry->base_high = (base >> 32) & 0xFFFFFFFF; // Upper 32 bits.
+		entry->zero = 0;							  // Reserved, must be zero.
+	}
+
+	void registerInterruptHandler(uint32_t index, Handler handler) { handlers[index] = handler; }
+
+	void unregisterInterruptHandler(uint32_t index) { handlers[index] = 0; }
+
+	// Interrupt service routines
+	void isrHandler(Registers regs)
+	{
+		uint8_t		isr_no = regs.int_no;
+		uint8_t		e = regs.err_code;
+		uint64_t	addr;
+		const char* violationMessage = (e & 0x1) ? "page-protection" : "non-present page";
+		switch (isr_no)
+		{
+			case INVALID_OPCODE:
+				dumpRegisters(&regs);
+				panic("Invalid opcode!");
+				break;
+			case DOUBLE_FAULT:
+				panic("Double Fault. Code: %d", regs.err_code);
+				break;
+			case GENERAL_PROTECTION_FAULT:
+				// Obtain the fault address from the CR2 register.
+				asm("mov %%cr2, %0" : "=r"(addr));
+				panic(GENERAL_PROTECTION_FAULT_MESSAGE, regs.err_code, addr);
+				break;
+			case PAGE_FAULT:
+				// Obtain the fault address from the CR2 register.
+				asm("mov %%cr2, %0" : "=r"(addr));
+				panic(PAGE_FAULT_MESSAGE, regs.err_code, addr, violationMessage);
+				break;
+			case SYSTEM_CALL:
+				{
+					// Pass registers to the syscall handler.
+					sysCallDispatcher(regs);
+					return;
+				}
+			default:
+				panic("%s exception thrown. Code: %d", idt_messages[regs.int_no], regs.int_no);
+				break;
+		}
+	}
+
+	// Interrupt request
+	void irqHandler(Registers regs)
+	{
+		uint8_t irq_no = regs.int_no;
+
+		// Get the handler for this interrupt and execute it.
+		Handler handler = handlers[irq_no];
+		if (handler)
+		{
+			handler(regs);
+		}
+
+		PIC::sendEOI(irq_no);
+	}
+
+	void dumpRegisters(Registers* reg)
+	{
+		warning("Dumping registers:");
+		warning("rdi: %x, rsi: %x, rbp: %x, rsp: %x, rbx: %x, rdx: %x, rcx: %x, rax: %x", reg->rdi,
+			reg->rsi, reg->rbp, reg->rsp, reg->rbx, reg->rdx, reg->rcx, reg->rax);
+		warning("int_no: %d, err_code: %d", reg->int_no, reg->err_code);
+		warning("Instruction Pointer (rip): %x", reg->rip);
+	}
+} // namespace IDT

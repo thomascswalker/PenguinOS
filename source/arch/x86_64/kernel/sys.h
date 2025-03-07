@@ -9,12 +9,33 @@
 
 struct Registers
 {
-	/* Pushed by common stub. */
-	uint32_t ds, edi, esi, ebp, esp, ebx, edx, ecx, eax;
-	/* Pushed by wrapper function. */
-	uint32_t int_no, err_code;
-	/* Pushed by interrupt. */
-	uint32_t eip, cs, eflags, useresp, ss;
+	/* Pushed by the ISR stub. */
+	uint64_t r15;
+	uint64_t r14;
+	uint64_t r13;
+	uint64_t r12;
+	uint64_t r11;
+	uint64_t r10;
+	uint64_t r9;
+	uint64_t r8;
+	uint64_t rdi;
+	uint64_t rsi;
+	uint64_t rbp;
+	uint64_t rdx;
+	uint64_t rcx;
+	uint64_t rbx;
+	uint64_t rax;
+
+	/* Pushed by the ISR wrapper function (if you choose to push these). */
+	uint64_t int_no;
+	uint64_t err_code;
+
+	/* Pushed automatically by the CPU on interrupt/exception. */
+	uint64_t rip;
+	uint64_t cs;
+	uint64_t rflags;
+	uint64_t rsp;
+	uint64_t ss;
 };
 
 // Function pointer to an IRQ callback
@@ -72,6 +93,6 @@ static inline void sysexit()
 	outw(0x604, 0x2000); // QEMU
 }
 
-static inline void invalidate(uint32_t vaddr) { asm("invlpg %0" ::"m"(vaddr)); }
+static inline void invalidate(uint64_t vaddr) { asm("invlpg %0" ::"m"(vaddr)); }
 
 void sleep(uint32_t seconds);

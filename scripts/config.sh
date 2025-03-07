@@ -5,8 +5,8 @@ export CPP_VERSION=c++23
 
 export MAKE=${MAKE:-make}
 
-export ARCH=i386
-export HOST=i686-elf
+export ARCH=x86_64
+export HOST=x86_64-elf
 export GCC=${HOST}-g++
 export AS=nasm
 
@@ -15,7 +15,7 @@ export BUILD_DIR="./build"
 export BOOT_DIR="$BUILD_DIR/boot"
 
 export CFLAGS="-O0 -g -ffreestanding -Wall -Wextra -fno-omit-frame-pointer"
-export ASFLAGS="-felf32 -g"
+export ASFLAGS="-felf64 -g"
 
 export KERNEL="PengOS.bin"
 export ISO="PengOS.iso"

@@ -67,13 +67,13 @@ namespace std
 
 namespace Memory
 {
-	void init(uint32_t start, uint32_t size);
+	void init(uint64_t start, uint32_t size);
 
 	/* Paging */
 
 	void identityMapTable(uint32_t index);
 
-	uint32_t* getTableFromAddress(uint32_t address);
+	uint32_t* getTableFromAddress(uint64_t address);
 	uint32_t* getTableFromIndex(uint32_t index);
 
 	void enablePaging();

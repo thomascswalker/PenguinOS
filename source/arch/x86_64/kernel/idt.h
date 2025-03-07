@@ -69,29 +69,31 @@
 
 struct IDTEntry
 {
-	uint16_t baseLow;
-	uint16_t sel;
-	uint8_t	 always0;
-	uint8_t	 flags;
-	uint16_t baseHigh;
+	uint16_t base_low;	// Lower 16 bits of handler address.
+	uint16_t sel;		// Kernel segment selector.
+	uint8_t	 ist;		// Bits 0-2 hold Interrupt Stack Table offset, rest are zero.
+	uint8_t	 type_attr; // Type and attributes.
+	uint16_t base_mid;	// Middle 16 bits of handler address.
+	uint32_t base_high; // Higher 32 bits of handler address.
+	uint32_t zero;		// Reserved, set to 0.
 } __attribute__((packed));
 
 struct IDTPtr
 {
 	uint16_t limit; // Size - 1
-	uint32_t base;	// Pointer to the address of our
+	uint64_t base;	// Pointer to the address of our
 					// interrupt handler array
 } __attribute__((packed));
 
 namespace IDT
 {
 	void init();
-	void setGate(uint8_t num, uint32_t base, uint16_t sel, uint8_t flags);
+	void setGate(uint8_t num, uint64_t base, uint16_t sel, uint8_t flags, uint8_t ist = 0);
 
 	void registerInterruptHandler(uint32_t index, Handler handler);
 	void unregisterInterruptHandler(uint32_t index);
 
-	EXTERN void loadIDT(uint32_t);
+	EXTERN void loadIDT(uint64_t);
 	EXTERN void irqHandler(Registers regs);
 	EXTERN void isrHandler(Registers regs);
 

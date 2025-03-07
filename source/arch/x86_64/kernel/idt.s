@@ -23,6 +23,42 @@ isr%1:
     jmp isrCommon
 %endmacro
 
+%macro PUSH_A 0
+push rax
+push rbx
+push rcx
+push rdx
+push rsi
+push rdi
+push rbp
+push r8
+push r9
+push r10
+push r11
+push r12
+push r13
+push r14
+push r15
+%endmacro
+
+%macro POP_A 0
+pop r15
+pop r14
+pop r13
+pop r12
+pop r11
+pop r10
+pop r9
+pop r8
+pop rbp
+pop rdi
+pop rsi
+pop rdx
+pop rcx
+pop rbx
+pop rax
+%endmacro
+
 ISR_NOERRORCODE 0
 ISR_NOERRORCODE 1
 ISR_NOERRORCODE 2
@@ -60,11 +96,11 @@ ISR_NOERRORCODE 128
 
 extern isrHandler
 isrCommon:
-    pusha
+    PUSH_A
 
     mov	    ax, ds
-    push	eax
-    mov 	esi, eax
+    push	rax
+    mov 	rsi, rax
 
     mov 	ax, 0x10
     mov 	ds, ax
@@ -74,16 +110,16 @@ isrCommon:
 
     call	isrHandler
 
-    pop	    ebx
-    mov 	ebx, esi
+    pop	    rbx
+    mov 	rbx, rsi
 
     mov 	ds, bx
     mov 	es, bx
     mov 	fs, bx
     mov 	gs, bx
 
-    popa
-    add     esp, 8
+    POP_A
+    add     rsp, 8
     sti
     iret
                                                             ; pops 5 things at once: CS, EIP, EFLAGS, SS, and ESP
@@ -115,11 +151,11 @@ IRQ 15, 47
 
 extern irqHandler
 irqCommon:
-    pusha
+    PUSH_A
 
     mov	    ax, ds
-    push	eax
-    mov 	esi, eax
+    push	rax
+    mov 	rsi, rax
 
     mov 	ax, 0x10
     mov 	ds, ax
@@ -129,15 +165,15 @@ irqCommon:
 
     call	irqHandler
 
-    pop	    ebx
-    mov 	ebx, esi
+    pop	    rbx
+    mov 	rbx, rsi
 
     mov 	ds, bx
     mov 	es, bx
     mov 	fs, bx
     mov 	gs, bx
 
-    popa
-    add     esp, 8
+    POP_A
+    add     rsp, 8
     sti
     iret
