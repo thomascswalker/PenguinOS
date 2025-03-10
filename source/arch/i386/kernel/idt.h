@@ -95,6 +95,9 @@ namespace IDT
 	EXTERN void irqHandler(Registers regs);
 	EXTERN void isrHandler(Registers regs);
 
+	void handleGeneralProtectionFault(Registers* regs);
+	void handlePageFault(Registers* regs);
+
 	EXTERN void isr0();
 	EXTERN void isr1();
 	EXTERN void isr2();

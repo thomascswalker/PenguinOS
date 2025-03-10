@@ -226,7 +226,7 @@ void Memory::removeBlock(Block* block, uint32_t order)
 	}
 }
 
-void* std::kmalloc(size_t size)
+void* Memory::kmalloc(size_t size)
 {
 	if (size == 0)
 	{
@@ -286,7 +286,7 @@ void* std::kmalloc(size_t size)
 	return (void*)((uint8_t*)block + sizeof(Block));
 }
 
-void std::kfree(void* ptr)
+void Memory::kfree(void* ptr)
 {
 	if (ptr == nullptr)
 	{
@@ -328,7 +328,7 @@ void std::kfree(void* ptr)
 	Memory::addBlock(block);
 }
 
-void* std::krealloc(void* ptr, size_t newSize)
+void* Memory::krealloc(void* ptr, size_t newSize)
 {
 	if (ptr == nullptr)
 	{
@@ -374,7 +374,7 @@ void* std::krealloc(void* ptr, size_t newSize)
 
 void* operator new(size_t size)
 {
-	auto ptr = std::kmalloc(size);
+	auto ptr = Memory::kmalloc(size);
 	if (!ptr)
 	{
 		panic("Out of memory.");
@@ -385,7 +385,7 @@ void* operator new(size_t size, void* ptr) { return ptr; }
 
 void* operator new[](size_t size)
 {
-	auto ptr = std::kmalloc(size);
+	auto ptr = Memory::kmalloc(size);
 	if (!ptr)
 	{
 		panic("Out of memory.");
@@ -394,7 +394,7 @@ void* operator new[](size_t size)
 }
 void* operator new[](size_t size, void* ptr) { return ptr; }
 
-void operator delete(void* ptr) { std::kfree(ptr); }
-void operator delete[](void* ptr) { std::kfree(ptr); }
-void operator delete(void* ptr, size_t size) { std::kfree(ptr); }
-void operator delete[](void* ptr, size_t size) { std::kfree(ptr); }
+void operator delete(void* ptr) { Memory::kfree(ptr); }
+void operator delete[](void* ptr) { Memory::kfree(ptr); }
+void operator delete(void* ptr, size_t size) { Memory::kfree(ptr); }
+void operator delete[](void* ptr, size_t size) { Memory::kfree(ptr); }

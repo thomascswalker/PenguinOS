@@ -58,13 +58,6 @@ struct Block
 	struct Block* next;	  // Pointer for linking free blocks in a list
 };
 
-namespace std
-{
-	void* kmalloc(size_t size);
-	void  kfree(void* ptr);
-	void* krealloc(void* ptr, size_t newSize);
-} // namespace std
-
 namespace Memory
 {
 	void init(uint32_t start, uint32_t size);
@@ -85,6 +78,10 @@ namespace Memory
 	/* Memory Allocation */
 	void addBlock(Block* block);
 	void removeBlock(Block* block, uint32_t order);
+
+	void* kmalloc(size_t size);
+	void  kfree(void* ptr);
+	void* krealloc(void* ptr, size_t newSize);
 } // namespace Memory
 
 void* operator new(size_t size);

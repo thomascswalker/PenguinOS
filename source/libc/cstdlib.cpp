@@ -1,5 +1,6 @@
+#include <cstdlib.h>
+#include <memory.h>
 #include <stdio.h>
-#include <stdlib.h>
 #include <syscall.h>
 
 void itoa(char* buffer, uint32_t value, uint32_t base)
@@ -24,18 +25,10 @@ void itoa(char* buffer, uint32_t value, uint32_t base)
 	}
 }
 
-// Allocate unitialized memory, uses syscall
-void* malloc(const uint32_t size)
-{
-	void* ptr = 0;
-	asm("int $0x80" : "=d"(ptr) : "a"(SYSCALL_MALLOC), "b"(size));
-	debug("Malloc %d: %x", size, ptr);
-	return ptr;
-}
+// Allocates size `bytes` of uninitialized storage.
+void* std::malloc(const uint32_t size) { return Memory::kmalloc(size); }
 
 // Free memory, uses syscall
-void free(const void* ptr)
-{
-	asm("int $0x80" ::"a"(SYSCALL_FREE), "b"(ptr)); // Free ptr in memory area
-	ptr = nullptr;
-}
+void std::free(void* ptr) { Memory::kfree(ptr); }
+
+void* std::realloc(void* ptr, const uint32_t size) { return Memory::krealloc(ptr, size); }

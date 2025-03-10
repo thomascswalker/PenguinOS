@@ -45,7 +45,7 @@ struct BootSector;
 namespace IDE
 {
 	void	   init();
-	void	   callback(Registers regs);
+	void	   callback(Registers* regs);
 	ATADevice* getDevice(uint32_t index);
 } // namespace IDE
 

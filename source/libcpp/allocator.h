@@ -1,6 +1,6 @@
 #pragma once
 
-#include <memory.h>
+#include <cstdlib.h>
 #include <stddef.h>
 #include <stdint.h>
 
@@ -25,12 +25,12 @@ public:
 	// Allocate memory for n objects of type T.
 	PtrType allocate(SizeType n)
 	{
-		PtrType ptr = static_cast<PtrType>(std::kmalloc(n * sizeof(T)));
+		PtrType ptr = static_cast<PtrType>(std::malloc(n * sizeof(T)));
 		return ptr;
 	}
 
 	// Deallocate memory.
-	void deallocate(PtrType p, SizeType n) noexcept { std::kfree(p); }
+	void deallocate(PtrType p, SizeType n) noexcept { std::free(p); }
 };
 
 template <typename T, typename U>

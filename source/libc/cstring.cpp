@@ -1,5 +1,5 @@
+#include <cstdlib.h>
 #include <cstring.h>
-#include <memory.h>
 
 // 	Copies one buffer to another.
 void* memcpy(void* dest, void* source, size_t size)
@@ -93,6 +93,17 @@ char* strcpy(char* dest, const char* source)
 	return temp;
 }
 
+EXTERN char* strncpy(char* dest, const char* source, size_t count)
+{
+	char*  temp = dest;
+	size_t i = 0;
+	while ((*dest++ = *source++) && i < count)
+	{
+		i++;
+	}
+	return temp;
+}
+
 // Appends one string to another
 char* strcat(char* dest, const char* source)
 {
@@ -145,7 +156,7 @@ EXTERN char* strrchr(const char* str, char c)
 char* strdup(const char* str)
 {
 	size_t size = strlen(str) + 1;
-	char*  copy = (char*)std::kmalloc(size);
+	char*  copy = (char*)std::malloc(size);
 	if (copy)
 	{
 		memcpy(copy, const_cast<char*>(str), size);

@@ -21,7 +21,7 @@ namespace Keyboard
 	}
 
 	// Called when IRQ1 (ISR33) is executed.
-	void callback(Registers regs)
+	void callback(Registers* regs)
 	{
 		uint8_t sc = inb(KEYBOARD_DATA_PORT); // Incoming scancode
 		KeyCode kc;							  // Converted keyboard code struct

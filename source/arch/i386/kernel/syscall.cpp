@@ -1,3 +1,4 @@
+#include <memory.h>
 #include <pic.h>
 #include <pit.h>
 #include <stdio.h>
@@ -25,8 +26,6 @@ static SysCallFunc syscalls[] = {
 	sysLink,
 	sysMkdir,
 	sysClose,
-	sysMalloc,
-	sysFree,
 };
 
 /*
@@ -64,30 +63,32 @@ void sysCallDispatcher(Registers regs)
 		"pop %%ecx\n"
 		"pop %%edx\n"
 		"pop %%esi\n"
-		"pop %%edi\n"
+
+		"add $24, %%esp\n" // Remove 6 pushed words, 5 args + return address
 
 		"iret\n"
 		: "=a"(ret)
-		: "r"(regs.edi), "r"(regs.esi), "r"(regs.edx), "r"(regs.ecx), "r"(regs.ebx), "r"(syscall));
+		: "r"(regs.edi), "r"(regs.esi), "r"(regs.edx), "r"(regs.ecx), "r"(regs.ebx), "r"(syscall)
+		: "memory");
 }
 
-int32_t sysFork(SysCallRegisters regs) { return 0; }
-int32_t sysExit(SysCallRegisters regs) { return 0; }
-int32_t sysWait(SysCallRegisters regs) { return 0; }
-int32_t sysPipe(SysCallRegisters regs) { return 0; }
-int32_t sysRead(SysCallRegisters regs) { return 0; }
-int32_t sysKill(SysCallRegisters regs) { return 0; }
-int32_t sysExec(SysCallRegisters regs) { return 0; }
-int32_t sysFstat(SysCallRegisters regs) { return 0; }
-int32_t sysChdir(SysCallRegisters regs) { return 0; }
-int32_t sysDup(SysCallRegisters regs) { return 0; }
-int32_t sysGetpid(SysCallRegisters regs) { return 0; }
-int32_t sysSbrk(SysCallRegisters regs) { return 0; }
-int32_t sysSleep(SysCallRegisters regs)
+int32_t sysFork(SysCallRegisters* regs) { return 0; }
+int32_t sysExit(SysCallRegisters* regs) { return 0; }
+int32_t sysWait(SysCallRegisters* regs) { return 0; }
+int32_t sysPipe(SysCallRegisters* regs) { return 0; }
+int32_t sysRead(SysCallRegisters* regs) { return 0; }
+int32_t sysKill(SysCallRegisters* regs) { return 0; }
+int32_t sysExec(SysCallRegisters* regs) { return 0; }
+int32_t sysFstat(SysCallRegisters* regs) { return 0; }
+int32_t sysChdir(SysCallRegisters* regs) { return 0; }
+int32_t sysDup(SysCallRegisters* regs) { return 0; }
+int32_t sysGetpid(SysCallRegisters* regs) { return 0; }
+int32_t sysSbrk(SysCallRegisters* regs) { return 0; }
+int32_t sysSleep(SysCallRegisters* regs)
 {
 	// Get the milliseconds to sleep for from the ecx
 	// register.
-	uint32_t ms = regs.ecx;
+	uint32_t ms = regs->ecx;
 
 	// Set the current SLEEP_TICK value to the milliseconds
 	// we're sleeping for.
@@ -110,25 +111,11 @@ int32_t sysSleep(SysCallRegisters regs)
 
 	return 0;
 }
-int32_t sysUptime(SysCallRegisters regs) { return 0; }
-int32_t sysOpen(SysCallRegisters regs) { return 0; }
-int32_t sysWrite(SysCallRegisters regs) { return 0; }
-int32_t sysMknod(SysCallRegisters regs) { return 0; }
-int32_t sysUnlink(SysCallRegisters regs) { return 0; }
-int32_t sysLink(SysCallRegisters regs) { return 0; }
-int32_t sysMkdir(SysCallRegisters regs) { return 0; }
-int32_t sysClose(SysCallRegisters regs) { return 0; }
-int32_t sysMalloc(SysCallRegisters regs)
-{
-	size_t bytes = regs.ecx;
-	debug("Allocating %d bytes of memory.", bytes);
-	// void* ptr = kmalloc(bytes);
-	// debug("Out address is %x.", ptr);
-	// asm("mov %0, %%edx" ::"r"(ptr));
-	return 0;
-}
-int32_t sysFree(SysCallRegisters regs)
-{
-	// Heap::kfree((void*)regs.ecx);
-	return 0;
-}
+int32_t sysUptime(SysCallRegisters* regs) { return 0; }
+int32_t sysOpen(SysCallRegisters* regs) { return 0; }
+int32_t sysWrite(SysCallRegisters* regs) { return 0; }
+int32_t sysMknod(SysCallRegisters* regs) { return 0; }
+int32_t sysUnlink(SysCallRegisters* regs) { return 0; }
+int32_t sysLink(SysCallRegisters* regs) { return 0; }
+int32_t sysMkdir(SysCallRegisters* regs) { return 0; }
+int32_t sysClose(SysCallRegisters* regs) { return 0; }

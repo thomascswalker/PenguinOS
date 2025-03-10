@@ -1,7 +1,7 @@
 #pragma once
 
+#include <cstdlib.h>
 #include <stdarg.h>
-#include <stdlib.h>
 
 // Printing
 

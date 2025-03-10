@@ -42,10 +42,14 @@ success "Disk image built."
 
 # Run QEMU
 info "Running QEMU-i386."
-MEM_SIZE=512 # Memory size in megabytes
+MEM_SIZE=32 # Memory size in megabytes
 qemu-system-i386 \
 	-m ${MEM_SIZE}M \
-	-cdrom ./build/${ISO} -boot d \
+	-cdrom ./build/${ISO} \
+	 -boot d \
 	-drive file=disk.img,format=raw,if=ide \
 	-display gtk,zoom-to-fit=on \
-	-no-reboot
+	# -d int \
+	# -no-reboot \
+	# -no-shutdown 
+	# -s -S

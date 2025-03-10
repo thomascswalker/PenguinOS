@@ -2,12 +2,14 @@
 
 #include <cstring.h>
 
-void		 itoa(char* buffer, uint32_t value, uint32_t base);
-EXTERN void* malloc(const uint32_t size);
-EXTERN void	 free(const void* ptr);
+void itoa(char* buffer, uint32_t value, uint32_t base);
 
 namespace std
 {
+	EXTERN void* malloc(const uint32_t size);
+	EXTERN void	 free(void* ptr);
+	EXTERN void* realloc(void* ptr, const uint32_t size);
+
 	template <typename T>
 	struct RemoveReference
 	{

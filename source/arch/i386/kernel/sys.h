@@ -12,13 +12,13 @@ struct Registers
 	/* Pushed by common stub. */
 	uint32_t ds, edi, esi, ebp, esp, ebx, edx, ecx, eax;
 	/* Pushed by wrapper function. */
-	uint32_t int_no, err_code;
+	uint32_t intNo, errCode;
 	/* Pushed by interrupt. */
-	uint32_t eip, cs, eflags, useresp, ss;
+	uint32_t eip, cs, eFlags, userEsp, ss;
 };
 
 // Function pointer to an IRQ callback
-typedef void (*Handler)(Registers);
+typedef void (*Handler)(Registers*);
 
 // Reads a byte of data from the specified IO port
 static inline uint8_t inb(uint16_t port)

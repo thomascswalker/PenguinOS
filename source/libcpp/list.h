@@ -146,7 +146,7 @@ public:
 		m_size--;
 	}
 
-	Node* find(const T& value)
+	Node* find(ConstReferenceType value)
 	{
 		Node* node = m_head;
 		while (node != nullptr)
@@ -161,6 +161,22 @@ public:
 	}
 
 	bool contains(const T& value) { return find(value) != nullptr; }
+
+	void rotate(SizeType count)
+	{
+		if (count == 0 || count == m_size || m_head == nullptr)
+		{
+			return;
+		}
+
+		for (uint32_t i = 0; i < count; i++)
+		{
+			Node* temp = m_head;
+			m_head = m_head->next;
+			m_tail = temp;
+			m_tail->next = m_head;
+		}
+	}
 
 	Node*		begin() { return getFront(); }
 	const Node* begin() const { return getFront(); }

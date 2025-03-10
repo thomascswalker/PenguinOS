@@ -3,14 +3,7 @@
 #include <stdio.h>
 #include <syscall.h>
 
-#define PAGE_FAULT_MESSAGE  \
-	"Page fault. Code %x\n" \
-	"\t\t  Attempted to access %x which caused a %s violation."
-#define GENERAL_PROTECTION_FAULT_MESSAGE  \
-	"General protection fault. Code %x\n" \
-	"\t\t  Attempted to access %x which caused a violation."
-
-static const char* idt_messages[] = {
+static const char* idtMessages[] = {
 	"Division by zero",				 // 0
 	"Single-step Interrupt",		 // 1
 	"NMI",							 // 2
@@ -136,28 +129,21 @@ namespace IDT
 	// Interrupt service routines
 	void isrHandler(Registers regs)
 	{
-		uint8_t		isr_no = regs.int_no;
-		uint8_t		e = regs.err_code;
-		uint32_t	addr;
-		const char* violationMessage = (e & 0x1) ? "page-protection" : "non-present page";
-		switch (isr_no)
+		switch (regs.intNo)
 		{
 			case INVALID_OPCODE:
 				dumpRegisters(&regs);
-				panic("Invalid opcode!");
+				panic("Invalid Opcode.");
 				break;
 			case DOUBLE_FAULT:
-				panic("Double Fault. Code: %d", regs.err_code);
+				dumpRegisters(&regs);
+				panic("Double Fault. Code: %d", regs.errCode);
 				break;
 			case GENERAL_PROTECTION_FAULT:
-				// Obtain the fault address from the CR2 register.
-				asm("movl %%cr2, %0" : "=r"(addr));
-				panic(GENERAL_PROTECTION_FAULT_MESSAGE, regs.err_code, addr);
+				handleGeneralProtectionFault(&regs);
 				break;
 			case PAGE_FAULT:
-				// Obtain the fault address from the CR2 register.
-				asm("movl %%cr2, %0" : "=r"(addr));
-				panic(PAGE_FAULT_MESSAGE, regs.err_code, addr, violationMessage);
+				handlePageFault(&regs);
 				break;
 			case SYSTEM_CALL:
 				{
@@ -166,21 +152,50 @@ namespace IDT
 					return;
 				}
 			default:
-				panic("%s exception thrown. Code: %d", idt_messages[regs.int_no], regs.int_no);
+				panic("%s exception thrown. Code: %d", idtMessages[regs.intNo], regs.intNo);
 				break;
 		}
+	}
+
+	void handleGeneralProtectionFault(Registers* regs)
+	{
+		dumpRegisters(regs);
+
+		uint32_t rpl = regs->errCode & 0x3;
+		uint32_t ti = (regs->errCode >> 2) & 1;
+		uint32_t index = (regs->errCode >> 3);
+		panic("General protection fault. Code %x\n"
+			  "\t\t  Requested Privilege Level: %d\n"
+			  "\t\t  Table Type: %d\n"
+			  "\t\t  Table Index: %d\n",
+			regs->errCode, rpl, ti, index);
+	}
+
+	void handlePageFault(Registers* regs)
+	{
+		dumpRegisters(regs);
+
+		// Obtain the fault address from the CR2 register.
+		uint32_t addr = 0;
+		asm("movl %%cr2, %0" : "=r"(addr));
+
+		const char* violationMessage =
+			(regs->errCode & 0x1) ? "page-protection" : "non-present page";
+		panic("Page fault. Code %x\n"
+			  "\t\t  Attempted to access %x which caused a %s violation.",
+			regs->errCode, addr, violationMessage);
 	}
 
 	// Interrupt request
 	void irqHandler(Registers regs)
 	{
-		uint8_t irq_no = regs.int_no;
+		uint8_t irq_no = regs.intNo;
 
 		// Get the handler for this interrupt and execute it.
 		Handler handler = handlers[irq_no];
 		if (handler)
 		{
-			handler(regs);
+			handler(&regs);
 		}
 
 		PIC::sendEOI(irq_no);
@@ -191,7 +206,7 @@ namespace IDT
 		warning("Dumping registers:");
 		warning("edi: %x, esi: %x, ebp: %x, esp: %x, ebx: %x, edx: %x, ecx: %x, eax: %x", reg->edi,
 			reg->esi, reg->ebp, reg->esp, reg->ebx, reg->edx, reg->ecx, reg->eax);
-		warning("int_no: %d, err_code: %d", reg->int_no, reg->err_code);
+		warning("int_no: %d, err_code: %d", reg->intNo, reg->errCode);
 		warning("Instruction Pointer (eip): %x", reg->eip);
 
 		// Obtain the current frame pointer

@@ -10,6 +10,7 @@ Main entry point into PenguinOS.
 #include <memory.h>
 #include <multiboot.h>
 #include <pit.h>
+#include <scheduling.h>
 #include <shell.h>
 
 EXTERN void kmain(MultibootInfo* info, uint32_t magic)
@@ -33,15 +34,18 @@ EXTERN void kmain(MultibootInfo* info, uint32_t magic)
 	enableInterrupts();
 	println("Welcome to Penguin OS!");
 
+	debug("Start:%x, Size:%d", start, size);
 	Memory::init(start, size);
 
 	// This needs to be called AFTER memory has been initialized.
 	// Some constructors (like String, Array, etc.) which use
 	// allocators need to use std::kmalloc.
 	// TODO: Fix this!
-	callConstructors();
+	// callConstructors();
 
 	FileSystem::init();
+
+	// TODO: Uncomment to make input work
 	CMD::init();
 
 	while (1)

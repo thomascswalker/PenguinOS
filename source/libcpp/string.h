@@ -298,7 +298,7 @@ public:
 
 	T* cstr() const
 	{
-		T* result = (T*)std::kmalloc(m_size);
+		T* result = (T*)std::malloc(m_size);
 		result[m_size + 1] = '\0';
 		return result;
 	}

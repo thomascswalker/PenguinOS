@@ -1,5 +1,6 @@
 #include <pic.h>
 #include <pit.h>
+#include <scheduling.h>
 #include <stdio.h>
 
 // Global ticks for the timer.
@@ -27,13 +28,17 @@ void PIT::init()
 	PIC::sendEOI(IRQ0);
 }
 
-void PIT::callback(Registers regs)
+void PIT::callback(Registers* regs)
 {
 	g_ticks++;
 	// TODO: Causes page fault at tick location
 	if (SLEEP_TICK > 0)
 	{
 		SLEEP_TICK--;
+	}
+	if (Scheduling::getInitialized())
+	{
+		Scheduling::schedule();
 	}
 }
 

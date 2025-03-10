@@ -30,7 +30,8 @@ void CMD::init()
 	g_cwd = CWD(); // Reinstantiate
 
 	// Default to "//0"
-	g_cwd.path = "/";
+	memset(g_cwd.path, 0, 128);
+	g_cwd.path[0] = '/';
 
 	// Start at root entry
 	g_cwd.entry = *getRootEntry();
@@ -145,7 +146,7 @@ void CMD::cat(const String& path)
 	printf("%s\n", file.data);
 }
 
-void CMD::pwd() { printf("pwd: %s\n", g_cwd.path.data()); }
+void CMD::pwd() { printf("pwd: %s\n", g_cwd.path); }
 
 void CMD::cd(const String& path)
 {

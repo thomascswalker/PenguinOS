@@ -17,6 +17,7 @@ EXTERN bool strncmp(const char* lhs, const char* rhs, size_t count);
 // Copies one string to another
 EXTERN char* strcpy(char* dest, const char* source);
 // Appends one string to another
+EXTERN char* strncpy(char* dest, const char* source, size_t count);
 EXTERN char* strcat(char* dest, const char* source);
 EXTERN char* strchr(const char* s, char c);
 EXTERN char* strrchr(const char* s, char c);
