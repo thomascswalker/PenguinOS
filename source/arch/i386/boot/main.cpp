@@ -13,6 +13,23 @@ Main entry point into PenguinOS.
 #include <scheduling.h>
 #include <shell.h>
 
+void fproc0()
+{
+	while (1)
+	{
+		debug("1.");
+		Scheduling::schedule();
+	}
+}
+void fproc1()
+{
+	while (1)
+	{
+		debug("2.");
+		Scheduling::schedule();
+	}
+}
+
 EXTERN void kmain(MultibootInfo* info, uint32_t magic)
 {
 	Shell::init();
@@ -38,7 +55,12 @@ EXTERN void kmain(MultibootInfo* info, uint32_t magic)
 	CMD::init();
 
 	println("Welcome to Penguin OS!");
-	CMD::help();
+
+	// Task proc0;
+	// Task proc1;
+
+	// Scheduling::createTask(&fproc0);
+	// Scheduling::createTask(&fproc1);
 
 	while (1)
 	{

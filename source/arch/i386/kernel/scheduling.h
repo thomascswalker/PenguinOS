@@ -13,25 +13,21 @@ enum ProcessStatus
 	Dead,
 };
 
-typedef void (*ProcessFunc)(void);
-struct Process
+typedef void (*TaskFunc)(void);
+struct Task
 {
-	uint32_t	  pid;
-	Registers*	  regs;
-	Process*	  next;
-	ProcessStatus state;
-	~Process() { std::free(regs); }
-	bool operator==(const Process& other) const { return pid == other.pid; }
+	void*	  stack;
+	uint32_t* sp;
+	Task*	  next;
 };
-
-EXTERN void kSwitchContext(Registers* regs);
 
 namespace Scheduling
 {
-	void contextSwitch(Registers* currentRegs, Registers* nextRegs);
-	void schedule();
-	void createProcess(Process* proc, ProcessFunc func);
-	void setCurrentProcess(Process* proc);
-	bool getInitialized();
+	// Defined in 'scheduling.s'
+	extern "C" void switchTo(Task* prev, Task* next);
 
+	void schedule();
+	void createTask(TaskFunc func);
+	void removeTask(Task* task);
+	void exitTask();
 }; // namespace Scheduling

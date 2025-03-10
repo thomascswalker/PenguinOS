@@ -36,10 +36,8 @@ void PIT::callback(Registers* regs)
 	{
 		SLEEP_TICK--;
 	}
-	if (Scheduling::getInitialized())
-	{
-		Scheduling::schedule();
-	}
+
+	Scheduling::schedule();
 }
 
 uint32_t PIT::getPITCount()
