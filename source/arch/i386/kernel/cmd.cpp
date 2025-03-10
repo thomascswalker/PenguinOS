@@ -124,13 +124,13 @@ void CMD::exit() { sysexit(); }
 
 void CMD::help()
 {
-	printf("HELP: exit - Exit the system.\n"
-		   "      help - Display list of commands.\n"
+	printf("HELP: exit  - Exit the system.\n"
+		   "      help  - Display list of commands.\n"
 		   "      clear - Clear the display of text.\n"
-		   "      cat - Print the contents of the specified file.\n"
-		   "      pwd - Print the current directory.\n"
-		   "      cd - Change to the specified directory.\n"
-		   "      ls - Print the files within the current directory.\n");
+		   "      cat   - Print the contents of the specified file.\n"
+		   "      pwd   - Print the current directory.\n"
+		   "      cd    - Change to the specified directory.\n"
+		   "      ls    - Print the files within the current directory.\n");
 }
 
 void CMD::clear() { Shell::clearDisplay(); }

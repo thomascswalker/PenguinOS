@@ -32,38 +32,28 @@ enum SysCalls
 	SYSCALL_CLOSE,	// Close
 };
 
-struct SysCallRegisters
-{
-	uint32_t edi; // 1st argument
-	uint32_t esi; // 2nd argument
-	uint32_t edx; // 3rd argument
-	uint32_t ecx; // 4th argument
-	uint32_t ebx; // 5th argument
-	uint32_t eax; // syscall number/return value
-} __attribute__((packed));
-
-void	sysCallDispatcher(Registers regs);
-int32_t sysFork(SysCallRegisters* regs);
-int32_t sysExit(SysCallRegisters* regs);
-int32_t sysWait(SysCallRegisters* regs);
-int32_t sysPipe(SysCallRegisters* regs);
-int32_t sysRead(SysCallRegisters* regs);
-int32_t sysKill(SysCallRegisters* regs);
-int32_t sysExec(SysCallRegisters* regs);
-int32_t sysFstat(SysCallRegisters* regs);
-int32_t sysChdir(SysCallRegisters* regs);
-int32_t sysDup(SysCallRegisters* regs);
-int32_t sysGetpid(SysCallRegisters* regs);
-int32_t sysSbrk(SysCallRegisters* regs);
-int32_t sysSleep(SysCallRegisters* regs);
-int32_t sysUptime(SysCallRegisters* regs);
-int32_t sysOpen(SysCallRegisters* regs);
-int32_t sysWrite(SysCallRegisters* regs);
-int32_t sysMknod(SysCallRegisters* regs);
-int32_t sysUnlink(SysCallRegisters* regs);
-int32_t sysLink(SysCallRegisters* regs);
-int32_t sysMkdir(SysCallRegisters* regs);
-int32_t sysClose(SysCallRegisters* regs);
+void	sysCallDispatcher(Registers* regs);
+int32_t sysFork(Registers* regs);
+int32_t sysExit(Registers* regs);
+int32_t sysWait(Registers* regs);
+int32_t sysPipe(Registers* regs);
+int32_t sysRead(Registers* regs);
+int32_t sysKill(Registers* regs);
+int32_t sysExec(Registers* regs);
+int32_t sysFstat(Registers* regs);
+int32_t sysChdir(Registers* regs);
+int32_t sysDup(Registers* regs);
+int32_t sysGetpid(Registers* regs);
+int32_t sysSbrk(Registers* regs);
+int32_t sysSleep(Registers* regs);
+int32_t sysUptime(Registers* regs);
+int32_t sysOpen(Registers* regs);
+int32_t sysWrite(Registers* regs);
+int32_t sysMknod(Registers* regs);
+int32_t sysUnlink(Registers* regs);
+int32_t sysLink(Registers* regs);
+int32_t sysMkdir(Registers* regs);
+int32_t sysClose(Registers* regs);
 
 // Syscall table
-typedef int32_t (*SysCallFunc)(SysCallRegisters*);
+typedef int32_t (*SysCallFunc)(Registers*);

@@ -125,14 +125,6 @@ void ATADevice::identify()
 
 	// 0b000_0100_0000_0000
 	lbaExtSupported = (buffer[83] & 0x400) == 0x400;
-	if (lbaExtSupported)
-	{
-		println("48-bit Address");
-	}
-	else
-	{
-		println("28-bit Address");
-	}
 
 	serial = buffer[ATA_IDENT_SERIAL];
 	printf("Serial: %d\n", serial);

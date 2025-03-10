@@ -16,7 +16,6 @@ Main entry point into PenguinOS.
 EXTERN void kmain(MultibootInfo* info, uint32_t magic)
 {
 	Shell::init();
-	println("Initializing...");
 	if (magic != MULTIBOOT_BOOTLOADER_MAGIC)
 	{
 		panic("Invalid Multiboot magic value.");
@@ -24,6 +23,7 @@ EXTERN void kmain(MultibootInfo* info, uint32_t magic)
 	uint32_t start = 0;
 	uint32_t size = 0;
 	Multiboot::init(info, &start, &size);
+	printf("RAM: %dMB\n", (size / 1024 / 1024));
 
 	GDT::init();
 	IDT::init();
@@ -32,21 +32,13 @@ EXTERN void kmain(MultibootInfo* info, uint32_t magic)
 
 	// Once everything is initialized, enable interrupts.
 	enableInterrupts();
-	println("Welcome to Penguin OS!");
 
-	debug("Start:%x, Size:%d", start, size);
 	Memory::init(start, size);
-
-	// This needs to be called AFTER memory has been initialized.
-	// Some constructors (like String, Array, etc.) which use
-	// allocators need to use std::kmalloc.
-	// TODO: Fix this!
-	// callConstructors();
-
 	FileSystem::init();
-
-	// TODO: Uncomment to make input work
 	CMD::init();
+
+	println("Welcome to Penguin OS!");
+	CMD::help();
 
 	while (1)
 	{

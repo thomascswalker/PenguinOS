@@ -146,11 +146,9 @@ namespace IDT
 				handlePageFault(&regs);
 				break;
 			case SYSTEM_CALL:
-				{
-					// Pass registers to the syscall handler.
-					sysCallDispatcher(regs);
-					return;
-				}
+				// Pass registers to the syscall handler.
+				sysCallDispatcher(&regs);
+				break;
 			default:
 				panic("%s exception thrown. Code: %d", idtMessages[regs.intNo], regs.intNo);
 				break;
