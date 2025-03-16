@@ -23,8 +23,6 @@ switchContext:
     ; At this point, the stack looks like (top-to-bottom):
     ;   EDI, ESI, EBP, ESP, EBX, EDX, ECX, EAX, then EFLAGS.
 
-    ; pop dword [edi + 16]  ; Pop EDI into prev->edi
-    ; pop dword [edi + 20]  ; Pop ESI into prev->esi
     pop dword [edi + 24]  ; Pop EBP into prev->ebp
     pop dword [edi + 28]  ; Pop original ESP into prev->esp
     pop dword [edi + 32]  ; Pop EBX into prev->ebx
@@ -44,8 +42,6 @@ switchContext:
     mov ds, [esi + 12]    ; Load ds from next->ds
     
     ; Restore general-purpose registers in the reverse stack order.
-    ; mov edi, [esi + 16]   ; Next->edi
-    ; mov esi, [esi + 20]   ; Next->esi
     mov ebp, [esi + 24]   ; Next->ebp
     mov esp, [esi + 28]   ; Next->esp
     mov ebx, [esi + 32]   ; Next->ebx

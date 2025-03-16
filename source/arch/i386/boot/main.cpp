@@ -14,11 +14,13 @@ Main entry point into PenguinOS.
 #include <scheduling.h>
 #include <shell.h>
 
+static uint32_t i = 0;
+
 void process1()
 {
 	while (1)
 	{
-		printf("Process 1 is running\n");
+		printf("Process 1 is running: %d\n", i++);
 	}
 }
 
