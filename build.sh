@@ -51,5 +51,5 @@ qemu-system-i386 \
 	-display gtk,zoom-to-fit=on \
 	-d int \
 	-no-reboot \
-	-no-shutdown 
+	-no-shutdown \
 	# -s -S

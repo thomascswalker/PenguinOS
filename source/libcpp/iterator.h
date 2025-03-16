@@ -4,8 +4,8 @@ template <typename T>
 class Iterator
 {
 	using ValueType = T;
-	using Pointer = T*;
-	using Reference = T&;
+	using Pointer = ValueType*;
+	using Reference = ValueType&;
 
 	Pointer m_ptr;
 

@@ -10,14 +10,14 @@
 
 namespace std
 {
-	template <typename T>
-	T min(T a, T b)
+	template <typename ValueType>
+	ValueType min(ValueType a, ValueType b)
 	{
 		return (a < b) ? a : b;
 	}
 
-	template <typename T>
-	T max(T a, T b)
+	template <typename ValueType>
+	ValueType max(ValueType a, ValueType b)
 	{
 		return (a > b) ? a : b;
 	}

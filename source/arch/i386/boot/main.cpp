@@ -7,26 +7,26 @@ Main entry point into PenguinOS.
 #include <filesystem.h>
 #include <gdt.h>
 #include <keyboard.h>
+#include <list.h>
 #include <memory.h>
 #include <multiboot.h>
 #include <pit.h>
 #include <scheduling.h>
 #include <shell.h>
 
-void fproc0()
+void process1()
 {
 	while (1)
 	{
-		debug("1.");
-		Scheduling::schedule();
+		printf("Process 1 is running\n");
 	}
 }
-void fproc1()
+
+void process2()
 {
 	while (1)
 	{
-		debug("2.");
-		Scheduling::schedule();
+		printf("Process 2 is running\n");
 	}
 }
 
@@ -56,11 +56,9 @@ EXTERN void kmain(MultibootInfo* info, uint32_t magic)
 
 	println("Welcome to Penguin OS!");
 
-	// Task proc0;
-	// Task proc1;
-
-	// Scheduling::createTask(&fproc0);
-	// Scheduling::createTask(&fproc1);
+	System::Scheduler::init();
+	System::Scheduler::add(process1);
+	System::Scheduler::add(process2);
 
 	while (1)
 	{

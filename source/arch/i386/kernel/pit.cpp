@@ -28,7 +28,7 @@ void PIT::init()
 	PIC::sendEOI(IRQ0);
 }
 
-void PIT::callback(Registers* regs)
+void PIT::callback(CPUState* regs)
 {
 	g_ticks++;
 	// TODO: Causes page fault at tick location
@@ -37,7 +37,7 @@ void PIT::callback(Registers* regs)
 		SLEEP_TICK--;
 	}
 
-	Scheduling::schedule();
+	System::Scheduler::schedule();
 }
 
 uint32_t PIT::getPITCount()

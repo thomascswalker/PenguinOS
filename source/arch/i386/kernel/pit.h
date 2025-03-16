@@ -20,6 +20,6 @@
 namespace PIT
 {
 	void	 init();
-	void	 callback(Registers* regs);
+	void	 callback(CPUState* regs);
 	uint32_t getPITCount();
 } // namespace PIT

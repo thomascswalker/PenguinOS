@@ -35,7 +35,7 @@ Dispatches the arguments held in registers `ebx`, `ecx`,
  the `syscalls` array containing a function pointer to each
  system call.
 */
-void sysCallDispatcher(Registers* regs)
+void sysCallDispatcher(CPUState* regs)
 {
 	uint32_t count = sizeof(syscalls) / sizeof(SysCallFunc);
 
@@ -58,19 +58,19 @@ void sysCallDispatcher(Registers* regs)
 	}
 }
 
-int32_t sysFork(Registers* regs) { return 0; }
-int32_t sysExit(Registers* regs) { return 0; }
-int32_t sysWait(Registers* regs) { return 0; }
-int32_t sysPipe(Registers* regs) { return 0; }
-int32_t sysRead(Registers* regs) { return 0; }
-int32_t sysKill(Registers* regs) { return 0; }
-int32_t sysExec(Registers* regs) { return 0; }
-int32_t sysFstat(Registers* regs) { return 0; }
-int32_t sysChdir(Registers* regs) { return 0; }
-int32_t sysDup(Registers* regs) { return 0; }
-int32_t sysGetpid(Registers* regs) { return 0; }
-int32_t sysSbrk(Registers* regs) { return 0; }
-int32_t sysSleep(Registers* regs)
+int32_t sysFork(CPUState* regs) { return 0; }
+int32_t sysExit(CPUState* regs) { return 0; }
+int32_t sysWait(CPUState* regs) { return 0; }
+int32_t sysPipe(CPUState* regs) { return 0; }
+int32_t sysRead(CPUState* regs) { return 0; }
+int32_t sysKill(CPUState* regs) { return 0; }
+int32_t sysExec(CPUState* regs) { return 0; }
+int32_t sysFstat(CPUState* regs) { return 0; }
+int32_t sysChdir(CPUState* regs) { return 0; }
+int32_t sysDup(CPUState* regs) { return 0; }
+int32_t sysGetpid(CPUState* regs) { return 0; }
+int32_t sysSbrk(CPUState* regs) { return 0; }
+int32_t sysSleep(CPUState* regs)
 {
 	// Get the milliseconds to sleep for from the ecx
 	// register.
@@ -96,11 +96,11 @@ int32_t sysSleep(Registers* regs)
 
 	return 0;
 }
-int32_t sysUptime(Registers* regs) { return 0; }
-int32_t sysOpen(Registers* regs) { return 0; }
-int32_t sysWrite(Registers* regs) { return 0; }
-int32_t sysMknod(Registers* regs) { return 0; }
-int32_t sysUnlink(Registers* regs) { return 0; }
-int32_t sysLink(Registers* regs) { return 0; }
-int32_t sysMkdir(Registers* regs) { return 0; }
-int32_t sysClose(Registers* regs) { return 0; }
+int32_t sysUptime(CPUState* regs) { return 0; }
+int32_t sysOpen(CPUState* regs) { return 0; }
+int32_t sysWrite(CPUState* regs) { return 0; }
+int32_t sysMknod(CPUState* regs) { return 0; }
+int32_t sysUnlink(CPUState* regs) { return 0; }
+int32_t sysLink(CPUState* regs) { return 0; }
+int32_t sysMkdir(CPUState* regs) { return 0; }
+int32_t sysClose(CPUState* regs) { return 0; }

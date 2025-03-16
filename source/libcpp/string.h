@@ -12,16 +12,16 @@ class BasicString
 	using ValueType = T;
 	using SizeType = size_t;
 
-	using PointerType = T*;
-	using ConstPointerType = const T*;
+	using PointerType = ValueType*;
+	using ConstPointerType = const ValueType*;
 
-	using IterType = T*;
-	using ConstIterType = const T*;
+	using IterType = ValueType*;
+	using ConstIterType = const ValueType*;
 
-	PointerType	 m_data;
-	SizeType	 m_size;
-	SizeType	 m_capacity;
-	Allocator<T> m_allocator;
+	PointerType			 m_data;
+	SizeType			 m_size;
+	SizeType			 m_capacity;
+	Allocator<ValueType> m_allocator;
 
 public:
 	static const SizeType npos = -1;
@@ -31,7 +31,7 @@ public:
 
 	// Default constructor
 	BasicString() : m_size(0), m_capacity(1) { m_data = m_allocator.allocate(1); }
-	BasicString(const BasicString<T>& other)
+	BasicString(const BasicString<ValueType>& other)
 	{
 		m_size = other.m_size;
 		m_capacity = other.m_capacity;
@@ -40,7 +40,7 @@ public:
 		m_data[m_size] = '\0';
 	}
 	// Assignment constructor
-	BasicString<T>& operator=(const BasicString<T>& other)
+	BasicString<ValueType>& operator=(const BasicString<ValueType>& other)
 	{
 		if (this == &other)
 		{
@@ -70,7 +70,7 @@ public:
 			m_data[i] = str[i];
 		}
 	}
-	BasicString(const T* str, SizeType count) : m_size(count), m_capacity(count + 1)
+	BasicString(const ValueType* str, SizeType count) : m_size(count), m_capacity(count + 1)
 	{
 		if (strlen(str) == 1)
 		{
@@ -92,7 +92,7 @@ public:
 		m_data = m_allocator.allocate(size);
 		memset(m_data, '\0', strlen(m_data) + 1);
 	}
-	BasicString(SizeType size, T c) : m_size(size), m_capacity(size + 1)
+	BasicString(SizeType size, ValueType c) : m_size(size), m_capacity(size + 1)
 	{
 		m_data = m_allocator.allocate(size);
 		memset(m_data, c, strlen(m_data));
@@ -102,17 +102,17 @@ public:
 
 	/* Methods */
 
-	T*		 data() const { return m_data; }
-	SizeType size() const { return m_size; }
-	SizeType capacity() const { return m_capacity; }
-	void	 reserve(SizeType newCapacity)
+	ValueType* data() const { return m_data; }
+	SizeType   size() const { return m_size; }
+	SizeType   capacity() const { return m_capacity; }
+	void	   reserve(SizeType newCapacity)
 	{
 		if (m_capacity > newCapacity)
 		{
 			return;
 		}
 
-		T* newData = new T[newCapacity];
+		ValueType* newData = new ValueType[newCapacity];
 
 		// Copy old data
 		if (m_data != nullptr)
@@ -143,7 +143,7 @@ public:
 		m_size -= count;
 		m_data[m_size] = '\0';
 	}
-	void append(T c)
+	void append(ValueType c)
 	{
 		if (m_size == m_capacity)
 		{
@@ -153,16 +153,16 @@ public:
 		m_data[m_size] = c;
 		m_size++;
 	}
-	void append(const BasicString<T>& p)
+	void append(const BasicString<ValueType>& p)
 	{
-		for (T c : p)
+		for (ValueType c : p)
 		{
 			append(c);
 		}
 	}
-	Array<BasicString<T>> split(T delimiter) const
+	Array<BasicString<ValueType>> split(ValueType delimiter) const
 	{
-		Array<BasicString<T>> tokens;
+		Array<BasicString<ValueType>> tokens;
 
 		SizeType start = 0;
 		SizeType end = find(delimiter);
@@ -172,7 +172,7 @@ public:
 			SizeType diff = end - start;
 			if (diff)
 			{
-				BasicString<T> s = substr(start, diff);
+				BasicString<ValueType> s = substr(start, diff);
 				tokens.add(s);
 			}
 			start = end + 1; // Skip delimiter
@@ -189,7 +189,7 @@ public:
 
 		return tokens;
 	}
-	void resize(SizeType size, T c = '\0')
+	void resize(SizeType size, ValueType c = '\0')
 	{
 		if (size < m_size)
 		{
@@ -200,7 +200,7 @@ public:
 			if (size > m_capacity)
 			{
 				m_capacity = size;
-				T* newData = new T[m_capacity + 1];
+				ValueType* newData = new ValueType[m_capacity + 1];
 				memcpy(newData, m_data, m_size);
 				for (SizeType i = m_size; i < size; i++)
 				{
@@ -221,14 +221,14 @@ public:
 		}
 		m_data[m_size] = '\0';
 	}
-	BasicString<T> substr(SizeType pos, SizeType count = BasicString<T>::npos) const
+	BasicString<ValueType> substr(SizeType pos, SizeType count = BasicString<ValueType>::npos) const
 	{
 		count = (count == npos || pos + count > m_size) ? m_size - pos : count;
-		BasicString<T> result(m_data + pos, count);
+		BasicString<ValueType> result(m_data + pos, count);
 		return result;
 	}
 
-	SizeType find(T c, SizeType start = 0) const
+	SizeType find(ValueType c, SizeType start = 0) const
 	{
 		for (SizeType i = start; i < m_size; i++)
 		{
@@ -237,10 +237,10 @@ public:
 				return i;
 			}
 		}
-		return BasicString<T>::npos;
+		return BasicString<ValueType>::npos;
 	}
-	SizeType findFirst(T c) const { return find(c, 0); }
-	SizeType findLast(T c, SizeType pos = BasicString<T>::npos) const
+	SizeType findFirst(ValueType c) const { return find(c, 0); }
+	SizeType findLast(ValueType c, SizeType pos = BasicString<ValueType>::npos) const
 	{
 		if (m_size == 0)
 		{
@@ -280,7 +280,7 @@ public:
 		m_capacity = 1;
 		m_data = m_allocator.allocate(1);
 	}
-	void trim(T c)
+	void trim(ValueType c)
 	{
 		int pos = m_size - 1;
 		while (m_data[pos] == c)
@@ -296,9 +296,9 @@ public:
 		trim('\t');
 	}
 
-	T* cstr() const
+	ValueType* cstr() const
 	{
-		T* result = (T*)std::malloc(m_size);
+		ValueType* result = (ValueType*)std::malloc(m_size);
 		result[m_size + 1] = '\0';
 		return result;
 	}
@@ -309,28 +309,28 @@ public:
 	ConstIterType end() const { return ConstIterType(m_data + m_size); }
 	/* Operators */
 
-	BasicString<T> operator+(const BasicString<T>& other)
+	BasicString<ValueType> operator+(const BasicString<ValueType>& other)
 	{
-		BasicString<T> temp(*this);
-		for (T c : other)
+		BasicString<ValueType> temp(*this);
+		for (ValueType c : other)
 		{
 			temp.append(c);
 		}
 		temp[temp.m_size] = '\0';
 		return temp;
 	}
-	BasicString<T>& operator+=(const BasicString<T>& other)
+	BasicString<ValueType>& operator+=(const BasicString<ValueType>& other)
 	{
-		for (T c : other)
+		for (ValueType c : other)
 		{
 			append(c);
 		}
 		m_data[m_size] = '\0';
 		return *this;
 	}
-	BasicString<T> operator+(const T* other)
+	BasicString<ValueType> operator+(const ValueType* other)
 	{
-		BasicString<T> temp = *this;
+		BasicString<ValueType> temp = *this;
 		for (uint32_t i = 0; i < strlen(other); i++)
 		{
 			temp.append(other[i]);
@@ -338,26 +338,29 @@ public:
 		temp[temp.m_size] = '\0';
 		return temp;
 	}
-	BasicString<T>& operator+=(const T* other)
+	BasicString<ValueType>& operator+=(const ValueType* other)
 	{
 		*this = *this + other;
 		return *this;
 	}
-	bool operator==(const BasicString<T>& other) const { return strcmp(m_data, other.data()); }
-	bool operator==(T* other) const { return strcmp(m_data, other); }
-	bool operator==(const T* other) const { return strcmp(m_data, other); }
-	bool operator!=(T* other) const { return !(*this == other); }
-	bool operator!=(const T* other) const { return !(*this == other); }
-	bool operator!=(const BasicString<T>& other) const { return !(*this == other); }
-	operator T*() const { return m_data; }
-	T&		 operator[](SizeType index) { return m_data[index]; }
-	const T& operator[](SizeType index) const { return m_data[index]; }
+	bool operator==(const BasicString<ValueType>& other) const
+	{
+		return strcmp(m_data, other.data());
+	}
+	bool operator==(ValueType* other) const { return strcmp(m_data, other); }
+	bool operator==(const ValueType* other) const { return strcmp(m_data, other); }
+	bool operator!=(ValueType* other) const { return !(*this == other); }
+	bool operator!=(const ValueType* other) const { return !(*this == other); }
+	bool operator!=(const BasicString<ValueType>& other) const { return !(*this == other); }
+	operator ValueType*() const { return m_data; }
+	ValueType&		 operator[](SizeType index) { return m_data[index]; }
+	const ValueType& operator[](SizeType index) const { return m_data[index]; }
 };
 
-template <typename T>
-static BasicString<T> operator+(const T* lhs, const BasicString<T>& rhs)
+template <typename ValueType>
+static BasicString<ValueType> operator+(const ValueType* lhs, const BasicString<ValueType>& rhs)
 {
-	BasicString<T> result(lhs);
+	BasicString<ValueType> result(lhs);
 	for (auto c : rhs)
 	{
 		result.append(c);

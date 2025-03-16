@@ -1,13 +1,19 @@
 namespace std
 {
-	template <typename T>
+	template <typename ValueType>
 	struct Less
 	{
-		constexpr bool operator()(const T& lhs, const T& rhs) const { return lhs < rhs; }
+		constexpr bool operator()(const ValueType& lhs, const ValueType& rhs) const
+		{
+			return lhs < rhs;
+		}
 	};
-	template <typename T>
+	template <typename ValueType>
 	struct Greater
 	{
-		constexpr bool operator()(const T& lhs, const T& rhs) const { return lhs > rhs; }
+		constexpr bool operator()(const ValueType& lhs, const ValueType& rhs) const
+		{
+			return lhs > rhs;
+		}
 	};
 } // namespace std

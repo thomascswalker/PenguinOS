@@ -21,7 +21,7 @@ void IDE::init()
 	IDT::registerInterruptHandler(IRQ14, IDE::callback);
 }
 
-void IDE::callback(Registers* regs) { /*debug("File IO callback");*/ }
+void IDE::callback(CPUState* regs) { /*debug("File IO callback");*/ }
 
 ATADevice* IDE::getDevice(uint32_t index) { return &devices[index]; }
 

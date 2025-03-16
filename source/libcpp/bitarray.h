@@ -2,11 +2,11 @@
 
 #include <stdio.h>
 
-template <typename T>
+template <typename ValueType>
 class BitArray
 {
-	using ValueType = T;
-	using PointerType = T*;
+	using ValueType = ValueType;
+	using PointerType = ValueType*;
 	using SizeType = size_t;
 	PointerType m_data = nullptr;
 	SizeType	m_size = 0;
@@ -18,8 +18,8 @@ public:
 	BitArray(SizeType size = 0)
 	{
 		m_size = size;
-		m_bitSize = m_size * sizeof(T) * 8;
-		memset(m_data, 0, m_size * sizeof(T));
+		m_bitSize = m_size * sizeof(ValueType) * 8;
+		memset(m_data, 0, m_size * sizeof(ValueType));
 	}
 
 	PointerType data() const { return m_data; }
@@ -30,28 +30,28 @@ public:
 
 	void set(SizeType pos)
 	{
-		SizeType index = pos == 0 ? 0 : pos / (sizeof(T) * 8);
-		uint8_t	 offset = pos == 0 ? 0 : pos % (sizeof(T) * 8);
+		SizeType index = pos == 0 ? 0 : pos / (sizeof(ValueType) * 8);
+		uint8_t	 offset = pos == 0 ? 0 : pos % (sizeof(ValueType) * 8);
 		m_data[index] |= (1 << offset);
 	}
 
 	void reset(SizeType pos)
 	{
-		SizeType index = pos == 0 ? 0 : pos / (sizeof(T) * 8);
-		uint8_t	 offset = pos == 0 ? 0 : pos % (sizeof(T) * 8);
+		SizeType index = pos == 0 ? 0 : pos / (sizeof(ValueType) * 8);
+		uint8_t	 offset = pos == 0 ? 0 : pos % (sizeof(ValueType) * 8);
 		m_data[index] &= ~(1 << offset);
 	}
 
 	void fill(bool state)
 	{
-		T value = state ? 0xFFFFFFFF : 0x0;
+		ValueType value = state ? 0xFFFFFFFF : 0x0;
 		memset(m_data, value, m_size);
 	}
 
 	void fill(bool state, SizeType pos, SizeType size)
 	{
-		T value = state ? 0xFFFFFFFF : 0x0;
-		memset(m_data + pos, value, size / sizeof(T));
+		ValueType value = state ? 0xFFFFFFFF : 0x0;
+		memset(m_data + pos, value, size / sizeof(ValueType));
 	}
 
 	void clear() { memset(m_data, 0, m_size); }
@@ -60,8 +60,8 @@ public:
 	// if it is 1 and false if it is 0.
 	bool test(SizeType pos) const
 	{
-		SizeType index = pos == 0 ? 0 : pos / (sizeof(T) * 8);
-		uint8_t	 offset = pos == 0 ? 0 : pos % (sizeof(T) * 8);
+		SizeType index = pos == 0 ? 0 : pos / (sizeof(ValueType) * 8);
+		uint8_t	 offset = pos == 0 ? 0 : pos % (sizeof(ValueType) * 8);
 		return (m_data[index] & (1 << offset)) != 0;
 	}
 

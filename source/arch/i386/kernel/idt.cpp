@@ -127,16 +127,16 @@ namespace IDT
 	void unregisterInterruptHandler(uint32_t index) { handlers[index] = 0; }
 
 	// Interrupt service routines
-	void isrHandler(Registers regs)
+	void isrHandler(CPUState regs)
 	{
 		switch (regs.intNo)
 		{
 			case INVALID_OPCODE:
-				dumpRegisters(&regs);
+				dumpCPUState(&regs);
 				panic("Invalid Opcode.");
 				break;
 			case DOUBLE_FAULT:
-				dumpRegisters(&regs);
+				dumpCPUState(&regs);
 				panic("Double Fault. Code: %d", regs.errCode);
 				break;
 			case GENERAL_PROTECTION_FAULT:
@@ -155,9 +155,9 @@ namespace IDT
 		}
 	}
 
-	void handleGeneralProtectionFault(Registers* regs)
+	void handleGeneralProtectionFault(CPUState* regs)
 	{
-		dumpRegisters(regs);
+		dumpCPUState(regs);
 
 		uint32_t rpl = regs->errCode & 0x3;
 		uint32_t ti = (regs->errCode >> 2) & 1;
@@ -169,9 +169,9 @@ namespace IDT
 			regs->errCode, rpl, ti, index);
 	}
 
-	void handlePageFault(Registers* regs)
+	void handlePageFault(CPUState* regs)
 	{
-		dumpRegisters(regs);
+		dumpCPUState(regs);
 
 		// Obtain the fault address from the CR2 register.
 		uint32_t addr = 0;
@@ -185,7 +185,7 @@ namespace IDT
 	}
 
 	// Interrupt request
-	void irqHandler(Registers regs)
+	void irqHandler(CPUState regs)
 	{
 		uint8_t irq_no = regs.intNo;
 
@@ -199,13 +199,22 @@ namespace IDT
 		PIC::sendEOI(irq_no);
 	}
 
-	void dumpRegisters(Registers* reg)
+	void dumpCPUState(CPUState* reg)
 	{
-		warning("Dumping registers:");
-		warning("edi: %x, esi: %x, ebp: %x, esp: %x, ebx: %x, edx: %x, ecx: %x, eax: %x", reg->edi,
-			reg->esi, reg->ebp, reg->esp, reg->ebx, reg->edx, reg->ecx, reg->eax);
-		warning("int_no: %d, err_code: %d", reg->intNo, reg->errCode);
-		warning("Instruction Pointer (eip): %x", reg->eip);
+		warning("CPU State:\n"
+				"\tSegments: cs: %x, ds: %x, es: %x, fs: %x, gs: %x, ss: %x\n"
+				"\tRegisters: edi: %x, esi: %x, ebp: %x, esp: %x\n"
+				"\t           ebx: %x, edx: %x, ecx: %x, eax: %x\n"
+				"\tInstruction Pointer (eip): %x\n"
+				"\tInterrupt: %d, Error Code: %d\n"
+				"\tFlags: %x\n",
+			reg->cs, reg->ds, reg->es, reg->fs, reg->gs, reg->ss, //
+			reg->edi, reg->esi, reg->ebp, reg->esp,				  //
+			reg->ebx, reg->edx, reg->ecx, reg->eax,				  //
+			reg->eip,											  //
+			reg->intNo, reg->errCode,							  //
+			reg->eFlags											  //
+		);
 
 		// Obtain the current frame pointer
 		void** frame;

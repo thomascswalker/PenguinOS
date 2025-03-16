@@ -12,13 +12,13 @@ class Array
 	using ValueType = T;
 	using SizeType = size_t;
 
-	using PointerType = T*;
-	using ConstPointerType = const T*;
-	using ReferenceType = T&;
-	using ConstReferenceType = const T&;
+	using PointerType = ValueType*;
+	using ConstPointerType = const ValueType*;
+	using ReferenceType = ValueType&;
+	using ConstReferenceType = const ValueType&;
 
-	using IterType = Iterator<T>;
-	using ConstIterType = const Iterator<T>;
+	using IterType = Iterator<ValueType>;
+	using ConstIterType = const Iterator<ValueType>;
 
 private:
 	PointerType			 m_data;

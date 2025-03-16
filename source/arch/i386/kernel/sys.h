@@ -7,18 +7,21 @@
 #define GB(x) (x * 0x40000000)
 #define asm __asm__ __volatile__
 
-struct Registers
+#define SEG_KERNEL_CODE 0x08
+#define SEG_KERNEL_DATA 0x10
+#define SEG_USER_CODE 0x1B
+#define SEG_USER_DATA 0x23
+
+struct CPUState
 {
-	/* Pushed by common stub. */
-	uint32_t ds, edi, esi, ebp, esp, ebx, edx, ecx, eax;
-	/* Pushed by wrapper function. */
-	uint32_t intNo, errCode;
-	/* Pushed by interrupt. */
-	uint32_t eip, cs, eFlags, userEsp, ss;
+	uint32_t gs, fs, es, ds;						 // Offsets 0, 4, 8, 12
+	uint32_t edi, esi, ebp, esp, ebx, edx, ecx, eax; // OFfsets 16, 20, 24, 28, 32, 36, 40, 44
+	uint32_t intNo, errCode;						 // Offsets 48, 52
+	uint32_t eip, cs, eFlags, userEsp, ss;			 // Offsets 56, 60, 64, 68, 72
 };
 
 // Function pointer to an IRQ callback
-typedef void (*Handler)(Registers*);
+typedef void (*Handler)(CPUState*);
 
 // Reads a byte of data from the specified IO port
 static inline uint8_t inb(uint16_t port)

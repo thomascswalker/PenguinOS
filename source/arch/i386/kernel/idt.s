@@ -60,33 +60,40 @@ ISR_NOERRORCODE 128
 
 extern isrHandler
 isrCommon:
-    pusha
+    pusha                    ; Push all general-purpose registers onto the stack
 
-    mov	    ax, ds
-    push	eax
-    mov 	esi, eax
+    ; Push all segment registers onto the stack
+    mov     ax, gs           ; Move the value of the gs segment register into ax
+    push    eax              ; Push the value of ax (which is the value of gs) onto the stack
+    mov     ax, fs           ; Move the value of the fs segment register into ax
+    push    eax              ; Push the value of ax (which is the value of fs) onto the stack
+    mov     ax, es           ; Move the value of the es segment register into ax
+    push    eax              ; Push the value of ax (which is the value of es) onto the stack
+    mov     ax, ds           ; Move the value of the ds segment register into ax
+    push    eax              ; Push the value of ax (which is the value of ds) onto the stack
+    mov     esi, eax         ; Move the value of ax into esi (save the original ds value)
 
-    mov 	ax, 0x10
-    mov 	ds, ax
-    mov 	es, ax
-    mov 	fs, ax
-    mov 	gs, ax
+    mov     ax, 0x10         ; Move the value 0x10 (kernel data segment selector) into ax
+    mov     ds, ax           ; Load the kernel data segment selector into ds
+    mov     es, ax           ; Load the kernel data segment selector into es
+    mov     fs, ax           ; Load the kernel data segment selector into fs
+    mov     gs, ax           ; Load the kernel data segment selector into gs
 
-    call	isrHandler
+    call    isrHandler       ; Call the C function isrHandler to handle the interrupt
 
-    pop	    ebx
-    mov 	ebx, esi
+    pop     ebx              ; Pop the top value from the stack into ebx (original ds value)
+    mov     ebx, esi         ; Move the saved original ds value from esi into ebx
 
-    mov 	ds, bx
-    mov 	es, bx
-    mov 	fs, bx
-    mov 	gs, bx
+    mov     ds, bx           ; Restore the original value of ds from bx
+    mov     es, bx           ; Restore the original value of es from bx
+    mov     fs, bx           ; Restore the original value of fs from bx
+    mov     gs, bx           ; Restore the original value of gs from bx
 
-    popa
-    add     esp, 8
-    sti
-    iret
-                                                            ; pops 5 things at once: CS, EIP, EFLAGS, SS, and ESP
+    popa                    ; Pop all general-purpose registers from the stack
+    add     esp, 8           ; Adjust the stack pointer to remove the error code and interrupt number
+    sti                      ; Set the interrupt flag (enable interrupts)
+    iret                     ; Return from the interrupt handler
+
 %macro IRQ 2
 global irq%1
 irq%1:
@@ -115,29 +122,38 @@ IRQ 15, 47
 
 extern irqHandler
 irqCommon:
-    pusha
+    pusha                    ; Push all general-purpose registers onto the stack
 
-    mov	    ax, ds
-    push	eax
-    mov 	esi, eax
+    mov     ax, gs           ; Move the value of the gs segment register into ax
+    push    eax              ; Push the value of ax (which is the value of gs) onto the stack
+    mov     ax, fs           ; Move the value of the fs segment register into ax
+    push    eax              ; Push the value of ax (which is the value of fs) onto the stack
+    mov     ax, es           ; Move the value of the es segment register into ax
+    push    eax              ; Push the value of ax (which is the value of es) onto the stack
+    mov     ax, ds           ; Move the value of the ds segment register into ax
+    push    eax              ; Push the value of ax (which is the value of ds) onto the stack
+    mov     esi, eax         ; Move the value of ax into esi (save the original ds value)
 
-    mov 	ax, 0x10
-    mov 	ds, ax
-    mov 	es, ax
-    mov 	fs, ax
-    mov 	gs, ax
+    mov     ax, 0x10         ; Move the value 0x10 (kernel data segment selector) into ax
+    mov     ds, ax           ; Load the kernel data segment selector into ds
+    mov     es, ax           ; Load the kernel data segment selector into es
+    mov     fs, ax           ; Load the kernel data segment selector into fs
+    mov     gs, ax           ; Load the kernel data segment selector into gs
 
-    call	irqHandler
+    call    irqHandler       ; Call the C function irqHandler to handle the interrupt
 
-    pop	    ebx
-    mov 	ebx, esi
+    pop     ebx              ; Pop the top value from the stack into ebx (original ds value)
+    mov     ebx, esi         ; Move the saved original ds value from esi into ebx
 
-    mov 	ds, bx
-    mov 	es, bx
-    mov 	fs, bx
-    mov 	gs, bx
+    mov     ds, bx           ; Restore the original value of ds from bx
+    pop     eax              ; Pop the original value of es from the stack into eax
+    mov     es, ax           ; Restore the original value of es from ax
+    pop     eax              ; Pop the original value of fs from the stack into eax
+    mov     fs, ax           ; Restore the original value of fs from ax
+    pop     eax              ; Pop the original value of gs from the stack into eax
+    mov     gs, ax           ; Restore the original value of gs from ax
 
-    popa
-    add     esp, 8
-    sti
-    iret
+    popa                    ; Pop all general-purpose registers from the stack
+    add     esp, 8           ; Adjust the stack pointer to remove the error code and interrupt number
+    sti                      ; Set the interrupt flag (enable interrupts)
+    iret                     ; Return from the interrupt handler

@@ -3,50 +3,63 @@
 #include <memory.h>
 
 template <typename T>
+class ListNode;
+template <typename T>
+class List;
+
+template <typename T>
+struct ListNode
+{
+	using ValueType = T;
+	using SizeType = size_t;
+	using ReferenceType = ValueType&;
+	using ConstReferenceType = const ValueType&;
+	using PointerType = ValueType*;
+	using ConstPointerType = const ValueType*;
+
+	ValueType value;
+	ListNode* next;
+	ListNode* prev;
+
+public:
+	ListNode() = default;
+	ListNode(ValueType newValue) : value(newValue), next(nullptr), prev(nullptr) {}
+
+	ReferenceType	   getValue() { return value; }
+	ConstReferenceType getValue() const { return value; }
+	PointerType		   get() { return &value; }
+	ConstPointerType   get() const { return &value; }
+
+	ListNode*		getNext() { return next; }
+	const ListNode* getNext() const { return next; }
+	ListNode*		getPrev() { return prev; }
+	const ListNode* getPrev() const { return prev; }
+};
+
+template <typename T>
 class List
 {
 	using ValueType = T;
 	using SizeType = size_t;
 	using ReferenceType = ValueType&;
 	using ConstReferenceType = const ValueType&;
-	using PointerType = T*;
-	using ConstPointerType = const T*;
+	using PointerType = ValueType*;
+	using ConstPointerType = const ValueType*;
 
-	struct Node
-	{
-	protected:
-		ValueType value;
-		Node*	  next;
-		Node*	  prev;
-
-	public:
-		friend class List;
-
-		Node() = default;
-		Node(ValueType newValue) : value(newValue), next(nullptr), prev(nullptr) {}
-
-		ReferenceType	   getValue() { return value; }
-		ConstReferenceType getValue() const { return value; }
-
-		Node*		getNext() { return next; }
-		const Node* getNext() const { return next; }
-		Node*		getPrev() { return prev; }
-		const Node* getPrev() const { return prev; }
-	};
-
-	Node*  m_head;
-	Node*  m_tail;
-	size_t m_size;
+	using NodeType = ListNode<T>;
+	NodeType* m_head;
+	NodeType* m_tail;
+	size_t	  m_size;
 
 public:
 	List() : m_head(nullptr), m_tail(nullptr), m_size(0) {}
 
-	SizeType size() const { return m_size; }
-	bool	 isEmpty() const { return m_size == 0; }
-	Node*	 getFront() const { return m_head; }
-	Node*	 getBack() const { return m_tail; }
+	SizeType  size() const { return m_size; }
+	bool	  isEmpty() const { return m_size == 0; }
+	NodeType* getFront() const { return m_head; }
+	NodeType* getBack() const { return m_tail; }
 
-	void addFront(Node* newNode)
+	void addFront(NodeType* newNode)
 	{
 		if (m_head != nullptr)
 		{
@@ -63,9 +76,9 @@ public:
 		m_size++;
 	}
 
-	void addFront(ConstReferenceType value) { addFront(new Node(value)); }
+	void addFront(ConstReferenceType value) { addFront(new NodeType(value)); }
 
-	void addBack(Node* newNode)
+	void addBack(NodeType* newNode)
 	{
 		if (m_tail != nullptr)
 		{
@@ -83,11 +96,11 @@ public:
 		m_size++;
 	}
 
-	void addBack(const T& value) { addBack(new Node(value)); }
+	void addBack(const ValueType& value) { addBack(new NodeType(value)); }
 
 	void clear()
 	{
-		Node* node;
+		NodeType* node;
 
 		while (m_head != nullptr && m_size > 0)
 		{
@@ -101,9 +114,9 @@ public:
 		m_tail = nullptr;
 	}
 
-	Node* at(SizeType index)
+	NodeType* at(SizeType index)
 	{
-		Node* current = m_head;
+		NodeType* current = m_head;
 		for (SizeType i = 0; i < index; i++)
 		{
 			current = current->next;
@@ -111,7 +124,7 @@ public:
 		return current;
 	}
 
-	void remove(Node* node)
+	void remove(NodeType* node)
 	{
 		if (node == nullptr)
 		{
@@ -146,9 +159,9 @@ public:
 		m_size--;
 	}
 
-	Node* find(ConstReferenceType value)
+	NodeType* find(ReferenceType value)
 	{
-		Node* node = m_head;
+		NodeType* node = m_head;
 		while (node != nullptr)
 		{
 			if (node->getValue() == value)
@@ -160,7 +173,21 @@ public:
 		return node;
 	}
 
-	bool contains(const T& value) { return find(value) != nullptr; }
+	NodeType* find(PointerType value)
+	{
+		NodeType* node = m_head;
+		while (node != nullptr)
+		{
+			if (node->getValue() == *value)
+			{
+				break;
+			}
+			node = node->next;
+		}
+		return node;
+	}
+
+	bool contains(const ValueType& value) { return find(value) != nullptr; }
 
 	void rotate(SizeType count)
 	{
@@ -171,15 +198,15 @@ public:
 
 		for (uint32_t i = 0; i < count; i++)
 		{
-			Node* temp = m_head;
+			NodeType* temp = m_head;
 			m_head = m_head->next;
 			m_tail = temp;
 			m_tail->next = m_head;
 		}
 	}
 
-	Node*		begin() { return getFront(); }
-	const Node* begin() const { return getFront(); }
-	Node*		end() { return getBack(); }
-	const Node* end() const { return getBack(); }
+	NodeType*		begin() { return getFront(); }
+	const NodeType* begin() const { return getFront(); }
+	NodeType*		end() { return getBack(); }
+	const NodeType* end() const { return getBack(); }
 };

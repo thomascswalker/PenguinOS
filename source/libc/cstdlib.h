@@ -10,46 +10,46 @@ namespace std
 	EXTERN void	 free(void* ptr);
 	EXTERN void* realloc(void* ptr, const uint32_t size);
 
-	template <typename T>
+	template <typename ValueType>
 	struct RemoveReference
 	{
-		typedef T Type;
+		typedef ValueType Type;
 	};
 
-	template <typename T>
-	struct RemoveReference<T&>
+	template <typename ValueType>
+	struct RemoveReference<ValueType&>
 	{
-		typedef T Type;
+		typedef ValueType Type;
 	};
 
-	template <typename T>
-	struct RemoveReference<T&&>
+	template <typename ValueType>
+	struct RemoveReference<ValueType&&>
 	{
-		typedef T Type;
+		typedef ValueType Type;
 	};
 
-	template <typename T>
-	constexpr typename RemoveReference<T>::Type&& move(T&& t) noexcept
+	template <typename ValueType>
+	constexpr typename RemoveReference<ValueType>::Type&& move(ValueType&& t) noexcept
 	{
-		return static_cast<typename RemoveReference<T>::Type&&>(t);
+		return static_cast<typename RemoveReference<ValueType>::Type&&>(t);
 	}
 
-	template <typename T>
-	constexpr T&& forward(typename RemoveReference<T>::Type& t) noexcept
+	template <typename ValueType>
+	constexpr ValueType&& forward(typename RemoveReference<ValueType>::Type& t) noexcept
 	{
-		return static_cast<T&&>(t);
+		return static_cast<ValueType&&>(t);
 	}
 
-	template <typename T>
-	constexpr T&& forward(typename RemoveReference<T>::Type&& t) noexcept
+	template <typename ValueType>
+	constexpr ValueType&& forward(typename RemoveReference<ValueType>::Type&& t) noexcept
 	{
-		return static_cast<T&&>(t);
+		return static_cast<ValueType&&>(t);
 	}
 
-	template <typename T>
-	void swap(T& t1, T& t2)
+	template <typename ValueType>
+	void swap(ValueType& t1, ValueType& t2)
 	{
-		T tmp = std::move(t1);
+		ValueType tmp = std::move(t1);
 		t1 = std::move(t2);
 		t2 = std::move(tmp);
 	}
