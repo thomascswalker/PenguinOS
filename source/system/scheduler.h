@@ -11,7 +11,7 @@ namespace System
 	/**
 	 * @brief Switches the CPU context from the previous state to the next state.
 	 *
-	 * Defined in 'scheduling.s'
+	 * Defined in 'scheduler.s'
 	 *
 	 * @param prev A pointer to the CPUState structure representing the current
 	 *             state of the CPU that will be saved.
@@ -25,16 +25,7 @@ namespace System
 	 */
 	namespace Scheduler
 	{
-		void init();
-		/**
-		 * @brief Adds a new process to the scheduler.
-		 * @param func The entry point function for the new process.
-		 */
 		void add(EntryPoint func);
-
-		/**
-		 * @brief Switches to the next process in the queue.
-		 */
 		void schedule();
 	}; // namespace Scheduler
 }; // namespace System

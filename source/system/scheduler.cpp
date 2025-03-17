@@ -1,15 +1,20 @@
 #include <list.h>
 #include <memory.h>
 #include <pic.h>
-#include <scheduling.h>
+#include <scheduler.h>
 #include <stdio.h>
-#include <thread.h>
 
 using namespace System;
+
+#define STACK_SIZE 0x400
 
 static List<Process*> g_queue;
 static uint32_t		  g_nextPID = 0; // Contains the next free PID
 
+/**
+ * @brief Adds a new process to the scheduler.
+ * @param func The entry point function for the new process.
+ */
 void Scheduler::add(EntryPoint func)
 {
 	Process* process = (Process*)std::malloc(sizeof(Process));
@@ -58,6 +63,9 @@ void Scheduler::add(EntryPoint func)
 	g_queue.addBack(process);
 }
 
+/**
+ * @brief Switches to the next process in the queue.
+ */
 void Scheduler::schedule()
 {
 	if (g_queue.empty())
@@ -69,8 +77,8 @@ void Scheduler::schedule()
 	{
 		return;
 	}
-	auto next = curr->getNext();
 
+	auto next = curr->getNext();
 	if (curr == next)
 	{
 		return;

@@ -1,6 +1,6 @@
 #include <pic.h>
 #include <pit.h>
-#include <scheduling.h>
+#include <scheduler.h>
 #include <stdio.h>
 
 // Global ticks for the timer.

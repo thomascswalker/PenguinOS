@@ -11,7 +11,7 @@ Main entry point into PenguinOS.
 #include <memory.h>
 #include <multiboot.h>
 #include <pit.h>
-#include <scheduling.h>
+#include <scheduler.h>
 #include <shell.h>
 
 static uint32_t i = 0;
