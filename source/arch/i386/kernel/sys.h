@@ -78,3 +78,7 @@ static inline void sysexit()
 static inline void invalidate(uint32_t vaddr) { asm("invlpg %0" ::"m"(vaddr)); }
 
 void sleep(uint32_t seconds);
+
+#define PUSH(esp, value) \
+	*esp -= 1;           \
+	**esp = value;

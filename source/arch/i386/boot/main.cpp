@@ -15,6 +15,7 @@ Main entry point into PenguinOS.
 #include <shell.h>
 
 static uint32_t i = 0;
+static uint32_t j = 0;
 
 void process1()
 {
@@ -28,7 +29,7 @@ void process2()
 {
 	while (1)
 	{
-		printf("Process 2 is running\n");
+		printf("Process 2 is running: %d\n", j++);
 	}
 }
 
@@ -58,7 +59,6 @@ EXTERN void kmain(MultibootInfo* info, uint32_t magic)
 
 	println("Welcome to Penguin OS!");
 
-	System::Scheduler::init();
 	System::Scheduler::add(process1);
 	System::Scheduler::add(process2);
 

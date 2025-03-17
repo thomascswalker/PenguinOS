@@ -55,7 +55,7 @@ public:
 	List() : m_head(nullptr), m_tail(nullptr), m_size(0) {}
 
 	SizeType  size() const { return m_size; }
-	bool	  isEmpty() const { return m_size == 0; }
+	bool	  empty() const { return m_size == 0; }
 	NodeType* getFront() const { return m_head; }
 	NodeType* getBack() const { return m_tail; }
 
@@ -159,6 +159,22 @@ public:
 		m_size--;
 	}
 
+	void removeFront()
+	{
+		if (m_head != nullptr)
+		{
+			remove(m_head);
+		}
+	}
+
+	void removeBack()
+	{
+		if (m_tail != nullptr)
+		{
+			remove(m_tail);
+		}
+	}
+
 	NodeType* find(ReferenceType value)
 	{
 		NodeType* node = m_head;
@@ -191,17 +207,20 @@ public:
 
 	void rotate(SizeType count)
 	{
-		if (count == 0 || count == m_size || m_head == nullptr)
+		if (count == 0 || count >= m_size || m_head == nullptr)
 		{
 			return;
 		}
 
-		for (uint32_t i = 0; i < count; i++)
+		for (SizeType i = 0; i < count; i++)
 		{
 			NodeType* temp = m_head;
 			m_head = m_head->next;
+			m_tail->next = temp;
+			temp->prev = m_tail;
 			m_tail = temp;
 			m_tail->next = m_head;
+			m_head->prev = m_tail;
 		}
 	}
 

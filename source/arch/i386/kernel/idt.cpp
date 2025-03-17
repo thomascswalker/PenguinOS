@@ -202,7 +202,8 @@ namespace IDT
 	void dumpCPUState(CPUState* reg)
 	{
 		warning("CPU State:\n"
-				"\tSegments: cs: %x, ds: %x, es: %x, fs: %x, gs: %x, ss: %x\n"
+				"\tSegments: cs: %x, ds: %x, es: %x\n"
+				"\t          fs: %x, gs: %x, ss: %x\n"
 				"\tRegisters: edi: %x, esi: %x, ebp: %x, esp: %x\n"
 				"\t           ebx: %x, edx: %x, ecx: %x, eax: %x\n"
 				"\tInstruction Pointer (eip): %x\n"

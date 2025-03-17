@@ -11,10 +11,10 @@ namespace System
 
 	struct Process
 	{
-		uint32_t		pid;
+		uint32_t   pid;
 		EntryPoint func;
-		CPUState		state;
-		Process*		next;
-		uint8_t*		stack;
+		CPUState*  state;
+		Process*   next;
+		uint8_t*   stack;
 	};
 } // namespace System
