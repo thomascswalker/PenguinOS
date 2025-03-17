@@ -1,7 +1,15 @@
 #include <cstdlib.h>
 #include <cstring.h>
 
-// 	Copies one buffer to another.
+/**
+ * Copies one buffer to another.
+ *
+ * @param dest Destination buffer.
+ * @param source Source buffer.
+ * @param size Number of bytes to copy.
+ *
+ * @return Pointer to the destination buffer.
+ */
 void* memcpy(void* dest, void* source, size_t size)
 {
 	uint8_t*	   p_dest = (uint8_t*)dest;
@@ -14,7 +22,15 @@ void* memcpy(void* dest, void* source, size_t size)
 	return dest;
 }
 
-// Fills a buffer with a repeated byte.
+/**
+ * Fills a buffer with a repeated uint8_t value.
+ *
+ * @param dest Destination buffer.
+ * @param value Value to fill the buffer with.
+ * @param size [n] bytes to fill.
+ *
+ * @return Pointer to the destination buffer.
+ */
 void* memset(void* dest, uint8_t value, int32_t size)
 {
 	char* tmp = (char*)dest;
@@ -25,7 +41,15 @@ void* memset(void* dest, uint8_t value, int32_t size)
 	return tmp;
 }
 
-// Fills a buffer with a repeated byte.
+/**
+ * Fills a buffer with a repeated uint16_t value.
+ *
+ * @param dest Destination buffer.
+ * @param value Value to fill the buffer with.
+ * @param size [n * 2] bytes to fill.
+ *
+ * @return Pointer to the destination buffer.
+ */
 uint16_t* wmemset(uint16_t* dest, uint16_t value, int32_t size)
 {
 	for (int32_t i = 0; i < size; i++)
@@ -35,7 +59,12 @@ uint16_t* wmemset(uint16_t* dest, uint16_t value, int32_t size)
 	return dest;
 }
 
-// Returns the length of the string.
+/**
+ * Returns the length of the string.
+ * @param string The string to measure.
+ *
+ * @return The length of the string.
+ */
 size_t strlen(const char* string)
 {
 	size_t length = 0;
@@ -46,7 +75,15 @@ size_t strlen(const char* string)
 	return length;
 }
 
-// Compares two strings.
+/**
+ * Compares two strings.
+ *
+ * @param lhs The first string to compare.
+ * @param rhs The second string to compare.
+ *
+ * @return `true` if the strings are equal, `false`
+ * otherwise.
+ */
 bool strcmp(const char* lhs, const char* rhs)
 {
 	if (strlen(lhs) != strlen(rhs))

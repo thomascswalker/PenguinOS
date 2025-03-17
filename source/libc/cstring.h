@@ -23,8 +23,8 @@ EXTERN char* strchr(const char* s, char c);
 EXTERN char* strrchr(const char* s, char c);
 EXTERN char* strdup(const char* str);
 EXTERN char* strtok(char* str, const char delim);
-char		 toupper(char c);
-char		 tolower(char c);
+EXTERN char	 toupper(char c);
+EXTERN char	 tolower(char c);
 // Reverses, in-place, the specified `string`.
 void strrev(char* string);
 void strapp(char* source, const char* string, char* dest);

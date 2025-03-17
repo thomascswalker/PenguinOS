@@ -13,22 +13,30 @@ static uint32_t		  g_nextPID = 0; // Contains the next free PID
 void Scheduler::add(EntryPoint func)
 {
 	Process* process = (Process*)std::malloc(sizeof(Process));
-	process->func = func;								// Set the function pointer
-	process->pid = g_nextPID++;							// Assign a unique PID
-	process->stack = (uint8_t*)std::malloc(STACK_SIZE); // Allocate a stack for the process
+	process->func = func;		// Set the function pointer
+	process->pid = g_nextPID++; // Assign a unique PID
 
+	/* Allocate memory for the stack and CPU state. The stack grows downwards,
+	 * so we allocate a block of memory and place the CPU state at the top of it.
+	 *
+	 * ┌──────────┐<- [0]    process->frame
+	 * │ CPUState │
+	 * ├──────────┤<- [76]   process->frame->esp
+	 * │  Stack   │
+	 * └──────────┘<- [1024] End of stack
+	 */
+
+	process->stack = (uint8_t*)std::malloc(STACK_SIZE); // Allocate a stack for the process
 	CPUState* frame = (CPUState*)((uint32_t)process->stack + STACK_SIZE);
-	process->state = frame; // Set the CPU state for the process
+	process->frame = frame; // Set the CPU state for the process
+	frame->esp = (uint32_t)(process->stack + STACK_SIZE - sizeof(CPUState));
 
 	// Set the instruction pointer to the function
 	frame->eip = (uint32_t)func;
 
-	// Set the stack pointer to the top of the stack
-	frame->esp = (uint32_t)(process->stack + STACK_SIZE - sizeof(CPUState));
-
 	// Set the interrupt flag (IF) and reserved flag (RF)
 	frame->eFlags = 0x202;
-	frame->userEsp = (uint32_t)(process->stack + STACK_SIZE - sizeof(CPUState));
+	frame->userEsp = frame->esp;
 
 	// Set general-purpose registers
 	frame->eax = 0;
@@ -72,6 +80,6 @@ void Scheduler::schedule()
 	Process* nextProc = next->getValue();
 
 	debug("Switching processes from %d to %d", currProc->pid, nextProc->pid);
-	switchContext(currProc->state, nextProc->state);
+	switchContext(currProc->frame, nextProc->frame);
 	g_queue.rotate(1);
 }
