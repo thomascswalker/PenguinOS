@@ -17,13 +17,14 @@ EXTERN bool strncmp(const char* lhs, const char* rhs, size_t count);
 // Copies one string to another
 EXTERN char* strcpy(char* dest, const char* source);
 // Appends one string to another
+EXTERN char* strncpy(char* dest, const char* source, size_t count);
 EXTERN char* strcat(char* dest, const char* source);
 EXTERN char* strchr(const char* s, char c);
 EXTERN char* strrchr(const char* s, char c);
 EXTERN char* strdup(const char* str);
 EXTERN char* strtok(char* str, const char delim);
-char		 toupper(char c);
-char		 tolower(char c);
+EXTERN char	 toupper(char c);
+EXTERN char	 tolower(char c);
 // Reverses, in-place, the specified `string`.
 void strrev(char* string);
 void strapp(char* source, const char* string, char* dest);

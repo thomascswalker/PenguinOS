@@ -159,7 +159,7 @@ enum ModifierKey
 namespace Keyboard
 {
 	void init();
-	void callback(Registers regs);
+	void callback(CPUState* regs);
 	bool getKeycode(ScanCode sc, KeyCode* kc);
 	void onKeyReleased(KeyCode* kc);
 	void onKeyPressed(KeyCode* kc);

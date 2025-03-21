@@ -31,14 +31,17 @@ Developed in C++ and NASM-style Assembly.
 - [x] IDT
 - [x] Keyboard
 - [x] Timer
-- [x] System Calls
+- [ ] System Calls
+  - [x] Basic implementation
+  - [ ] Memory (malloc, free, realloc)
 - [x] Paging
 - [x] Simple memory management (kmalloc/kfree)
 - [ ] Data Types
   - [x] std::string (called String)
   - [x] std::vector (called Array)
   - [ ] std::map (called Map)
-  - [ ] std::list (called LinkedList)
+  - [x] std::list (called LinkedList)
+  - [x] std::queue (called Queue)
 - [ ] File System
   - [ ] FAT32
     - [x] Read
@@ -48,5 +51,9 @@ Developed in C++ and NASM-style Assembly.
   - [ ] NTFS
     - [ ] ???
 - [ ] Stack trace dump on error/panic
-- [ ] Shell
+- [x] Shell
 - [ ] Graphical Display
+- [ ] Scheduling
+  - [x] Create process
+  - [ ] Switch process
+  - [ ] Kill process

@@ -10,7 +10,7 @@ namespace CMD
 	struct CWD
 	{
 		FAT32::ShortEntry entry;
-		String			  path;
+		char			  path[128];
 	};
 
 	void		  init();

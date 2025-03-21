@@ -13,7 +13,7 @@ git clone git://sourceware.org/git/binutils-gdb.git
 git clone git://gcc.gnu.org/git/gcc.git
 
 # Environment variables
-export PREFIX="$HOME/opt/cross_compiler"
+export PREFIX="$HOME/opt/cc_i386"
 export TARGET=i686-elf
 export PATH="$PREFIX/bin:$PATH"
 
@@ -22,8 +22,8 @@ cd $HOME/source
 mkdir binutils-build
 cd binutils-build
 ../binutils-gdb/configure --target=$TARGET --prefix="$PREFIX" --with-sysroot --disable-nls --disable-werror
-make
-make install
+make -j 20
+make -j 20 install
 
 # Build GCC
 cd $HOME/source
@@ -33,9 +33,9 @@ cd gcc-build
 make -j 20 all-gcc
 make -j 20 all-target-libgcc
 make -j 20 all-target-libstdc++-v3
-make install-gcc
-make install-target-libgcc
-make install-target-libstdc++-v3
+make -j 20 install-gcc
+make -j 20 install-target-libgcc
+make -j 20 install-target-libstdc++-v3
 
 # Add build directory to profile
 line="export PATH=\"$HOME/opt/cross_compiler/bin:$PATH\""

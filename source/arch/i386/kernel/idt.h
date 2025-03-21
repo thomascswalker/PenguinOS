@@ -92,8 +92,11 @@ namespace IDT
 	void unregisterInterruptHandler(uint32_t index);
 
 	EXTERN void loadIDT(uint32_t);
-	EXTERN void irqHandler(Registers regs);
-	EXTERN void isrHandler(Registers regs);
+	EXTERN void irqHandler(CPUState regs);
+	EXTERN void isrHandler(CPUState regs);
+
+	void handleGeneralProtectionFault(CPUState* regs);
+	void handlePageFault(CPUState* regs);
 
 	EXTERN void isr0();
 	EXTERN void isr1();
@@ -147,5 +150,5 @@ namespace IDT
 	EXTERN void irq14();
 	EXTERN void irq15();
 
-	void dumpRegisters(Registers* reg);
+	void dumpCPUState(CPUState* reg);
 } // namespace IDT

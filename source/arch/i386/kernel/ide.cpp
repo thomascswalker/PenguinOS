@@ -21,7 +21,7 @@ void IDE::init()
 	IDT::registerInterruptHandler(IRQ14, IDE::callback);
 }
 
-void IDE::callback(Registers regs) { /*debug("File IO callback");*/ }
+void IDE::callback(CPUState* regs) { /*debug("File IO callback");*/ }
 
 ATADevice* IDE::getDevice(uint32_t index) { return &devices[index]; }
 
@@ -125,14 +125,6 @@ void ATADevice::identify()
 
 	// 0b000_0100_0000_0000
 	lbaExtSupported = (buffer[83] & 0x400) == 0x400;
-	if (lbaExtSupported)
-	{
-		println("48-bit Address");
-	}
-	else
-	{
-		println("28-bit Address");
-	}
 
 	serial = buffer[ATA_IDENT_SERIAL];
 	printf("Serial: %d\n", serial);

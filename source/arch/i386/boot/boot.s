@@ -37,3 +37,10 @@ section .bss                                                ; Setup the stack.
 align 32
 stack:
     resb 16384											    ; Allocate 16KB for the stack.
+
+global esp0_stack_bottom
+global esp0_stack_top
+align 4096
+esp0_stack_bottom:
+    resb 8192
+esp0_stack_top:

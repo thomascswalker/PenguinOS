@@ -1,15 +1,15 @@
 #pragma once
 
 #include <compare.h>
-#include <memory.h>
+#include <cstdlib.h>
 #include <pair.h>
 
-template <typename KeyType, typename T, typename Compare = std::Less<KeyType>>
+template <typename KeyType, typename ValueType, typename Compare = std::Less<KeyType>>
 class Map
 
 {
 public:
-	using ValueType = Pair<KeyType, T>;
+	using ValueType = Pair<KeyType, ValueType>;
 	using SizeType = size_t;
 
 private:
@@ -45,7 +45,7 @@ private:
 		clear(node->left);
 		clear(node->right);
 		node->~Node();
-		std::kfree(node);
+		std::free(node);
 	}
 
 	Node* minimum(Node* n) const
@@ -85,7 +85,7 @@ public:
 			}
 		}
 
-		Node* z = static_cast<Node*>(std::kmalloc(sizeof(Node)));
+		Node* z = static_cast<Node*>(std::malloc(sizeof(Node)));
 		if (!z)
 		{
 			// Out of memory

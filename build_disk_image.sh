@@ -4,7 +4,8 @@
 
 # Build a disk image
 DISK=disk.img
-dd if=/dev/zero of=${DISK} bs=1M count=2
+SIZE=32
+dd if=/dev/zero of=${DISK} bs=${SIZE}M count=1
 mformat -i ${DISK} -F
 mcopy -i ${DISK} -s ./base/ ::/
 mdir -i ${DISK} -/

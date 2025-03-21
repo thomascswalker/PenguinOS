@@ -1,6 +1,6 @@
 #pragma once
 
-#include <memory.h>
+#include <cstdlib.h>
 #include <stddef.h>
 #include <stdint.h>
 
@@ -10,8 +10,8 @@ class Allocator
 {
 public:
 	using ValueType = T;
-	using PtrType = T*;
-	using ConstPtrType = const T*;
+	using PtrType = ValueType*;
+	using ConstPtrType = const ValueType*;
 	using SizeType = size_t;
 	using DiffType = ptrdiff_t;
 
@@ -25,22 +25,22 @@ public:
 	// Allocate memory for n objects of type T.
 	PtrType allocate(SizeType n)
 	{
-		PtrType ptr = static_cast<PtrType>(std::kmalloc(n * sizeof(T)));
+		PtrType ptr = static_cast<PtrType>(std::malloc(n * sizeof(ValueType)));
 		return ptr;
 	}
 
 	// Deallocate memory.
-	void deallocate(PtrType p, SizeType n) noexcept { std::kfree(p); }
+	void deallocate(PtrType p, SizeType n) noexcept { std::free(p); }
 };
 
-template <typename T, typename U>
-bool operator==(const Allocator<T>&, const Allocator<U>&) noexcept
+template <typename ValueType, typename U>
+bool operator==(const Allocator<ValueType>&, const Allocator<U>&) noexcept
 {
 	return true;
 }
 
-template <typename T, typename U>
-bool operator!=(const Allocator<T>& a, const Allocator<U>& b) noexcept
+template <typename ValueType, typename U>
+bool operator!=(const Allocator<ValueType>& a, const Allocator<U>& b) noexcept
 {
 	return !(a == b);
 }

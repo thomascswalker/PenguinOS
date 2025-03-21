@@ -30,7 +30,8 @@ void CMD::init()
 	g_cwd = CWD(); // Reinstantiate
 
 	// Default to "//0"
-	g_cwd.path = "/";
+	memset(g_cwd.path, 0, 128);
+	g_cwd.path[0] = '/';
 
 	// Start at root entry
 	g_cwd.entry = *getRootEntry();
@@ -123,13 +124,13 @@ void CMD::exit() { sysexit(); }
 
 void CMD::help()
 {
-	printf("HELP: exit - Exit the system.\n"
-		   "      help - Display list of commands.\n"
+	printf("HELP: exit  - Exit the system.\n"
+		   "      help  - Display list of commands.\n"
 		   "      clear - Clear the display of text.\n"
-		   "      cat - Print the contents of the specified file.\n"
-		   "      pwd - Print the current directory.\n"
-		   "      cd - Change to the specified directory.\n"
-		   "      ls - Print the files within the current directory.\n");
+		   "      cat   - Print the contents of the specified file.\n"
+		   "      pwd   - Print the current directory.\n"
+		   "      cd    - Change to the specified directory.\n"
+		   "      ls    - Print the files within the current directory.\n");
 }
 
 void CMD::clear() { Shell::clearDisplay(); }
@@ -145,7 +146,7 @@ void CMD::cat(const String& path)
 	printf("%s\n", file.data);
 }
 
-void CMD::pwd() { printf("pwd: %s\n", g_cwd.path.data()); }
+void CMD::pwd() { printf("pwd: %s\n", g_cwd.path); }
 
 void CMD::cd(const String& path)
 {
