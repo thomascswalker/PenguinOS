@@ -31,13 +31,11 @@ void PIT::init()
 void PIT::callback(CPUState* regs)
 {
 	g_ticks++;
-	// TODO: Causes page fault at tick location
 	if (SLEEP_TICK > 0)
 	{
 		SLEEP_TICK--;
 	}
-
-	System::Scheduler::schedule();
+	// System::schedule();
 }
 
 uint32_t PIT::getPITCount()

@@ -3,7 +3,7 @@
 
 #include <stdio.h>
 
-#define GDT_ENTRY_COUNT 5
+#define GDT_ENTRY_COUNT 6
 
 struct GDTEntry
 {

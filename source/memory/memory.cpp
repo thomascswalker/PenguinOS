@@ -329,7 +329,7 @@ void* Memory::kmalloc(size_t size)
 	// If we couldn't find a free block, return nullptr.
 	if (currentOrder >= BUCKET_COUNT)
 	{
-		warning("kmalloc: Out of memory.", BUCKET_COUNT);
+		warning("kmalloc: Unable to find free block (Order %d >= %d).", currentOrder, BUCKET_COUNT);
 		return nullptr;
 	}
 

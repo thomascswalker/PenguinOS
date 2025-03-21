@@ -13,7 +13,8 @@ mkdir build
 debug "Constructing grub directory."
 mkdir -p build/boot/grub
 
-# Run Makefile 
+export PATH=$HOME/opt/cc_i386/bin:$PATH
+
 info "Compiling..."
 . ./scripts/compile.sh
 
