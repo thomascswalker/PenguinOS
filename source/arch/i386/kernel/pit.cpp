@@ -35,7 +35,6 @@ void PIT::callback(CPUState* regs)
 	{
 		SLEEP_TICK--;
 	}
-	// System::schedule();
 }
 
 uint32_t PIT::getPITCount()

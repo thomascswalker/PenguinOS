@@ -7,23 +7,16 @@
 
 using namespace System;
 
-Task*			g_queue;
-Task*			g_currentTask = nullptr;
-uint32_t		g_taskCount = 0;
+// Defined as external in 'scheduler.h'
+Task* g_currentTask = nullptr;
+
+// Task Queue
+static Task*	g_queue = nullptr;
+static uint32_t g_taskCount = 0;
 static uint32_t g_currentPID = 0;
 
 // Defined in scheduler.s
 EXTERN void switchTask(Task* next);
-
-void idle()
-{
-	while (1)
-	{
-		// Do nothing, just yield to other tasks.
-		printf("Idling...\n");
-		System::schedule();
-	}
-}
 
 Task* System::create(EntryPoint func)
 {
@@ -47,11 +40,16 @@ Task* System::create(EntryPoint func)
 	*(--newTask->stackPointer) = 0;				  // edi
 	*(--newTask->stackPointer) = 0;				  // ebp
 
+	newTask->next = nullptr;
+
+	// If the queue has not been initialized, set the new task
+	// as the current task.
 	if (!g_queue)
 	{
 		g_queue = newTask;
 		g_currentTask = g_queue;
 	}
+	// Otherwise, add it to the end of the queue.
 	else
 	{
 		Task* current = g_queue;
@@ -66,11 +64,11 @@ Task* System::create(EntryPoint func)
 	return newTask;
 }
 
-void System::init() { create(&idle); }
+void System::init() { create(nullptr); }
 
 void System::schedule()
 {
-	if (g_taskCount == 0)
+	if (!g_currentTask)
 	{
 		return;
 	}
@@ -78,8 +76,12 @@ void System::schedule()
 	Task* next = g_currentTask->next;
 	if (!next)
 	{
-		next = g_queue; // Loop back to the start of the queue
+		next = g_queue;
 	}
 
+	// TODO: There is a problem where the first task in the
+	// list is not actually running. For now, we just put a
+	// dummy task (nullptr) in the queue to make sure the
+	// remaining tasks get executed.
 	switchTask(next);
 }

@@ -37,4 +37,3 @@ namespace System
 }; // namespace System
 
 EXTERN System::Task* g_currentTask;
-EXTERN uint32_t		 g_taskCount;
