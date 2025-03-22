@@ -20,20 +20,20 @@ namespace System
 		Terminated
 	};
 
-	struct Task
+	struct Process
 	{
 		uint32_t   pid;			   // Process ID
 		TaskState  state;		   // Process state
 		uintptr_t  programCounter; // Program Counter
+		uintptr_t* stackBase;	   // Top of the stack
 		uintptr_t* stackPointer;   // Stack Pointer
-		uintptr_t* stackTop;	   // Stack Pointer Base for free();
 		uint32_t   flags;		   // Status/Flags register
-		Task*	   next;		   // Pointer to the next task in the list
+		Process*   next;		   // Pointer to the next task in the list
 	};
 
-	Task* create(EntryPoint func);
-	void  init();
-	void  schedule();
+	Process* create(EntryPoint func);
+	void	 init();
+	void	 schedule();
 }; // namespace System
 
-EXTERN System::Task* g_currentTask;
+EXTERN System::Process* g_currentProcess;

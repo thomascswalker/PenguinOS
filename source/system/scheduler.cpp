@@ -8,80 +8,80 @@
 using namespace System;
 
 // Defined as external in 'scheduler.h'
-Task* g_currentTask = nullptr;
+Process* g_currentProcess = nullptr;
 
 // Task Queue
-static Task*	g_queue = nullptr;
-static uint32_t g_taskCount = 0;
+static Process* g_processQueue = nullptr;
+static uint32_t g_processCount = 0;
 static uint32_t g_currentPID = 0;
 
 // Defined in scheduler.s
-EXTERN void switchTask(Task* next);
+EXTERN void switchProcess(Process* next);
 
-Task* System::create(EntryPoint func)
+Process* System::create(EntryPoint func)
 {
-	Task* newTask = (Task*)std::malloc(sizeof(Task));
+	Process* newProcess = (Process*)std::malloc(sizeof(Process));
 
-	if (!newTask)
+	if (!newProcess)
 	{
 		warning("Unable to create new task.");
 		return nullptr;
 	}
 
-	newTask->pid = g_currentPID++;
-	newTask->state = Ready;
-	newTask->programCounter = 0;
-	newTask->stackTop = (uintptr_t*)std::malloc(STACK_SIZE);
-	newTask->stackPointer = (uintptr_t*)((uint32_t)newTask->stackTop + STACK_SIZE);
+	newProcess->pid = g_currentPID++;
+	newProcess->state = Ready;
+	newProcess->programCounter = 0;
+	newProcess->stackBase = (uintptr_t*)std::malloc(STACK_SIZE);
+	newProcess->stackPointer = (uintptr_t*)((uint32_t)newProcess->stackBase + STACK_SIZE);
 
-	*(--newTask->stackPointer) = (uintptr_t)func; // eip
-	*(--newTask->stackPointer) = 0;				  // ebx
-	*(--newTask->stackPointer) = 0;				  // esi
-	*(--newTask->stackPointer) = 0;				  // edi
-	*(--newTask->stackPointer) = 0;				  // ebp
+	*(--newProcess->stackPointer) = (uintptr_t)func; // eip
+	*(--newProcess->stackPointer) = 0;				 // ebx
+	*(--newProcess->stackPointer) = 0;				 // esi
+	*(--newProcess->stackPointer) = 0;				 // edi
+	*(--newProcess->stackPointer) = 0;				 // ebp
 
-	newTask->next = nullptr;
+	newProcess->next = nullptr;
 
 	// If the queue has not been initialized, set the new task
 	// as the current task.
-	if (!g_queue)
+	if (!g_processQueue)
 	{
-		g_queue = newTask;
-		g_currentTask = g_queue;
+		g_processQueue = newProcess;
+		g_currentProcess = g_processQueue;
 	}
 	// Otherwise, add it to the end of the queue.
 	else
 	{
-		Task* current = g_queue;
+		Process* current = g_processQueue;
 		while (current->next)
 		{
 			current = current->next;
 		}
-		current->next = newTask;
+		current->next = newProcess;
 	}
 
-	g_taskCount++;
-	return newTask;
+	g_processCount++;
+	return newProcess;
 }
 
 void System::init() { create(nullptr); }
 
 void System::schedule()
 {
-	if (!g_currentTask)
+	if (!g_currentProcess)
 	{
 		return;
 	}
 
-	Task* next = g_currentTask->next;
+	Process* next = g_currentProcess->next;
 	if (!next)
 	{
-		next = g_queue;
+		next = g_processQueue;
 	}
 
 	// TODO: There is a problem where the first task in the
 	// list is not actually running. For now, we just put a
 	// dummy task (nullptr) in the queue to make sure the
 	// remaining tasks get executed.
-	switchTask(next);
+	switchProcess(next);
 }
