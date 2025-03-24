@@ -15,8 +15,19 @@ static Task*	g_queue = nullptr;
 static uint32_t g_taskCount = 0;
 static uint32_t g_currentPID = 0;
 
+static uint32_t IRQ_disable_counter = 0;
+
 // Defined in scheduler.s
 EXTERN void switchTask(Task* next);
+
+
+// Function that will be called prior to the task's func entrypoint
+// Unlokck the scheduler automatically
+static void processStartup(void)
+{
+	//MUST: All processes at start need to ulock the scheduler
+	unlock_scheduler();
+}
 
 Task* System::create(EntryPoint func)
 {
@@ -35,6 +46,7 @@ Task* System::create(EntryPoint func)
 	newTask->stackPointer = (uintptr_t*)((uint32_t)newTask->stackTop + STACK_SIZE);
 
 	*(--newTask->stackPointer) = (uintptr_t)func; // eip
+	*(--newTask->stackPointer) = (uintptr_t)processStartup; // Static startup function to run before func
 	*(--newTask->stackPointer) = 0;				  // ebx
 	*(--newTask->stackPointer) = 0;				  // esi
 	*(--newTask->stackPointer) = 0;				  // edi
@@ -63,6 +75,32 @@ Task* System::create(EntryPoint func)
 	g_taskCount++;
 	return newTask;
 }
+
+void System::yield(void)
+{
+	lock_scheduler();
+	schedule();
+	unlock_scheduler();
+}
+
+void System::lock_scheduler(void)
+{
+#ifndef SMP
+	disableInterrupts();
+	IRQ_disable_counter++;
+#endif
+}
+
+void System::unlock_scheduler(void)
+{
+#ifndef SMP
+	IRQ_disable_counter--;
+	if(IRQ_disable_counter == 0) {
+		enableInterrupts();
+	}
+#endif
+}
+
 
 void System::init() { create(nullptr); }
 

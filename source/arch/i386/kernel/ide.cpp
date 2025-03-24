@@ -2,6 +2,7 @@
 #include <bitmask.h>
 #include <cstring.h>
 #include <fat.h>
+#include <pic.h>
 #include <filesystem.h>
 #include <ide.h>
 #include <idt.h>
@@ -21,7 +22,7 @@ void IDE::init()
 	IDT::registerInterruptHandler(IRQ14, IDE::callback);
 }
 
-void IDE::callback(CPUState* regs) { /*debug("File IO callback");*/ }
+void IDE::callback(CPUState* regs) {  PIC::sendEOI(regs->intNo); /*debug("File IO callback");*/ }
 
 ATADevice* IDE::getDevice(uint32_t index) { return &devices[index]; }
 

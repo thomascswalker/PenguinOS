@@ -24,8 +24,6 @@ void PIT::init()
 
 	outb(PIT_DATA0, low);
 	outb(PIT_DATA0, high);
-
-	PIC::sendEOI(IRQ0);
 }
 
 void PIT::callback(CPUState* regs)
@@ -35,6 +33,14 @@ void PIT::callback(CPUState* regs)
 	{
 		SLEEP_TICK--;
 	}
+
+	// Send EOI before scheduling
+	PIC::sendEOI(regs->intNo);
+
+	// Schedule next process (includes lock/unlokc shceduler
+	System::lock_scheduler();
+	System::schedule();
+	System::unlock_scheduler();
 }
 
 uint32_t PIT::getPITCount()

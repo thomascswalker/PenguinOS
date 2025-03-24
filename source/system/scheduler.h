@@ -34,6 +34,10 @@ namespace System
 	Task* create(EntryPoint func);
 	void  init();
 	void  schedule();
+	void  lock_scheduler(void);
+	void  unlock_scheduler(void);
+	void  yield(void);
+
 }; // namespace System
 
 EXTERN System::Task* g_currentTask;

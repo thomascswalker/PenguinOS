@@ -9,7 +9,6 @@ loadIDT:
 %macro ISR_NOERRORCODE 1
 global isr%1
 isr%1:
-    cli
     push 0
     push %1                                                 ; Push interrupt number
     jmp isrCommon
@@ -18,7 +17,6 @@ isr%1:
 %macro ISR_ERRCODE 1
 global isr%1
 isr%1:
-    cli
     push %1                                                 ; Push error code
     jmp isrCommon
 %endmacro
@@ -79,7 +77,10 @@ isrCommon:
     mov     fs, ax           ; Load the kernel data segment selector into fs
     mov     gs, ax           ; Load the kernel data segment selector into gs
 
+    push esp                 ; Pointer to CPUState
+    cld
     call    isrHandler       ; Call the C function isrHandler to handle the interrupt
+    pop     ebx              ; Remve the CPUState pointer
 
     pop     ebx              ; Pop the top value from the stack into ebx (original ds value)
     mov     ebx, esi         ; Move the saved original ds value from esi into ebx
@@ -89,9 +90,8 @@ isrCommon:
     mov     fs, bx           ; Restore the original value of fs from bx
     mov     gs, bx           ; Restore the original value of gs from bx
 
-    popa                    ; Pop all general-purpose registers from the stack
+    popa                     ; Pop all general-purpose registers from the stack
     add     esp, 8           ; Adjust the stack pointer to remove the error code and interrupt number
-    sti                      ; Set the interrupt flag (enable interrupts)
     iret                     ; Return from the interrupt handler
 
 %macro IRQ 2
@@ -140,7 +140,10 @@ irqCommon:
     mov     fs, ax           ; Load the kernel data segment selector into fs
     mov     gs, ax           ; Load the kernel data segment selector into gs
 
+    push esp                 ; 1st Parameter is pointer to CPUState
+    cld
     call    irqHandler       ; Call the C function irqHandler to handle the interrupt
+    pop     ebx              ; Remove the CPUState pointer
 
     pop     ebx              ; Pop the top value from the stack into ebx (original ds value)
     mov     ebx, esi         ; Move the saved original ds value from esi into ebx
@@ -153,7 +156,6 @@ irqCommon:
     pop     eax              ; Pop the original value of gs from the stack into eax
     mov     gs, ax           ; Restore the original value of gs from ax
 
-    popa                    ; Pop all general-purpose registers from the stack
+    popa                     ; Pop all general-purpose registers from the stack
     add     esp, 8           ; Adjust the stack pointer to remove the error code and interrupt number
-    sti                      ; Set the interrupt flag (enable interrupts)
     iret                     ; Return from the interrupt handler

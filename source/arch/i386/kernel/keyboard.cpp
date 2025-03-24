@@ -2,6 +2,7 @@
 #include <pic.h>
 #include <shell.h>
 #include <stdio.h>
+#include <pic.h>
 
 namespace Keyboard
 {
@@ -51,6 +52,8 @@ namespace Keyboard
 		{
 			onKeyPressed(&kc);
 		}
+
+		PIC::sendEOI(regs->intNo);
 	}
 
 	// Given the input scancode, retrieve the keycode struct

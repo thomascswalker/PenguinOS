@@ -127,30 +127,30 @@ namespace IDT
 	void unregisterInterruptHandler(uint32_t index) { handlers[index] = 0; }
 
 	// Interrupt service routines
-	void isrHandler(CPUState regs)
+	void isrHandler(CPUState *regs)
 	{
-		switch (regs.intNo)
+		switch (regs->intNo)
 		{
 			case INVALID_OPCODE:
-				dumpCPUState(&regs);
+				dumpCPUState(regs);
 				panic("Invalid Opcode.");
 				break;
 			case DOUBLE_FAULT:
-				dumpCPUState(&regs);
-				panic("Double Fault. Code: %d", regs.errCode);
+				dumpCPUState(regs);
+				panic("Double Fault. Code: %d", regs->errCode);
 				break;
 			case GENERAL_PROTECTION_FAULT:
-				handleGeneralProtectionFault(&regs);
+				handleGeneralProtectionFault(regs);
 				break;
 			case PAGE_FAULT:
-				handlePageFault(&regs);
+				handlePageFault(regs);
 				break;
 			case SYSTEM_CALL:
 				// Pass registers to the syscall handler.
-				sysCallDispatcher(&regs);
+				sysCallDispatcher(regs);
 				break;
 			default:
-				panic("%s exception thrown. Code: %d", idtMessages[regs.intNo], regs.intNo);
+				panic("%s exception thrown. Code: %d", idtMessages[regs->intNo], regs->intNo);
 				break;
 		}
 	}
@@ -185,18 +185,20 @@ namespace IDT
 	}
 
 	// Interrupt request
-	void irqHandler(CPUState regs)
+	void irqHandler(CPUState *regs)
 	{
-		uint8_t irq_no = regs.intNo;
+		uint8_t irq_no = regs->intNo;
 
 		// Get the handler for this interrupt and execute it.
 		Handler handler = handlers[irq_no];
 		if (handler)
 		{
-			handler(&regs);
+			handler(regs);
 		}
-
-		PIC::sendEOI(irq_no);
+		// The interrupt handlers should send the EOI
+		// Only do this if no handler is registered
+		else
+			PIC::sendEOI(irq_no);
 	}
 
 	void dumpCPUState(CPUState* reg)
