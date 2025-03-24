@@ -18,6 +18,14 @@ Main entry point into PenguinOS.
 static uint32_t i = 0;
 static uint32_t j = 0;
 
+void proc()
+{
+	while (1)
+	{
+		printf("Hello from process %d\n", i++);
+	}
+}
+
 EXTERN void kmain(MultibootInfo* info, uint32_t magic)
 {
 	Shell::init();
@@ -39,16 +47,16 @@ EXTERN void kmain(MultibootInfo* info, uint32_t magic)
 	enableInterrupts();
 
 	Memory::init(start, size);
+	Scheduler::init();
 	FileSystem::init();
 	CMD::init();
 
 	println("Welcome to Penguin OS!");
 
-	System::init();
-	System::create(&testProcess);
+	Scheduler::create(&proc);
 
 	while (1)
 	{
-		System::schedule();
+		// Scheduler::schedule();
 	}
 }

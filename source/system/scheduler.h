@@ -10,7 +10,7 @@
 
 using EntryPoint = void (*)();
 
-namespace System
+namespace Scheduler
 {
 	enum TaskState
 	{
@@ -34,6 +34,9 @@ namespace System
 	Process* create(EntryPoint func);
 	void	 init();
 	void	 schedule();
-}; // namespace System
+	void	 yield();
+	void	 lock();
+	void	 unlock();
+}; // namespace Scheduler
 
-EXTERN System::Process* g_currentProcess;
+EXTERN Scheduler::Process* g_currentProcess;

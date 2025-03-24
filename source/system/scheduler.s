@@ -20,7 +20,7 @@ switchProcess:
      ; |------------------------|
      ; |  Return Address (EIP)  | +0
      ; |------------------------|
-     ; |       Process* next       | +4
+     ; |       Process* next    | +4
      ; |------------------------|
 
      ; Push volatile registers (per the 32-bit System V ABI)
@@ -41,7 +41,7 @@ switchProcess:
      ; |-------- ---------------| 
      ; |   Return Address (EIP) | +16
      ; |------------------------| 
-     ; |       Process* next       | +20
+     ; |       Process* next    | +20
      ; |------------------------| 
 
      ; Save g_currentProcess process' state
@@ -66,7 +66,7 @@ switchProcess:
      ;             |------------------------| 
      ;             |   Return Address (EIP) | +16
      ; |-----|     |------------------------|
-     ; | ESI | <== |       Process* next       | +20
+     ; | ESI | <== |       Process* next    | +20
      ; |-----|     |------------------------|
 
 
@@ -90,7 +90,7 @@ switchProcess:
      ; |------------------------|
      ; |  Return Address (EIP)  | +0
      ; |------------------------|
-     ; |       Process* next       | +4
+     ; |       Process* next    | +4
      ; |------------------------|
 
      ret

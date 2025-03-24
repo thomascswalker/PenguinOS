@@ -5,20 +5,30 @@
 #include <scheduler.h>
 #include <stdio.h>
 
-using namespace System;
+using namespace Scheduler;
 
 // Defined as external in 'scheduler.h'
 Process* g_currentProcess = nullptr;
 
-// Task Queue
-static Process* g_processQueue = nullptr;
-static uint32_t g_processCount = 0;
+// Process Queue
+static Process* g_queue = nullptr;
+static uint32_t g_taskCount = 0;
 static uint32_t g_currentPID = 0;
+static uint32_t g_irqDisableCounter = 0;
 
 // Defined in scheduler.s
 EXTERN void switchProcess(Process* next);
 
-Process* System::create(EntryPoint func)
+// Function that will be called prior to the task's func entrypoint
+// Unlock the scheduler automatically
+static void processStartup()
+{
+	debug("Starting process...");
+	// MUST: All processes at start need to unlock the scheduler
+	unlock();
+}
+
+Process* Scheduler::create(EntryPoint func)
 {
 	Process* newProcess = (Process*)std::malloc(sizeof(Process));
 
@@ -35,24 +45,26 @@ Process* System::create(EntryPoint func)
 	newProcess->stackPointer = (uintptr_t*)((uint32_t)newProcess->stackBase + STACK_SIZE);
 
 	*(--newProcess->stackPointer) = (uintptr_t)func; // eip
-	*(--newProcess->stackPointer) = 0;				 // ebx
-	*(--newProcess->stackPointer) = 0;				 // esi
-	*(--newProcess->stackPointer) = 0;				 // edi
-	*(--newProcess->stackPointer) = 0;				 // ebp
+	// Static startup function to run before func
+	*(--newProcess->stackPointer) = (uintptr_t)processStartup;
+	*(--newProcess->stackPointer) = 0; // ebx
+	*(--newProcess->stackPointer) = 0; // esi
+	*(--newProcess->stackPointer) = 0; // edi
+	*(--newProcess->stackPointer) = 0; // ebp
 
 	newProcess->next = nullptr;
 
 	// If the queue has not been initialized, set the new task
 	// as the current task.
-	if (!g_processQueue)
+	if (!g_queue)
 	{
-		g_processQueue = newProcess;
-		g_currentProcess = g_processQueue;
+		g_queue = newProcess;
+		g_currentProcess = g_queue;
 	}
 	// Otherwise, add it to the end of the queue.
 	else
 	{
-		Process* current = g_processQueue;
+		Process* current = g_queue;
 		while (current->next)
 		{
 			current = current->next;
@@ -60,13 +72,39 @@ Process* System::create(EntryPoint func)
 		current->next = newProcess;
 	}
 
-	g_processCount++;
+	g_taskCount++;
 	return newProcess;
 }
 
-void System::init() { create(nullptr); }
+void Scheduler::yield()
+{
+	lock();
+	schedule();
+	unlock();
+}
 
-void System::schedule()
+void Scheduler::lock()
+{
+#ifndef SMP
+	disableInterrupts();
+	g_irqDisableCounter++;
+#endif
+}
+
+void Scheduler::unlock()
+{
+#ifndef SMP
+	g_irqDisableCounter--;
+	if (g_irqDisableCounter == 0)
+	{
+		enableInterrupts();
+	}
+#endif
+}
+
+void Scheduler::init() { create(nullptr); }
+
+void Scheduler::schedule()
 {
 	if (!g_currentProcess)
 	{
@@ -76,7 +114,7 @@ void System::schedule()
 	Process* next = g_currentProcess->next;
 	if (!next)
 	{
-		next = g_processQueue;
+		next = g_queue;
 	}
 
 	// TODO: There is a problem where the first task in the

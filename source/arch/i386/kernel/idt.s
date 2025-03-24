@@ -99,6 +99,7 @@ isrCommon:
                                                             ; state) resides. 
                                                             ; Push ESP as the first parameter as a pointer to CPUState.
 
+    cld
     call    isrHandler
 
     pop     eax                                             ; Remove ESP from the top of the stack. Pop into any register.
@@ -123,6 +124,7 @@ irqCommon:
                                                             ; state) resides. 
                                                             ; Push ESP as the first parameter as a pointer to CPUState.
 
+    cld
     call    irqHandler
 
     pop     eax                                             ; Remove ESP from the top of the stack. Pop into any register.

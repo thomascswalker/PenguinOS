@@ -51,6 +51,8 @@ namespace Keyboard
 		{
 			onKeyPressed(&kc);
 		}
+
+		PIC::sendEOI(regs->intNo);
 	}
 
 	// Given the input scancode, retrieve the keycode struct
