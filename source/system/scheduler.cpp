@@ -22,10 +22,10 @@ EXTERN void switchTask(Task* next);
 
 
 // Function that will be called prior to the task's func entrypoint
-// Unlokck the scheduler automatically
+// Unlock the scheduler automatically
 static void processStartup(void)
 {
-	//MUST: All processes at start need to ulock the scheduler
+	// MUST: All processes at start need to unlock the scheduler
 	unlock_scheduler();
 }
 
