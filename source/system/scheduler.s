@@ -1,12 +1,12 @@
-extern g_currentTask
-global switchTask
+extern g_currentProcess
+global switchProcess
 
 struc PCB
      .PID                resd 1 ; Offset: 0
      .STATE              resd 1 ; Offset: 4
      .PROGRAM_COUNTER    resd 1 ; Offset: 8
-     .STACK_POINTER      resd 1 ; Offset: 12
-     .STACK_TOP          resd 1 ; Offset: 16
+     .STACK_BASE         resd 1 ; Offset: 12
+     .STACK_POINTER      resd 1 ; Offset: 16
      .FLAGS              resd 1 ; Offset: 20
      .NEXT               resd 1 ; Offset: 24
 endstruc
@@ -14,13 +14,13 @@ endstruc
 section .text
 
 
-; void switchTask(Task* next)
-switchTask:
+; void switchProcess(Process* next)
+switchProcess:
      ; __________Stack___________
      ; |------------------------|
      ; |  Return Address (EIP)  | +0
      ; |------------------------|
-     ; |       Task* next       | +4
+     ; |       Process* next    | +4
      ; |------------------------|
 
      ; Push volatile registers (per the 32-bit System V ABI)
@@ -41,38 +41,38 @@ switchTask:
      ; |-------- ---------------| 
      ; |   Return Address (EIP) | +16
      ; |------------------------| 
-     ; |       Task* next       | +20
+     ; |       Process* next    | +20
      ; |------------------------| 
 
-     ; Save g_currentTask task's state
-     mov edi, [g_currentTask]
-     ; EDI now contains the pointer to [Task* g_currentTask]
+     ; Save g_currentProcess process' state
+     mov edi, [g_currentProcess]
+     ; EDI now contains the pointer to [Process* g_currentProcess]
      ; |-----|
-     ; | EDI | <== [Task* g_currentTask]
+     ; | EDI | <== [Process* g_currentProcess]
      ; |-----|
 
-     ; Set [g_currentTask->PCB.STACK_POINTER] to the value in ESP
-     ; Task* g_currentTask->PCB.STACK_POINTER <== ESP
+     ; Set [g_currentProcess->PCB.STACK_POINTER] to the value in ESP
+     ; Process* g_currentProcess->PCB.STACK_POINTER <== ESP
      mov [edi + PCB.STACK_POINTER], esp
 
 
-     ; Load next task's state
+     ; Load next process' state
      ; ESP has been decremented by 16, so instead of +4,
      ; we need to do +20. 4 pushes, 1 return address, 4
      ; bytes each.
      mov esi, [esp + 20]
-     ; ESI now contains the pointer to [Task* next]
+     ; ESI now contains the pointer to [Process* next]
      ;             __________Stack___________
      ;             |------------------------| 
      ;             |   Return Address (EIP) | +16
      ; |-----|     |------------------------|
-     ; | ESI | <== |       Task* next       | +20
+     ; | ESI | <== |       Process* next    | +20
      ; |-----|     |------------------------|
 
 
-     ; Set [EXTERN Task* g_currentTask] to the value in ESI
-     ; Task* g_currentTask <== ESI (Task* next)
-     mov [g_currentTask], esi
+     ; Set [EXTERN Process* g_currentProcess] to the value in ESI
+     ; Process* g_currentProcess <== ESI (Process* next)
+     mov [g_currentProcess], esi
 
      mov esp, [esi + PCB.STACK_POINTER]
      ; |-----|     |-----|
@@ -90,7 +90,7 @@ switchTask:
      ; |------------------------|
      ; |  Return Address (EIP)  | +0
      ; |------------------------|
-     ; |       Task* next       | +4
+     ; |       Process* next    | +4
      ; |------------------------|
 
      ret

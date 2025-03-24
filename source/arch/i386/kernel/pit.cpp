@@ -35,6 +35,8 @@ void PIT::callback(CPUState* regs)
 	{
 		SLEEP_TICK--;
 	}
+	PIC::sendEOI(regs->intNo);
+	Scheduler::yield();
 }
 
 uint32_t PIT::getPITCount()
@@ -54,3 +56,5 @@ uint32_t PIT::getPITCount()
 
 	return count;
 }
+
+uint32_t PIT::getTimerTick() { return g_ticks; }

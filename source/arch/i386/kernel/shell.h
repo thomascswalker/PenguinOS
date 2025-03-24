@@ -66,10 +66,11 @@ namespace Shell
 	uint32_t getDisplayPosition();
 	void	 setDisplayPosition(uint32_t x, uint32_t y);
 
-	void setCursorPosition(int32_t x);
-	void updateCursorPosition();
-	void enableCursor(uint32_t start, uint32_t end);
-	void disableCursor();
+	void	 setCursorPosition(int32_t x);
+	uint32_t getCursorPosition();
+	void	 updateCursorPosition();
+	void	 enableCursor(uint32_t start, uint32_t end);
+	void	 disableCursor();
 
 	void putNext(char c);
 	void putAt(char c, uint32_t pos);

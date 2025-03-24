@@ -55,5 +55,5 @@ Developed in C++ and NASM-style Assembly.
 - [ ] Graphical Display
 - [ ] Scheduling
   - [x] Create process
-  - [ ] Switch process
+  - [x] Switch process
   - [ ] Kill process

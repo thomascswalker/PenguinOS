@@ -52,7 +52,11 @@ String Path::extension() { return String(); }
 
 void FileSystem::init()
 {
+	// Initialize the first IDE device.
 	IDE::init();
+
+	// Initialize the FAT32 filesystem by reading and
+	// storing the root directory.
 	FAT32::init();
 }
 

@@ -127,32 +127,47 @@ namespace IDT
 	void unregisterInterruptHandler(uint32_t index) { handlers[index] = 0; }
 
 	// Interrupt service routines
-	void isrHandler(CPUState regs)
+	void isrHandler(CPUState* regs)
 	{
-		switch (regs.intNo)
+		switch (regs->intNo)
 		{
 			case INVALID_OPCODE:
-				dumpCPUState(&regs);
+				dumpCPUState(regs);
 				panic("Invalid Opcode.");
 				break;
 			case DOUBLE_FAULT:
-				dumpCPUState(&regs);
-				panic("Double Fault. Code: %d", regs.errCode);
+				dumpCPUState(regs);
+				panic("Double Fault. Code: %d", regs->errCode);
 				break;
 			case GENERAL_PROTECTION_FAULT:
-				handleGeneralProtectionFault(&regs);
+				handleGeneralProtectionFault(regs);
 				break;
 			case PAGE_FAULT:
-				handlePageFault(&regs);
+				handlePageFault(regs);
 				break;
 			case SYSTEM_CALL:
 				// Pass registers to the syscall handler.
-				sysCallDispatcher(&regs);
+				sysCallDispatcher(regs);
 				break;
 			default:
-				panic("%s exception thrown. Code: %d", idtMessages[regs.intNo], regs.intNo);
+				panic("%s exception thrown. Code: %d", idtMessages[regs->intNo], regs->intNo);
 				break;
 		}
+	}
+
+	// Interrupt request
+	void irqHandler(CPUState* regs)
+	{
+		uint8_t irq = regs->intNo; // IRQs start at 32
+
+		// Get the handler for this interrupt and execute it.
+		Handler handler = handlers[irq];
+		if (handler)
+		{
+			handler(regs);
+		}
+
+		PIC::sendEOI(irq);
 	}
 
 	void handleGeneralProtectionFault(CPUState* regs)
@@ -184,37 +199,21 @@ namespace IDT
 			regs->errCode, addr, violationMessage);
 	}
 
-	// Interrupt request
-	void irqHandler(CPUState regs)
-	{
-		uint8_t irq_no = regs.intNo;
-
-		// Get the handler for this interrupt and execute it.
-		Handler handler = handlers[irq_no];
-		if (handler)
-		{
-			handler(&regs);
-		}
-
-		PIC::sendEOI(irq_no);
-	}
-
 	void dumpCPUState(CPUState* reg)
 	{
-		warning("CPU State:\n"
-				"\tSegments: cs: %x, ds: %x, es: %x\n"
-				"\t          fs: %x, gs: %x, ss: %x\n"
+		warning("CPUState State:\n"
+				"\tSegments: cs: %x, ss: %x\n"
 				"\tRegisters: edi: %x, esi: %x, ebp: %x, esp: %x\n"
 				"\t           ebx: %x, edx: %x, ecx: %x, eax: %x\n"
 				"\tInstruction Pointer (eip): %x\n"
 				"\tInterrupt: %d, Error Code: %d\n"
 				"\tFlags: %x\n",
-			reg->cs, reg->ds, reg->es, reg->fs, reg->gs, reg->ss, //
-			reg->edi, reg->esi, reg->ebp, reg->esp,				  //
-			reg->ebx, reg->edx, reg->ecx, reg->eax,				  //
-			reg->eip,											  //
-			reg->intNo, reg->errCode,							  //
-			reg->eFlags											  //
+			reg->cs, reg->ss,						//
+			reg->edi, reg->esi, reg->ebp, reg->esp, //
+			reg->ebx, reg->edx, reg->ecx, reg->eax, //
+			reg->eip,								//
+			reg->intNo, reg->errCode,				//
+			reg->eFlags								//
 		);
 
 		// Obtain the current frame pointer

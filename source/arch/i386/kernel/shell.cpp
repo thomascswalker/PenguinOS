@@ -58,6 +58,8 @@ void Shell::setCursorPosition(int32_t x)
 	outb(0x3D5, (uint8_t)((pos >> 8) & 0xFF));
 }
 
+uint32_t Shell::getCursorPosition() { return g_inputCursor; }
+
 void Shell::updateCursorPosition() { setCursorPosition(g_inputCursor); }
 
 void Shell::enableCursor(uint32_t start, uint32_t end)

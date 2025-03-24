@@ -7,23 +7,25 @@
 #include <idt.h>
 #include <math.h>
 #include <memory.h>
+#include <pic.h>
+#include <scheduler.h>
 #include <stdio.h>
 
-ATADevice  devices[4];
-ATADevice* currentDevice;
+ATADevice  g_devices[4];
+ATADevice* g_currentDevice;
 
 FAT32::ShortEntry rootDirectory;
 
 void IDE::init()
 {
-	devices[0].init(true, true);
-	currentDevice = &devices[0];
+	g_devices[0].init(true, true);
+	g_currentDevice = &g_devices[0];
 	IDT::registerInterruptHandler(IRQ14, IDE::callback);
 }
 
-void IDE::callback(CPUState* regs) { /*debug("File IO callback");*/ }
+void IDE::callback(CPUState* regs) { PIC::sendEOI(regs->intNo); }
 
-ATADevice* IDE::getDevice(uint32_t index) { return &devices[index]; }
+ATADevice* IDE::getDevice(uint32_t index) { return &g_devices[index]; }
 
 void ATADevice::init(bool inPrimary, bool inMaster)
 {
