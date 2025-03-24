@@ -40,6 +40,7 @@ build_include_args() {
         -I./source/libcpp \
         -I./source/filesystem \
         -I./source/memory \
+        -I./source/processes \
         -I./source/system \
         ${result# }"
 }

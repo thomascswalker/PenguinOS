@@ -14,10 +14,10 @@
 
 struct CPUState
 {
-	uint32_t gs, fs, es, ds;						 // Offsets 0, 4, 8, 12
-	uint32_t edi, esi, ebp, esp, ebx, edx, ecx, eax; // OFfsets 16, 20, 24, 28, 32, 36, 40, 44
-	uint32_t intNo, errCode;						 // Offsets 48, 52
-	uint32_t eip, cs, eFlags, userEsp, ss;			 // Offsets 56, 60, 64, 68, 72
+	// uint32_t gs, fs, es, ds;
+	uint32_t edi, esi, ebp, esp, ebx, edx, ecx, eax;
+	uint32_t intNo, errCode;
+	uint32_t eip, cs, eFlags, userEsp, ss;
 };
 
 // Function pointer to an IRQ callback

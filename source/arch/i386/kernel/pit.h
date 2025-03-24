@@ -22,4 +22,5 @@ namespace PIT
 	void	 init();
 	void	 callback(CPUState* regs);
 	uint32_t getPITCount();
+	uint32_t getTimerTick();
 } // namespace PIT
