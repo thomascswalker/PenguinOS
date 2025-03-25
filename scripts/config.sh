@@ -8,6 +8,8 @@ export MAKE=${MAKE:-make}
 export ARCH=i386
 export HOST=i686-elf
 export GCC=${HOST}-g++
+export AR=${HOST}-ar
+export LD=${HOST}-ld
 export AS=nasm
 
 export SOURCE_DIR="./source"
@@ -25,6 +27,7 @@ RED='\e[0;31m'
 BLUE='\e[0;34m'
 GREEN='\e[0;32m'
 YELLOW='\e[0;33m'
+GRAY='\e[0;37m'
 NC='\e[0m' # No Color
 
 build_include_args() {
@@ -46,7 +49,7 @@ build_include_args() {
 }
 
 debug() {
-    echo -e "${BLUE}[ DEBUG   ] ${1}${NC}"
+    echo -e "${GRAY}[ DEBUG   ] ${1}${NC}"
 }
 
 info() {
