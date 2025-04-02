@@ -59,6 +59,7 @@ bool FAT32::openFile(const String& filename, void* file)
 	{
 		if (!findEntry(currentCluster, c, &entry))
 		{
+			warning("Unable to find entry %s", c.data());
 			return false;
 		}
 
@@ -86,6 +87,7 @@ bool FAT32::openFile(const String& filename, void* file)
 
 	// Allocate memory for the file.
 	f->data = new char[entry.fileSize];
+	debug("Data: %x", f->data);
 
 	// Finally read the sector corresponding to this entry,
 	// storing the result in f->data.

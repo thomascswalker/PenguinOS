@@ -4,6 +4,7 @@ Main entry point into PenguinOS.
 
 #include <cmd.h>
 #include <crt.h>
+#include <elf.h>
 #include <filesystem.h>
 #include <gdt.h>
 #include <keyboard.h>
@@ -13,18 +14,9 @@ Main entry point into PenguinOS.
 #include <pit.h>
 #include <scheduler.h>
 #include <shell.h>
-#include <testProcess.h>
 
 static uint32_t i = 0;
 static uint32_t j = 0;
-
-void proc()
-{
-	while (1)
-	{
-		printf("Hello from process %d\n", i++);
-	}
-}
 
 EXTERN void kmain(MultibootInfo* info, uint32_t magic)
 {
@@ -53,7 +45,8 @@ EXTERN void kmain(MultibootInfo* info, uint32_t magic)
 
 	println("Welcome to Penguin OS!");
 
-	Scheduler::create(&proc);
+	// https://build-your-own.org/blog/20230219_elf_craft/
+	ELF::ELFFile file("/test.bin");
 
 	while (1)
 	{

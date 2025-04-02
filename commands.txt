@@ -8,3 +8,4 @@ objdump -drS ./build/boot/pengos.bin > symbols.txt
 qemu-img create -f raw disk.img 100M
 
 addr2line -e ./build/boot/PengOS.bin 0x
+readelf -a ./build/test/test.bin
