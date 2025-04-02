@@ -7,55 +7,64 @@ ELFFile::ELFFile(const char* path)
 	m_file = new File();
 	if (FileSystem::openFile(path, m_file))
 	{
-		char* data = (char*)m_file->data;
-
-		// Read the main ELF header
-		memcpy(&m_header, data, sizeof(FileHeader));
-
-		// Read all program headers, the count being defined
-		// by FileHeader.phnum
-		for (uint32_t i = 0; i < m_header.programHeaderCount; i++)
-		{
-			ProgramHeader ph;
-			memcpy(&ph, data + m_header.programHeaderOffset + (i * sizeof(ProgramHeader)),
-				sizeof(ProgramHeader));
-
-			// Add to program header array
-			m_programHeaders.add(ph);
-		}
-
-		// Read all section headers, the count being defined
-		// by FileHeader.shnum
-		for (uint32_t i = 0; i < m_header.sectionHeaderCount; i++)
-		{
-			SectionHeader sh;
-			memcpy(&sh, data + m_header.sectionHeaderOffset + (i * sizeof(SectionHeader)),
-				sizeof(SectionHeader));
-
-			// Add to program header array
-			m_sectionHeaders.add(sh);
-		}
-
-		auto nameHeader = m_sectionHeaders[m_header.sectionHeaderStringIndex];
-		auto nameData = new char[nameHeader.size];
-		memcpy(nameData, data + nameHeader.offset, nameHeader.size);
-
-		m_header.dump();
-		for (const auto& header : m_programHeaders)
-		{
-			header.dump();
-		}
-
-		m_sectionNames = String(nameData, nameHeader.size).split('\0');
-		for (size_t i = 0; i < m_sectionHeaders.size(); i++)
-		{
-			m_sectionHeaders[i].dump(m_sectionNames[i].data());
-		}
+		parseHeaders();
+		dumpHeaders();
 	}
 	else
 	{
 		warning("ELF: Failed to open file: '%s'", path);
 		m_file = nullptr;
+	}
+}
+
+void ELF::ELFFile::parseHeaders()
+{
+	char* data = (char*)m_file->data;
+
+	// Read the main ELF header
+	memcpy(&m_header, data, sizeof(FileHeader));
+
+	// Read all program headers, the count being defined
+	// by FileHeader.phnum
+	for (uint32_t i = 0; i < m_header.programHeaderCount; i++)
+	{
+		ProgramHeader ph;
+		memcpy(&ph, data + m_header.programHeaderOffset + (i * sizeof(ProgramHeader)),
+			sizeof(ProgramHeader));
+
+		// Add to program header array
+		m_programHeaders.add(ph);
+	}
+
+	// Read all section headers, the count being defined
+	// by FileHeader.shnum
+	for (uint32_t i = 0; i < m_header.sectionHeaderCount; i++)
+	{
+		SectionHeader sh;
+		memcpy(&sh, data + m_header.sectionHeaderOffset + (i * sizeof(SectionHeader)),
+			sizeof(SectionHeader));
+
+		// Add to program header array
+		m_sectionHeaders.add(sh);
+	}
+
+	auto nameHeader = m_sectionHeaders[m_header.sectionHeaderStringIndex];
+	auto nameData = new char[nameHeader.size];
+	memcpy(nameData, data + nameHeader.offset, nameHeader.size);
+
+	m_sectionNames = String(nameData, nameHeader.size).split('\0');
+}
+
+void ELF::ELFFile::dumpHeaders() const
+{
+	m_header.dump();
+	for (const auto& header : m_programHeaders)
+	{
+		header.dump();
+	}
+	for (size_t i = 0; i < m_sectionHeaders.size(); i++)
+	{
+		m_sectionHeaders[i].dump(m_sectionNames[i].data());
 	}
 }
 

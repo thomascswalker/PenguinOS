@@ -84,7 +84,8 @@ namespace ELF
 	public:
 		ELFFile(const char* path);
 		~ELFFile() {}
-
+		void parseHeaders();
+		void dumpHeaders() const;
 		bool isValid() const { return m_file != nullptr; }
 	};
 
