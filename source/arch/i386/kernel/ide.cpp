@@ -262,6 +262,7 @@ bool ATADevice::accessSectors(uint32_t sector, uint32_t count, bool read, void* 
 			wait4ns();
 		}
 	}
+	// Write
 	else
 	{
 		for (uint32_t i = count; i > 0; i--)

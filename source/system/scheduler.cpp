@@ -8,16 +8,16 @@
 using namespace Scheduler;
 
 // Defined as external in 'scheduler.h'
-Process* g_currentProcess = nullptr;
+ProcessControlBlock* g_currentProcess = nullptr;
 
 // Process Queue
-static Process* g_queue = nullptr;
-static uint32_t g_taskCount = 0;
-static uint32_t g_currentPID = 0;
-static uint32_t g_irqDisableCounter = 0;
+static ProcessControlBlock* g_queue = nullptr;
+static uint32_t				g_taskCount = 0;
+static uint32_t				g_currentPID = 0;
+static uint32_t				g_irqDisableCounter = 0;
 
 // Defined in scheduler.s
-EXTERN void switchProcess(Process* next);
+EXTERN void switchProcess(ProcessControlBlock* next);
 
 // Function that will be called prior to the task's func entrypoint
 // Unlock the scheduler automatically
@@ -28,9 +28,10 @@ static void processStartup()
 	unlock();
 }
 
-Process* Scheduler::create(EntryPoint func)
+ProcessControlBlock* Scheduler::create(EntryPoint func)
 {
-	Process* newProcess = (Process*)std::malloc(sizeof(Process));
+	ProcessControlBlock* newProcess =
+		(ProcessControlBlock*)std::malloc(sizeof(ProcessControlBlock));
 
 	if (!newProcess)
 	{
@@ -64,7 +65,7 @@ Process* Scheduler::create(EntryPoint func)
 	// Otherwise, add it to the end of the queue.
 	else
 	{
-		Process* current = g_queue;
+		ProcessControlBlock* current = g_queue;
 		while (current->next)
 		{
 			current = current->next;
@@ -111,7 +112,7 @@ void Scheduler::schedule()
 		return;
 	}
 
-	Process* next = g_currentProcess->next;
+	ProcessControlBlock* next = g_currentProcess->next;
 	if (!next)
 	{
 		next = g_queue;

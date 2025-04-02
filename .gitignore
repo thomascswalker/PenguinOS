@@ -59,3 +59,4 @@ bx_enh_dbg.ini
 image.img
 disk.img
 disk.img
+base/bin/*

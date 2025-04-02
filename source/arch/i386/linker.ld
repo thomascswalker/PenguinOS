@@ -22,10 +22,12 @@ SECTIONS
 	.text ALIGN(4K) :
 	{
 		*(.text)
+		*(.rodata)
 	}
 
     /* Global constructors: mark the beginning and end so they can be iterated over. */
-	.ctors : {
+	.ctors (READONLY): 
+	{
 		__ctor_start = .;
 		KEEP(*(SORT(.ctors*)))
 		__ctor_end = .;
@@ -35,7 +37,6 @@ SECTIONS
 	.data ALIGN(4K) :
 	{
 		*(.data)
-		*(.rodata)
 	}
 
 	.bss ALIGN(4K) :
