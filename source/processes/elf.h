@@ -70,7 +70,7 @@ namespace ELF
 		uint32_t addralign; // Address alignment constraints
 		uint32_t entsize;	// Size of entries (if section has entries)
 
-		void dump(const char* inName) const;
+		void dump(const char* inName, int index) const;
 	};
 
 	class ELFFile

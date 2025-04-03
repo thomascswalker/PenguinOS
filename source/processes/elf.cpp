@@ -58,29 +58,35 @@ void ELF::ELFFile::parseHeaders()
 void ELF::ELFFile::dumpHeaders() const
 {
 	m_header.dump();
+	printf("Program Headers:\n");
+	printf("  Type           Offset   VirtAddr   PhysAddr   FileSiz MemSiz  Flg Align\n");
 	for (const auto& header : m_programHeaders)
 	{
 		header.dump();
 	}
+	printf("Section Headers:\n");
+	printf("  [Nr] Name         Type   Addr       Off      Size     ES Flg Lk Inf Al\n");
 	for (size_t i = 0; i < m_sectionHeaders.size(); i++)
 	{
-		m_sectionHeaders[i].dump(m_sectionNames[i].data());
+		m_sectionHeaders[i].dump(m_sectionNames[i].data(), i);
 	}
 }
 
 void ELF::FileHeader::dump() const
 {
 	printf("ELF Header:\n"
-		   "  Type: %d Machine: %d Version: %d\n"
-		   "  Entry point: %x\n"
-		   "  Program header offset: %x\n"
-		   "  Section header offset: %x\n"
-		   "  Flags: %x\n"
-		   "  ELF header size: %d\n"
-		   "  Program header entry size: %d\n"
-		   "  Number of program headers: %d\n"
-		   "  Section header entry size: %d\n"
-		   "  Number of section headers: %d\n"
+		   "  Type:                            %d\n"
+		   "  Machine:                         %d\n"
+		   "  Version:                         %d\n"
+		   "  Entry point:                     %x\n"
+		   "  Program header offset:           %x\n"
+		   "  Section header offset:           %x\n"
+		   "  Flags:                           %x\n"
+		   "  ELF header size:                 %d\n"
+		   "  Program header entry size:       %d\n"
+		   "  Number of program headers:       %d\n"
+		   "  Section header entry size:       %d\n"
+		   "  Number of section headers:       %d\n"
 		   "  Section name string table index: %d\n",
 		type, machine, version, entry, programHeaderOffset, sectionHeaderOffset, flags,
 		entryHeaderSize, programHeaderSize, programHeaderCount, sectionHeaderSize,
@@ -89,18 +95,17 @@ void ELF::FileHeader::dump() const
 
 void ELF::ProgramHeader::dump() const
 {
-	printf("Program Header:\n"
-		   "  Type: %d             Offset: %x    Virtual Address: %x\n"
-		   "  Physical Address: %x File Size: %x Memory Size: %x\n"
-		   "  Flags: %x            Alignment: %x\n",
-		type, offset, vaddr, paddr, filesz, memsz, flags, align);
+
+	printf("  %-14d %06x %08x %08x %05x %05x %03d %-04x\n", type, offset, vaddr, paddr, filesz,
+		memsz, flags, align);
 }
 
-void ELF::SectionHeader::dump(const char* inName) const
+void ELF::SectionHeader::dump(const char* inName, int index) const
 {
-	printf("Section %s:\n"
-		   "  NameIndex: %d Type: %d Flags: %x\n"
-		   "  Address: %x Offset: %x Size: %x\n"
-		   "  Link: %d Info: %d Address Align: %x Entry Size: %x\n",
-		inName, name, type, flags, addr, offset, size, link, info, addralign, entsize);
+	if (!inName)
+	{
+		return;
+	}
+	printf("  [%2d] %-12s %-6d %08x %06x %06x %02d %03d %d  %d   %d\n", index, inName, type, addr,
+		offset, size, entsize, flags, link, info, addralign);
 }

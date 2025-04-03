@@ -129,11 +129,9 @@ void ATADevice::identify()
 	lbaExtSupported = (buffer[83] & 0x400) == 0x400;
 
 	serial = buffer[ATA_IDENT_SERIAL];
-	printf("Serial: %d\n", serial);
 
 	sectorCount = *((uint32_t*)(buffer + ATA_IDENT_MAX_LBA));
-	printf("Sector count: %d\n", sectorCount);
-	printf("Drive size: %dMB\n", size() / 1024 / 1024);
+	printf("HDD: %12dMB\n", size() / 1024 / 1024);
 
 	uint8_t* modelPtr = (uint8_t*)(buffer + ATA_IDENT_MODEL);
 	/*
@@ -154,7 +152,7 @@ void ATADevice::identify()
 		model[offset + 1] = modelPtr[offset];
 	}
 	model[40] = 0; // Terminate string at the last byte
-	printf("Drive model: %s\n", model);
+	printf("%17s\n", model);
 }
 
 void ATADevice::flush() const { outb(ports.command, 0xE7); }

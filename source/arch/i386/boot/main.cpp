@@ -15,9 +15,6 @@ Main entry point into PenguinOS.
 #include <scheduler.h>
 #include <shell.h>
 
-static uint32_t i = 0;
-static uint32_t j = 0;
-
 EXTERN void kmain(MultibootInfo* info, uint32_t magic)
 {
 	Shell::init();
@@ -28,7 +25,7 @@ EXTERN void kmain(MultibootInfo* info, uint32_t magic)
 	uint32_t start = 0;
 	uint32_t size = 0;
 	Multiboot::init(info, &start, &size);
-	printf("RAM: %dMB\n", (size / 1024 / 1024));
+	printf("RAM: %12dMB\n", (size / 1024 / 1024));
 
 	GDT::init();
 	IDT::init();
