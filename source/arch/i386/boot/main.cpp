@@ -15,9 +15,6 @@ Main entry point into PenguinOS.
 #include <scheduler.h>
 #include <shell.h>
 
-static uint32_t i = 0;
-static uint32_t j = 0;
-
 EXTERN void kmain(MultibootInfo* info, uint32_t magic)
 {
 	Shell::init();
@@ -50,6 +47,5 @@ EXTERN void kmain(MultibootInfo* info, uint32_t magic)
 
 	while (1)
 	{
-		// Scheduler::schedule();
 	}
 }

@@ -129,22 +129,19 @@ void ATADevice::identify()
 	lbaExtSupported = (buffer[83] & 0x400) == 0x400;
 
 	serial = buffer[ATA_IDENT_SERIAL];
-	printf("Serial: %d\n", serial);
 
 	sectorCount = *((uint32_t*)(buffer + ATA_IDENT_MAX_LBA));
-	printf("Sector count: %d\n", sectorCount);
-	printf("Drive size: %dMB\n", size() / 1024 / 1024);
 
 	uint8_t* modelPtr = (uint8_t*)(buffer + ATA_IDENT_MODEL);
 	/*
-		ATA strings are weird and are written in 16bit increments,
-		where the second 8bits are the first character and the
-		first 8bits are the second character.
+	ATA strings are weird and are written in 16bit increments,
+	where the second 8bits are the first character and the
+	first 8bits are the second character.
 
-		-------------------------
-		| Char 1 | Char 3 | ... |
-		| Char 0 | Char 2 | ... |
-		-------------------------
+	-------------------------
+	| Char 1 | Char 3 | ... |
+	| Char 0 | Char 2 | ... |
+	-------------------------
 	*/
 
 	for (uint32_t i = 0; i < 21; i++)
@@ -154,7 +151,7 @@ void ATADevice::identify()
 		model[offset + 1] = modelPtr[offset];
 	}
 	model[40] = 0; // Terminate string at the last byte
-	printf("Drive model: %s\n", model);
+	printf("HDD: %s %dMB\n", model, size() / 1024 / 1024);
 }
 
 void ATADevice::flush() const { outb(ports.command, 0xE7); }

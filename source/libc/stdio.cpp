@@ -34,7 +34,7 @@ uint32_t sprintf(char* stream, const char* format, va_list args)
 	uint8_t		base;
 	char		c;
 	const char* begin = stream;
-	const char* hex_prefix = "0x";
+	const char* hexPrefix = "0x";
 
 	while ((c = *format++) != '\0')
 	{
@@ -42,6 +42,28 @@ uint32_t sprintf(char* stream, const char* format, va_list args)
 		if (c == '%')
 		{
 			c = *format++; // Get the format specifier
+
+			bool	 leftAlign = false;
+			bool	 zeroPad = false;
+			uint32_t width = 0;
+
+			if (c == '-')
+			{
+				leftAlign = true;
+				c = *format++;
+			}
+			if (c == '0')
+			{
+				zeroPad = true;
+				c = *format++;
+			}
+
+			while (c >= '0' && c <= '9')
+			{
+				width = width * 10 + (c - '0');
+				c = *format++;
+			}
+
 			switch (c)
 			{
 				case FMT_CHAR: // Characters
@@ -56,9 +78,30 @@ uint32_t sprintf(char* stream, const char* format, va_list args)
 						{
 							break;
 						}
+
+						size_t len = strlen(text);
+						int	   padding = width > len ? width - len : 0;
+
+						// Apply padding for right alignment (default)
+						if (!leftAlign)
+						{
+							while (padding-- > 0)
+							{
+								*(stream++) = zeroPad ? '0' : ' ';
+							}
+						}
+
 						while (*text)
 						{
 							*(stream++) = *(text++);
+						}
+
+						if (leftAlign)
+						{
+							while (padding-- > 0)
+							{
+								*(stream++) = ' ';
+							}
 						}
 						break;
 					}
@@ -74,7 +117,7 @@ uint32_t sprintf(char* stream, const char* format, va_list args)
 						else if (c == 'x')
 						{
 							base = 16;
-							strcpy(stream, hex_prefix);
+							strcpy(stream, hexPrefix);
 							stream += 2;
 						}
 						int32_t value = va_arg(args, int);
@@ -90,8 +133,34 @@ uint32_t sprintf(char* stream, const char* format, va_list args)
 								buffer[i] = toupper(buffer[i]);
 							}
 						}
-						strcpy(stream, (char*)buffer);
-						stream += strlen(buffer);
+
+						size_t	 len = strlen(buffer);
+						uint32_t padding = width > len ? width - len : 0;
+
+						if (!leftAlign)
+						{
+							// Add padding to the left
+							for (uint32_t i = 0; i < padding; i++)
+							{
+								*(stream++) = zeroPad ? '0' : ' ';
+							}
+						}
+
+						// Copy the number
+						strcpy(stream, buffer);
+						stream += len;
+
+						// Add padding for left alignment
+						if (leftAlign)
+						{
+							while (padding-- > 0)
+							{
+								*(stream++) = ' ';
+							}
+						}
+
+						// strcpy(stream, (char*)buffer);
+						// stream += strlen(buffer);
 						break;
 					}
 				default:
