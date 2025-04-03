@@ -25,7 +25,7 @@ EXTERN void kmain(MultibootInfo* info, uint32_t magic)
 	uint32_t start = 0;
 	uint32_t size = 0;
 	Multiboot::init(info, &start, &size);
-	printf("RAM: %12dMB\n", (size / 1024 / 1024));
+	printf("RAM: %dMB\n", (size / 1024 / 1024));
 
 	GDT::init();
 	IDT::init();
@@ -47,6 +47,5 @@ EXTERN void kmain(MultibootInfo* info, uint32_t magic)
 
 	while (1)
 	{
-		// Scheduler::schedule();
 	}
 }

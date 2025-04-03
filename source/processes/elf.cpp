@@ -28,24 +28,24 @@ void ELF::ELFFile::parseHeaders()
 	// by FileHeader.phnum
 	for (uint32_t i = 0; i < m_header.programHeaderCount; i++)
 	{
-		ProgramHeader ph;
-		memcpy(&ph, data + m_header.programHeaderOffset + (i * sizeof(ProgramHeader)),
+		ProgramHeader header;
+		memcpy(&header, data + m_header.programHeaderOffset + (i * sizeof(ProgramHeader)),
 			sizeof(ProgramHeader));
 
 		// Add to program header array
-		m_programHeaders.add(ph);
+		m_programHeaders.add(header);
 	}
 
 	// Read all section headers, the count being defined
 	// by FileHeader.shnum
 	for (uint32_t i = 0; i < m_header.sectionHeaderCount; i++)
 	{
-		SectionHeader sh;
-		memcpy(&sh, data + m_header.sectionHeaderOffset + (i * sizeof(SectionHeader)),
+		SectionHeader header;
+		memcpy(&header, data + m_header.sectionHeaderOffset + (i * sizeof(SectionHeader)),
 			sizeof(SectionHeader));
 
 		// Add to program header array
-		m_sectionHeaders.add(sh);
+		m_sectionHeaders.add(header);
 	}
 
 	auto nameHeader = m_sectionHeaders[m_header.sectionHeaderStringIndex];
