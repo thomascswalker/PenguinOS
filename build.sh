@@ -1,6 +1,26 @@
 #!/bin/sh
 
+# Ensure PATH is accurate
+export PATH=$HOME/opt/cc_i386/bin:$PATH
+
 . ./scripts/config.sh
+
+# Add a flag to enable debug mode
+VERBOSE=false
+while getopts "v" opt; do
+  case $opt in
+    v)
+      VERBOSE=true
+      ;;
+  esac
+done
+
+# Modify the debug function to respect the debug flag
+debug() {
+  if [ "$VERBOSE" = true ]; then
+    echo "[DEBUG] $1"
+  fi
+}
 
 debug "Constructing build directory"
 if [ -e build ]
@@ -13,19 +33,18 @@ mkdir -p build
 debug "Constructing grub directory"
 mkdir -p build/boot/grub
 
-export PATH=$HOME/opt/cc_i386/bin:$PATH
-
 INCLUDE_DIRS=$(find ./source/ -type d)
-info "Include directories: ${INCLUDE_DIRS[@]}"
 INCLUDE_ARG=""
 for DIR in $INCLUDE_DIRS; do
 	INCLUDE_ARG+=" -I${DIR}"
 done
+info "Include arguments: ${INCLUDE_ARG}"
 
 OUT_FILENAME=""
 OBJ_FILES=()
 
-assemble() {
+assemble() 
+{
     debug "Assembling '$1'"
     BASE_FILENAME=$(basename $1 | sed 's/\.[^.]*$//')
     OUT_FILENAME="$2/${BASE_FILENAME}.o"
@@ -33,7 +52,8 @@ assemble() {
     verify_file $OUT_FILENAME
 }
 
-compile() {
+compile() 
+{
     debug "Compiling '$1'"
     BASE_FILENAME=$(basename $1 | sed 's/\.[^.]*$//')
     OUT_FILENAME="$2/${BASE_FILENAME}_cpp.o"

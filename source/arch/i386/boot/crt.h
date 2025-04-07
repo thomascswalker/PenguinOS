@@ -3,7 +3,7 @@
 #include <ctype.h>
 #include <stdio.h>
 
-EXTERN void* __dso_handle = nullptr;
+void* __dso_handle = nullptr;
 
 using ConstructorType = void (*)();
 
