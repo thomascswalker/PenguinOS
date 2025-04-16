@@ -273,7 +273,7 @@ public:
 		return strncmp(m_data + i, str, strlen(str));
 	}
 
-	bool empty() const { return m_size != 0; }
+	bool empty() const { return m_size == 0; }
 	void clear()
 	{
 		m_size = 0;
@@ -298,7 +298,7 @@ public:
 
 	ValueType* cstr() const
 	{
-		ValueType* result = (ValueType*)std::malloc(m_size);
+		ValueType* result = (ValueType*)malloc(m_size);
 		result[m_size + 1] = '\0';
 		return result;
 	}

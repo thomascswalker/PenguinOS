@@ -1,3 +1,4 @@
+#include <idt.h>
 #include <memory.h>
 #include <pic.h>
 #include <pit.h>
@@ -50,26 +51,18 @@ void sysCallDispatcher(CPUState* regs)
 	switch (sysNo)
 	{
 		case SYSCALL_SLEEP:
-			sysSleep(regs);
+			regs->eax = sysSleep(regs);
+			break;
+		case SYSCALL_OPEN:
+			regs->eax = sysOpen(regs);
 			break;
 		default:
-			warning("Not implemented yet.");
+			warning("System Call %d: Not implemented yet.", sysNo);
+			regs->eax = -1;
 			break;
 	}
 }
 
-int32_t sysFork(CPUState* regs) { return 0; }
-int32_t sysExit(CPUState* regs) { return 0; }
-int32_t sysWait(CPUState* regs) { return 0; }
-int32_t sysPipe(CPUState* regs) { return 0; }
-int32_t sysRead(CPUState* regs) { return 0; }
-int32_t sysKill(CPUState* regs) { return 0; }
-int32_t sysExec(CPUState* regs) { return 0; }
-int32_t sysFstat(CPUState* regs) { return 0; }
-int32_t sysChdir(CPUState* regs) { return 0; }
-int32_t sysDup(CPUState* regs) { return 0; }
-int32_t sysGetpid(CPUState* regs) { return 0; }
-int32_t sysSbrk(CPUState* regs) { return 0; }
 int32_t sysSleep(CPUState* regs)
 {
 	// Get the milliseconds to sleep for from the ecx
@@ -96,9 +89,41 @@ int32_t sysSleep(CPUState* regs)
 
 	return 0;
 }
-int32_t sysUptime(CPUState* regs) { return 0; }
-int32_t sysOpen(CPUState* regs) { return 0; }
+
+int32_t sysRead(CPUState* regs) { return 0; }
+
+/**
+ * Handles the system call for opening a file.
+ *
+ * This function is invoked when a process requests to open a file
+ * through the system call interface. It retrieves the filename from
+ * the CPU state and performs the necessary operations to open the file.
+
+ * @return An integer representing the file descriptor or an error code.
+ *         - On success: Returns a valid file descriptor.
+ *         - On failure: Returns a negative error code.
+ */
+int32_t sysOpen(CPUState* regs)
+{
+	const char* filename = (const char*)regs->ebx;
+	debug("Opening file: %s", filename);
+	int32_t fd = 0;
+	return fd;
+}
 int32_t sysWrite(CPUState* regs) { return 0; }
+
+int32_t sysFork(CPUState* regs) { return 0; }
+int32_t sysExit(CPUState* regs) { return 0; }
+int32_t sysWait(CPUState* regs) { return 0; }
+int32_t sysPipe(CPUState* regs) { return 0; }
+int32_t sysKill(CPUState* regs) { return 0; }
+int32_t sysExec(CPUState* regs) { return 0; }
+int32_t sysFstat(CPUState* regs) { return 0; }
+int32_t sysChdir(CPUState* regs) { return 0; }
+int32_t sysDup(CPUState* regs) { return 0; }
+int32_t sysGetpid(CPUState* regs) { return 0; }
+int32_t sysSbrk(CPUState* regs) { return 0; }
+int32_t sysUptime(CPUState* regs) { return 0; }
 int32_t sysMknod(CPUState* regs) { return 0; }
 int32_t sysUnlink(CPUState* regs) { return 0; }
 int32_t sysLink(CPUState* regs) { return 0; }

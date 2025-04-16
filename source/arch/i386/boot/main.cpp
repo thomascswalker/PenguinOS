@@ -41,9 +41,9 @@ EXTERN void kmain(MultibootInfo* info, uint32_t magic)
 	CMD::init();
 
 	println("Welcome to Penguin OS!");
-
-	// https://build-your-own.org/blog/20230219_elf_craft/
-	ELF::ELFFile file("/test.bin");
+	const char* filename = "test.bin";
+	int32_t		fd = open(filename);
+	debugd(fd);
 
 	while (1)
 	{

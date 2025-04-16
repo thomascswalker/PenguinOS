@@ -57,7 +57,7 @@ compile()
     debug "Compiling '$1'"
     BASE_FILENAME=$(basename $1 | sed 's/\.[^.]*$//')
     OUT_FILENAME="$2/${BASE_FILENAME}_cpp.o"
-    $GCC -std=$CPP_VERSION $CFLAGS -nostdlib -fno-builtin -Wno-unused-function -Wno-unused-parameter -Wno-unused-variable -Wno-parentheses -fno-exceptions $INCLUDE_ARG -c -o $OUT_FILENAME $1
+    $GCC -std=$CPP_VERSION $CXXFLAGS -nostdlib -fno-builtin -Wno-unused-function -Wno-unused-parameter -Wno-unused-variable -Wno-parentheses -fno-exceptions $INCLUDE_ARG -c -o $OUT_FILENAME $1
     verify_file $OUT_FILENAME
 }
 
@@ -95,7 +95,7 @@ verify_file "${BUILD_DIR}/${LIB}"
 info "Linking kernel"
 $GCC \
 	-T "${SOURCE_DIR}/arch/${ARCH}/linker.ld" \
-	-g -m32 $CFLAGS -nostdlib -lgcc $INCLUDE_ARG \
+	-g -m32 $CXXFLAGS -nostdlib -lgcc -lstdc++ $INCLUDE_ARG \
 	-L${BUILD_DIR} -l:${LIB} \
 	-o "${BOOT_DIR}/${KERNEL}"
 verify_file "${BOOT_DIR}/${KERNEL}"
@@ -138,7 +138,7 @@ done
 
 $GCC \
 	-T "${SOURCE_DIR}/arch/${ARCH}/linker.ld" \
-	-g -m32 $CFLAGS -nostdlib -lgcc $INCLUDE_ARG \
+	-g -m32 $CXXFLAGS -nostdlib -lgcc $INCLUDE_ARG \
 	-L${BUILD_DIR} -l:${LIB}
 
 # Construct the grub config file
@@ -173,7 +173,7 @@ qemu-system-i386 \
 	 -boot d \
 	-drive file=disk.img,format=raw,if=ide \
 	-display gtk,zoom-to-fit=on \
-	# -d int \
-	# -no-reboot \
-	# -no-shutdown \
+	-d int \
+	-no-reboot \
+	-no-shutdown \
 	# -s -S

@@ -193,7 +193,7 @@ EXTERN char* strrchr(const char* str, char c)
 char* strdup(const char* str)
 {
 	size_t size = strlen(str) + 1;
-	char*  copy = (char*)std::malloc(size);
+	char*  copy = (char*)malloc(size);
 	if (copy)
 	{
 		memcpy(copy, const_cast<char*>(str), size);

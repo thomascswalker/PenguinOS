@@ -30,8 +30,7 @@ static void processStartup()
 
 ProcessControlBlock* Scheduler::create(EntryPoint func)
 {
-	ProcessControlBlock* newProcess =
-		(ProcessControlBlock*)std::malloc(sizeof(ProcessControlBlock));
+	ProcessControlBlock* newProcess = (ProcessControlBlock*)malloc(sizeof(ProcessControlBlock));
 
 	if (!newProcess)
 	{
@@ -42,7 +41,7 @@ ProcessControlBlock* Scheduler::create(EntryPoint func)
 	newProcess->pid = g_currentPID++;
 	newProcess->state = Ready;
 	newProcess->programCounter = 0;
-	newProcess->stackBase = (uintptr_t*)std::malloc(STACK_SIZE);
+	newProcess->stackBase = (uintptr_t*)malloc(STACK_SIZE);
 	newProcess->stackPointer = (uintptr_t*)((uint32_t)newProcess->stackBase + STACK_SIZE);
 
 	*(--newProcess->stackPointer) = (uintptr_t)func; // eip

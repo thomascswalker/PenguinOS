@@ -16,7 +16,7 @@ export SOURCE_DIR="./source"
 export BUILD_DIR="./build"
 export BOOT_DIR="$BUILD_DIR/boot"
 
-export CFLAGS="-O0 -m32 -g -ffreestanding -Wall -Wextra -fno-omit-frame-pointer"
+export CXXFLAGS="-O0 -m32 -g -Wall -ffreestanding -fno-omit-frame-pointer -fno-rtti"
 export ASFLAGS="-felf32 -g"
 
 export LIB="PengOS.a"

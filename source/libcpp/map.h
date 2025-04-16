@@ -45,7 +45,7 @@ private:
 		clear(node->left);
 		clear(node->right);
 		node->~Node();
-		std::free(node);
+		free(node);
 	}
 
 	Node* minimum(Node* n) const
@@ -85,7 +85,7 @@ public:
 			}
 		}
 
-		Node* z = static_cast<Node*>(std::malloc(sizeof(Node)));
+		Node* z = static_cast<Node*>(malloc(sizeof(Node)));
 		if (!z)
 		{
 			// Out of memory

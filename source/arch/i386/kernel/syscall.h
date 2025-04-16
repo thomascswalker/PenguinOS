@@ -6,31 +6,27 @@ int 0x80        ; Trigger system call defined by value in EAX
 
 #include <idt.h>
 
-enum SysCalls
-{
-	// Standard
-	SYSCALL_FORK,	// Fork
-	SYSCALL_EXIT,	// Exit
-	SYSCALL_WAIT,	// Wait
-	SYSCALL_PIPE,	// Pipe
-	SYSCALL_READ,	// Read
-	SYSCALL_KILL,	// Kill
-	SYSCALL_EXEC,	// Exec
-	SYSCALL_FSTAT,	// Fstat
-	SYSCALL_CHDIR,	// Chdir
-	SYSCALL_DUP,	// Dup
-	SYSCALL_GETPID, // Getpid
-	SYSCALL_SBRK,	// Sbrk
-	SYSCALL_SLEEP,	// Sleep
-	SYSCALL_UPTIME, // Uptime
-	SYSCALL_OPEN,	// Open
-	SYSCALL_WRITE,	// Write
-	SYSCALL_MKNOD,	// Mknod
-	SYSCALL_UNLINK, // Unlink
-	SYSCALL_LINK,	// Link
-	SYSCALL_MKDIR,	// Mkdir
-	SYSCALL_CLOSE,	// Close
-};
+#define SYSCALL_FORK 0	  // Fork
+#define SYSCALL_EXIT 1	  // Exit
+#define SYSCALL_WAIT 2	  // Wait
+#define SYSCALL_PIPE 3	  // Pipe
+#define SYSCALL_READ 4	  // Read
+#define SYSCALL_KILL 5	  // Kill
+#define SYSCALL_EXEC 6	  // Exec
+#define SYSCALL_FSTAT 7	  // Fstat
+#define SYSCALL_CHDIR 8	  // Chdir
+#define SYSCALL_DUP 9	  // Dup
+#define SYSCALL_GETPID 10 // Getpid
+#define SYSCALL_SBRK 11	  // Sbrk
+#define SYSCALL_SLEEP 12  // Sleep
+#define SYSCALL_UPTIME 13 // Uptime
+#define SYSCALL_OPEN 14	  // Open
+#define SYSCALL_WRITE 15  // Write
+#define SYSCALL_MKNOD 16  // Mknod
+#define SYSCALL_UNLINK 17 // Unlink
+#define SYSCALL_LINK 18	  // Link
+#define SYSCALL_MKDIR 19  // Mkdir
+#define SYSCALL_CLOSE 20  // Close
 
 void	sysCallDispatcher(CPUState* regs);
 int32_t sysFork(CPUState* regs);
