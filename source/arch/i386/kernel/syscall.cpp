@@ -4,6 +4,7 @@
 #include <pit.h>
 #include <stdio.h>
 #include <syscall.h>
+#include <vfs.h>
 
 static SysCallFunc syscalls[] = {
 	sysFork,
@@ -93,9 +94,12 @@ int32_t sysRead(CPUState* regs) { return 0; }
  */
 int32_t sysOpen(CPUState* regs)
 {
+	debug("Sys Open");
 	const char* filename = (const char*)regs->ebx;
-	debug("Opening file: %s", filename);
-	return 0;
+
+	auto vfs = getVirtualFileSystem();
+	debug("(%s) Opening file: %s", vfs->getTypeName().data(), filename);
+	return vfs->open(filename);
 }
 int32_t sysWrite(CPUState* regs) { return 0; }
 

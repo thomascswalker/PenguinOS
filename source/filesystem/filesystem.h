@@ -43,8 +43,6 @@ public:
 
 namespace FileSystem
 {
-	void init();
-
 	bool openFile(const String& path, File* file);
 	bool isFile(const String& path);
 	bool isDirectory(const String& path);

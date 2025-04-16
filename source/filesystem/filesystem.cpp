@@ -50,17 +50,7 @@ String Path::stem()
 
 String Path::extension() { return String(); }
 
-void FileSystem::init()
-{
-	// Initialize the first IDE device.
-	IDE::init();
-
-	// Initialize the FAT32 filesystem by reading and
-	// storing the root directory.
-	FAT32::init();
-}
-
-bool FileSystem::openFile(const String& path, File* file) { return FAT32::openFile(path, file); }
+bool FileSystem::openFile(const String& path, File* file) { return true; }
 
 bool FileSystem::isFile(const String& path) { return path.split('.').size(); }
 

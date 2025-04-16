@@ -15,8 +15,6 @@ Main entry point into PenguinOS.
 #include <scheduler.h>
 #include <shell.h>
 
-VirtualFileSystem* vfs = nullptr;
-
 EXTERN void kmain(MultibootInfo* info, uint32_t magic)
 {
 	Shell::init();
@@ -39,15 +37,15 @@ EXTERN void kmain(MultibootInfo* info, uint32_t magic)
 
 	Memory::init(start, size);
 	Scheduler::init();
-	FileSystem::init();
+	IDE::init();
 	CMD::init();
 
 	println("Welcome to Penguin OS!");
 
-	vfs = new FAT32FileSystem();
-	debugs(vfs->getTypeName().data());
+	FAT32FileSystem fs;
+	setVirtualFileSystem(&fs);
 
-	const char* filename = "test.bin";
+	const char* filename = "/test.bin";
 	int32_t		fd = open(filename);
 	debugd(fd);
 

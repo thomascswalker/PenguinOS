@@ -8,6 +8,8 @@
 #include <memory.h>
 #include <stdio.h>
 
+using namespace FAT32;
+
 #define GET_DEVICE(index) ATADevice* d = IDE::getDevice(index)
 
 FAT32FileSystem::FAT32FileSystem()
@@ -19,35 +21,65 @@ FAT32FileSystem::FAT32FileSystem()
 	{
 		panic("Failed to read root directory sector.");
 	}
-	memcpy(m_rootEntry, &data[0], sizeof(ShortEntry));
+
+	memcpy(&m_rootEntry, &data[0], sizeof(ShortEntry));
 }
 
-static FAT32::ShortEntry* g_rootEntry;
-
-void FAT32::init()
+// Given the cluster number `n`, get the next cluster.
+uint32_t FAT32FileSystem::getNextCluster(uint32_t n)
 {
-	GET_DEVICE(0);
+	uint32_t offset = n * 4; // ??? why multiply by 4?
+	uint32_t sector =
+		m_device->bootSector.reservedSectorCount + (offset / m_device->bootSector.bytesPerSector);
+	uint32_t offsetInSector = offset % m_device->bootSector.bytesPerSector;
 
-	ShortEntry data[FAT_ENTRIES_PER_SECTOR];
-	if (!d->readSectors(d->rootDirectorySector, 1, &data))
+	// Assumes the sector is 512 bytes.
+	uint8_t buffer[512];
+	if (!m_device->readSector(sector, buffer))
 	{
-		panic("Failed to read root directory sector.");
+		return FAT_END_OF_CLUSTER; // End of chain
 	}
-	memcpy(g_rootEntry, &data[0], sizeof(ShortEntry));
+
+	uint32_t* entry = (uint32_t*)(buffer + offsetInSector);
+	uint32_t  next = *entry & FAT_END_OF_CLUSTER;
+	return next;
 }
 
-bool FAT32::openFile(const String& filename, void* file)
+// Given the cluster number `n`, get the corresponding
+// sector number.
+uint32_t FAT32FileSystem::getClusterSector(uint32_t n)
+{
+	return ((n - 2) * m_device->bootSector.sectorsPerCluster) + m_device->firstDataSector;
+}
+
+// Returns the total number of clusters (sectors for data)
+// in this partition.
+uint32_t FAT32FileSystem::getClusterCount()
+{
+	uint32_t dataSectors =
+		m_device->bootSector.sectorCount - (m_device->bootSector.reservedSectorCount + getSize());
+	return dataSectors / m_device->bootSector.sectorsPerCluster;
+}
+
+// Returns the total number of sectors in this partition.
+uint32_t FAT32FileSystem::getSize()
+{
+	return m_device->bootSector.tableCount * m_device->bootSector.bigSectorsPerTable;
+}
+
+int32_t FAT32FileSystem::open(const char* filename)
 {
 	GET_DEVICE(0);
 
 	// Split the filename by `/`. This will result in an
 	// array of each path component we need to search for.
-	Array<String> components = filename.split('/');
+	String		  str(filename);
+	Array<String> components = str.split('/');
 
 	if (components.empty())
 	{
-		warning("No components in path %s", filename.data());
-		return false;
+		warning("FAT32: No components in path %s", str.data());
+		return 0;
 	}
 
 	// TODO: Move this to global space as it's redundant
@@ -55,7 +87,7 @@ bool FAT32::openFile(const String& filename, void* file)
 	ShortEntry data[FAT_ENTRIES_PER_SECTOR];
 	if (!d->readSectors(d->rootDirectorySector, 1, &data))
 	{
-		panic("Failed to read root directory sector.");
+		panic("FAT32: Failed to read root directory sector.");
 	}
 	ShortEntry* rootDirectory = &data[0];
 	uint32_t	currentCluster = rootDirectory->cluster();
@@ -71,7 +103,7 @@ bool FAT32::openFile(const String& filename, void* file)
 	{
 		if (!findEntry(currentCluster, c, &entry))
 		{
-			warning("Unable to find entry %s", c.data());
+			warning("FAT32: Unable to find entry %s", c.data());
 			return false;
 		}
 
@@ -83,27 +115,32 @@ bool FAT32::openFile(const String& filename, void* file)
 		break;
 	}
 
-	// If the file entry indicates the file is empty, just return.
-	if (!entry.fileSize)
-	{
-		warning("File is empty.");
-		return false;
-	}
+	int32_t cluster = entry.cluster();
+	m_openEntries.add({ cluster, entry });
 
-	// Extract relevant file data and properties.
-	File* f = (File*)file;
-	f->size = entry.fileSize;
+	return cluster;
 
-	// Get the corresponding sector for the entry's cluster.
-	sector = FAT32::getClusterSector(entry.cluster());
+	// // If the file entry indicates the file is empty, just return.
+	// if (!entry.fileSize)
+	// {
+	// 	warning("File is empty.");
+	// 	return false;
+	// }
 
-	// Allocate memory for the file.
-	f->data = new char[entry.fileSize];
-	debug("Data: %x", f->data);
+	// // Extract relevant file data and properties.
+	// File* f = (File*)file;
+	// f->size = entry.fileSize;
 
-	// Finally read the sector corresponding to this entry,
-	// storing the result in f->data.
-	return d->readSector(sector, f->data);
+	// // Get the corresponding sector for the entry's cluster.
+	// sector = FAT32::getClusterSector(entry.cluster());
+
+	// // Allocate memory for the file.
+	// f->data = new char[entry.fileSize];
+	// debug("Data: %x", f->data);
+
+	// // Finally read the sector corresponding to this entry,
+	// // storing the result in f->data.
+	// return d->readSector(sector, f->data);
 }
 
 // Converts the given `longName` to a FAT 8.3 compatible
@@ -202,7 +239,7 @@ bool FAT32::isValidChar(char c)
 		|| c == ';' || c == '=' || c == ',');
 }
 
-bool FAT32::findEntry(uint32_t startCluster, const String& name, ShortEntry* entry)
+bool FAT32FileSystem::findEntry(uint32_t startCluster, const String& name, ShortEntry* entry)
 {
 	GET_DEVICE(0);
 
@@ -219,7 +256,7 @@ bool FAT32::findEntry(uint32_t startCluster, const String& name, ShortEntry* ent
 	while (cluster < FAT_END_OF_CLUSTER)
 	{
 		// Get the first sector of this cluster.
-		uint32_t firstSector = FAT32::getClusterSector(cluster);
+		uint32_t firstSector = getClusterSector(cluster);
 
 		// Read each sector (16 total) of this cluster into `buffer` at the offset
 		// [n * BPS] where `n` is the current sector index and BPS is the bytes
@@ -269,7 +306,7 @@ bool FAT32::findEntry(uint32_t startCluster, const String& name, ShortEntry* ent
 		}
 
 		// Move to the next cluster.
-		cluster = FAT32::getNextCluster(cluster);
+		cluster = getNextCluster(cluster);
 	}
 
 	return false;
@@ -281,7 +318,8 @@ bool FAT32::isLongEntry(uint8_t* buffer)
 	// - The first character of the entry is 0.
 	// - The 'attribute' component of a FAT entry is at offset 11 (0xB). This
 	// character is equal to 15 (0xF).
-	return *buffer == Attribute::LastEntry || *(buffer + 11) == Attribute::LongFileName;
+	return *buffer == (uint8_t)Attribute::LastEntry
+		|| *(buffer + 11) == (uint8_t)Attribute::LongFileName;
 }
 
 void FAT32::parseLongEntry(LongEntry* entry, uint32_t count, char* filename)
@@ -320,54 +358,7 @@ void FAT32::parseLongEntry(LongEntry* entry, uint32_t count, char* filename)
 	}
 }
 
-// Given the cluster number `n`, get the next cluster.
-uint32_t FAT32::getNextCluster(uint32_t n)
-{
-	GET_DEVICE(0);
-	uint32_t offset = n * 4; // ??? why multiply by 4?
-	uint32_t sector = d->bootSector.reservedSectorCount + (offset / d->bootSector.bytesPerSector);
-	uint32_t offsetInSector = offset % d->bootSector.bytesPerSector;
-
-	// Assumes the sector is 512 bytes.
-	uint8_t buffer[512];
-	if (!d->readSector(sector, buffer))
-	{
-		return FAT_END_OF_CLUSTER; // End of chain
-	}
-
-	uint32_t* entry = (uint32_t*)(buffer + offsetInSector);
-	uint32_t  next = *entry & FAT_END_OF_CLUSTER;
-	return next;
-}
-
-// Given the cluster number `n`, get the corresponding
-// sector number.
-uint32_t FAT32::getClusterSector(uint32_t n)
-{
-	GET_DEVICE(0);
-	return ((n - 2) * d->bootSector.sectorsPerCluster) + d->firstDataSector;
-}
-
-// Returns the total number of clusters (sectors for data)
-// in this partition.
-uint32_t FAT32::getClusterCount()
-{
-	GET_DEVICE(0);
-	uint32_t dataSectors =
-		d->bootSector.sectorCount - (d->bootSector.reservedSectorCount + getSize());
-	return dataSectors / d->bootSector.sectorsPerCluster;
-}
-
-// Returns the total number of sectors in this partition.
-uint32_t FAT32::getSize()
-{
-	GET_DEVICE(0);
-	return d->bootSector.tableCount * d->bootSector.bigSectorsPerTable;
-}
-
-FAT32::ShortEntry* FAT32::getRootEntry() { return g_rootEntry; }
-
-bool FAT32::readDirectory(const ShortEntry& entry, Array<ShortEntry>& entries)
+bool FAT32FileSystem::readDirectory(const ShortEntry& entry, Array<ShortEntry>& entries)
 {
 	GET_DEVICE(0);
 
@@ -383,7 +374,7 @@ bool FAT32::readDirectory(const ShortEntry& entry, Array<ShortEntry>& entries)
 	while (cluster < FAT_END_OF_CLUSTER)
 	{
 		// Get the first sector of this cluster.
-		uint32_t firstSector = FAT32::getClusterSector(cluster);
+		uint32_t firstSector = getClusterSector(cluster);
 
 		if (!firstSector)
 		{
@@ -430,7 +421,7 @@ bool FAT32::readDirectory(const ShortEntry& entry, Array<ShortEntry>& entries)
 		}
 
 		// Move to the next cluster.
-		cluster = FAT32::getNextCluster(cluster);
+		cluster = getNextCluster(cluster);
 	}
 
 	return true;

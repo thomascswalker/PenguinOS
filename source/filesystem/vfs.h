@@ -22,6 +22,11 @@ public:
 	VirtualFileSystem() = default;
 	virtual ~VirtualFileSystem() = default;
 
+	virtual int32_t open(const char* filename) = 0;
+
 	virtual FileSystemType getType() const = 0;
 	virtual String		   getTypeName() const = 0;
 };
+
+void			   setVirtualFileSystem(VirtualFileSystem* vfs);
+VirtualFileSystem* getVirtualFileSystem();
