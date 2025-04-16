@@ -10,6 +10,18 @@
 
 #define GET_DEVICE(index) ATADevice* d = IDE::getDevice(index)
 
+FAT32FileSystem::FAT32FileSystem()
+{
+	m_device = IDE::getDevice(0);
+
+	ShortEntry data[FAT_ENTRIES_PER_SECTOR];
+	if (!m_device->readSectors(m_device->rootDirectorySector, 1, &data))
+	{
+		panic("Failed to read root directory sector.");
+	}
+	memcpy(m_rootEntry, &data[0], sizeof(ShortEntry));
+}
+
 static FAT32::ShortEntry* g_rootEntry;
 
 void FAT32::init()

@@ -48,19 +48,7 @@ void sysCallDispatcher(CPUState* regs)
 		return;
 	}
 
-	switch (sysNo)
-	{
-		case SYSCALL_SLEEP:
-			regs->eax = sysSleep(regs);
-			break;
-		case SYSCALL_OPEN:
-			regs->eax = sysOpen(regs);
-			break;
-		default:
-			warning("System Call %d: Not implemented yet.", sysNo);
-			regs->eax = -1;
-			break;
-	}
+	regs->eax = syscalls[sysNo](regs);
 }
 
 int32_t sysSleep(CPUState* regs)
@@ -107,8 +95,7 @@ int32_t sysOpen(CPUState* regs)
 {
 	const char* filename = (const char*)regs->ebx;
 	debug("Opening file: %s", filename);
-	int32_t fd = 0;
-	return fd;
+	return 0;
 }
 int32_t sysWrite(CPUState* regs) { return 0; }
 

@@ -77,6 +77,6 @@ void sleep(uint32_t seconds)
 int32_t open(const char* filename)
 {
 	int32_t result = 0;
-	asm("int $0x80" : "=a"(result) : "a"(SYSCALL_OPEN), "b"(filename));
+	asm("int $0x80" : "=a"(result) : "0"(SYSCALL_OPEN), "b"(filename));
 	return result;
 }

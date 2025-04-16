@@ -144,7 +144,7 @@ void ATADevice::identify()
 	-------------------------
 	*/
 
-	for (uint32_t i = 0; i < 21; i++)
+	for (uint32_t i = 0; i < 20; i++)
 	{
 		auto offset = i * 2;
 		model[offset] = modelPtr[offset + 1];
