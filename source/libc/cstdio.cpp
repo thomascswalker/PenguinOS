@@ -1,7 +1,7 @@
 #include <cstdio.h>
 #include <shell.h>
+#include <syscall.h>
 #include <vfs.h>
-
 void putc(char c) { Shell::putNext(c); }
 
 char getc() { return 0; }
@@ -276,22 +276,23 @@ void panic(const char* format, ...)
 	syshalt();
 }
 
-FILE* fopen(const char* filename)
+File* fopen(const char* filename)
 {
 	int32_t fd = open(filename);
 	if (fd <= 0)
 	{
+		error("Failed to open file: %s", filename);
 		return nullptr;
 	}
+	FileStat stat;
+	fstat(fd, &stat);
 
-	VirtualFileSystem* vfs = getVirtualFileSystem();
-
-	size_t size = vfs->getFileSize(filename);
+	size_t size = stat.size;
 
 	char* buf = new char[size];
 	read(fd, buf, size);
 
-	FILE* f = new FILE();
+	File* f = new File();
 	f->fd = fd;
 	f->name = new char[strlen(filename) + 1];
 	strcpy(f->name, filename);
@@ -301,7 +302,7 @@ FILE* fopen(const char* filename)
 	return f;
 }
 
-size_t fread(FILE* stream, void* buffer, size_t size)
+size_t fread(File* stream, void* buffer, size_t size)
 {
 	if (!stream || !buffer || size == 0)
 	{
@@ -321,7 +322,7 @@ size_t fread(FILE* stream, void* buffer, size_t size)
 	return bytesToRead; // Return the number of bytes actually read
 }
 
-void fclose(FILE* stream)
+void fclose(File* stream)
 {
 	if (stream)
 	{
@@ -331,7 +332,9 @@ void fclose(FILE* stream)
 		delete[] stream->name;
 		delete[] stream->buffer;
 
-		// Free the FILE structure itself
+		// Free the File structure itself
 		delete stream;
 	}
 }
+
+void fstat(int32_t fd, FileStat* buffer) { stat(fd, (void*)buffer); }

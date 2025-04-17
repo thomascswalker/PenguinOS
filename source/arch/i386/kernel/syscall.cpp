@@ -114,8 +114,15 @@ int32_t sysClose(CPUState* regs)
 	vfs->close(fd);
 	return 0;
 }
-
 int32_t sysWrite(CPUState* regs) { return 0; }
+int32_t sysFstat(CPUState* regs)
+{
+	int32_t	  fd = regs->ebx;
+	FileStat* stat = (FileStat*)regs->ecx;
+	auto	  vfs = getVirtualFileSystem();
+	stat->size = vfs->getFileSize(fd);
+	return 0;
+}
 
 int32_t sysFork(CPUState* regs) { return 0; }
 int32_t sysExit(CPUState* regs) { return 0; }
@@ -123,7 +130,6 @@ int32_t sysWait(CPUState* regs) { return 0; }
 int32_t sysPipe(CPUState* regs) { return 0; }
 int32_t sysKill(CPUState* regs) { return 0; }
 int32_t sysExec(CPUState* regs) { return 0; }
-int32_t sysFstat(CPUState* regs) { return 0; }
 int32_t sysChdir(CPUState* regs) { return 0; }
 int32_t sysDup(CPUState* regs) { return 0; }
 int32_t sysGetpid(CPUState* regs) { return 0; }

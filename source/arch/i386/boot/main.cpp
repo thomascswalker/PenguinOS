@@ -47,7 +47,7 @@ EXTERN void kmain(MultibootInfo* info, uint32_t magic)
 
 	const char* filename = "/test.bin";
 
-	FILE* f = fopen(filename);
+	File* f = fopen(filename);
 	if (f)
 	{
 		success("File opened successfully!");

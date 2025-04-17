@@ -137,13 +137,13 @@ void CMD::clear() { Shell::clearDisplay(); }
 
 void CMD::cat(const String& path)
 {
-	File file;
-	if (!FileSystem::openFile(path, &file))
-	{
-		warning("cat: %s: No such file or directory", path.data());
-		return;
-	}
-	printf("%s\n", file.data);
+	// File file;
+	// if (!FileSystem::openFile(path, &file))
+	// {
+	// 	warning("cat: %s: No such file or directory", path.data());
+	// 	return;
+	// }
+	// printf("%s\n", file.data);
 }
 
 void CMD::pwd() { printf("pwd: %s\n", g_cwd.path); }

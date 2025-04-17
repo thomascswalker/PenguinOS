@@ -110,7 +110,8 @@ public:
 	size_t	read(int32_t fd, void* buffer, size_t size) override;
 	void	close(int32_t fd) override;
 
-	size_t		   getFileSize(const char* filename) override;
+	size_t		   getFileSize(int32_t fd) override;
+	size_t		   getFileSizeFromName(const char* filename) override;
 	FileSystemType getType() const override { return FileSystemType::FAT32; };
 	String		   getTypeName() const override { return "FAT32"; };
 

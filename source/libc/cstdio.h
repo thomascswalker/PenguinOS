@@ -35,7 +35,7 @@ void panic(const char* format, ...);
 
 // Files
 
-struct FILE
+struct File
 {
 	char*	name;	// File name
 	char*	buffer; // Buffer for file I/O
@@ -44,6 +44,12 @@ struct FILE
 	size_t	pos;	// Current position in the file
 };
 
-FILE*  fopen(const char* filename);
-size_t fread(FILE* stream, void* buffer, size_t size);
-void   fclose(FILE* stream);
+struct FileStat
+{
+	size_t size; // Size of the file
+};
+
+File*  fopen(const char* filename);
+size_t fread(File* stream, void* buffer, size_t size);
+void   fclose(File* stream);
+void   fstat(int32_t fd, FileStat* buffer);

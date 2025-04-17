@@ -155,7 +155,19 @@ void FAT32FileSystem::close(int32_t fd)
 	}
 }
 
-size_t FAT32FileSystem::getFileSize(const char* filename)
+size_t FAT32FileSystem::getFileSize(int32_t fd)
+{
+	for (const auto& pair : m_openEntries)
+	{
+		if (pair.a == fd)
+		{
+			return pair.b.fileSize;
+		}
+	}
+	return 0;
+}
+
+size_t FAT32FileSystem::getFileSizeFromName(const char* filename)
 {
 	ShortEntry entry;
 	if (!getEntryFromPath(filename, &entry))
