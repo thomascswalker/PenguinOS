@@ -93,11 +93,6 @@ namespace FAT32
 
 	} __attribute__((packed));
 
-	char* toShortName(const char* longName);
-	char* sanitize(const String& component, size_t count);
-	bool  isValidChar(char c);
-	bool  isLongEntry(uint8_t* buffer);
-	void  parseLongEntry(LongEntry* entry, uint32_t count, char* filename);
 } // namespace FAT32
 
 class FAT32FileSystem : public VirtualFileSystem
@@ -127,4 +122,10 @@ public:
 
 	bool findEntry(uint32_t startCluster, const String& name, FAT32::ShortEntry* entry);
 	bool readDirectory(const FAT32::ShortEntry& entry, Array<FAT32::ShortEntry>& entries);
+
+	char* toShortName(const char* longName);
+	char* sanitize(const String& component, size_t count);
+	bool  isValidChar(char c);
+	bool  isLongEntry(uint8_t* buffer);
+	void  parseLongEntry(FAT32::LongEntry* entry, uint32_t count, char* filename);
 };
