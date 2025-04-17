@@ -2,13 +2,16 @@
 
 #include <cstring.h>
 
-void	itoa(char* buffer, uint32_t value, uint32_t base);
-void*	malloc(const uint32_t size);
-void	free(void* ptr);
-void*	realloc(void* ptr, const uint32_t size);
-void	sleep(uint32_t seconds);
+void  itoa(char* buffer, uint32_t value, uint32_t base);
+void* malloc(const uint32_t size);
+void  free(void* ptr);
+void* realloc(void* ptr, const uint32_t size);
+void  sleep(uint32_t seconds);
+
+// IO
 int32_t open(const char* filename);
 size_t	read(int32_t fd, void* buffer, size_t size);
+void	close(int32_t fd);
 
 namespace std
 {

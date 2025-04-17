@@ -87,3 +87,5 @@ size_t read(int32_t fd, void* buffer, size_t size)
 	asm("int $0x80" : "=a"(result) : "0"(SYSCALL_READ), "b"(fd), "c"(buffer), "d"(size));
 	return result;
 }
+
+void close(int32_t fd) { asm("int $0x80" ::"a"(SYSCALL_CLOSE), "b"(fd)); }

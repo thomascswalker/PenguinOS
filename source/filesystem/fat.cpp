@@ -123,6 +123,13 @@ int32_t FAT32FileSystem::open(const char* filename)
 		return -1;
 	}
 	int32_t cluster = entry.cluster();
+	for (auto& pair : m_openEntries)
+	{
+		if (pair.a == cluster)
+		{
+			return cluster;
+		}
+	}
 	m_openEntries.add({ cluster, entry });
 
 	return cluster;
@@ -136,6 +143,18 @@ size_t FAT32FileSystem::read(int32_t fd, void* buffer, size_t size)
 		return size;
 	}
 	return 0;
+}
+
+void FAT32FileSystem::close(int32_t fd)
+{
+	for (size_t i = 0; i < m_openEntries.size(); i++)
+	{
+		if (m_openEntries[i].a == fd)
+		{
+			m_openEntries.remove(i);
+			return;
+		}
+	}
 }
 
 size_t FAT32FileSystem::getFileSize(const char* filename)

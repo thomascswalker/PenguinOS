@@ -73,6 +73,21 @@ public:
 		m_size++;
 	}
 
+	void remove(int32_t index)
+	{
+		if (index < 0 || index >= m_size)
+		{
+			return;
+		}
+		m_data[index].~ValueType();
+		for (SizeType i = index; i < m_size - 1; i++)
+		{
+			new (&m_data[i]) ValueType(std::move(m_data[i + 1]));
+			m_data[i + 1].~ValueType();
+		}
+		m_size--;
+	}
+
 	void grow()
 	{
 		SizeType newCapacity = m_capacity == 0 ? 1 : m_capacity * 2;

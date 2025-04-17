@@ -107,6 +107,14 @@ int32_t sysRead(CPUState* regs)
 	return vfs->read(fd, buffer, size);
 }
 
+int32_t sysClose(CPUState* regs)
+{
+	int32_t fd = regs->ebx;
+	auto	vfs = getVirtualFileSystem();
+	vfs->close(fd);
+	return 0;
+}
+
 int32_t sysWrite(CPUState* regs) { return 0; }
 
 int32_t sysFork(CPUState* regs) { return 0; }
@@ -125,4 +133,3 @@ int32_t sysMknod(CPUState* regs) { return 0; }
 int32_t sysUnlink(CPUState* regs) { return 0; }
 int32_t sysLink(CPUState* regs) { return 0; }
 int32_t sysMkdir(CPUState* regs) { return 0; }
-int32_t sysClose(CPUState* regs) { return 0; }

@@ -44,4 +44,6 @@ struct FILE
 	size_t	pos;	// Current position in the file
 };
 
-FILE* fopen(const char* filename);
+FILE*  fopen(const char* filename);
+size_t fread(FILE* stream, void* buffer, size_t size);
+void   fclose(FILE* stream);

@@ -297,5 +297,41 @@ FILE* fopen(const char* filename)
 	strcpy(f->name, filename);
 	f->buffer = buf;
 	f->size = size;
+	f->pos = 0;
 	return f;
+}
+
+size_t fread(FILE* stream, void* buffer, size_t size)
+{
+	if (!stream || !buffer || size == 0)
+	{
+		return 0; // Invalid input
+	}
+
+	// Calculate the number of bytes available to read
+	size_t bytesAvailable = stream->size - stream->pos;
+	size_t bytesToRead = (size > bytesAvailable) ? bytesAvailable : size;
+
+	// Copy the data from the stream's buffer to the provided buffer
+	memcpy(buffer, stream->buffer + stream->pos, bytesToRead);
+
+	// Update the stream's position
+	stream->pos += bytesToRead;
+
+	return bytesToRead; // Return the number of bytes actually read
+}
+
+void fclose(FILE* stream)
+{
+	if (stream)
+	{
+		close(stream->fd);
+
+		// Free the allocated memory for the file name and buffer
+		delete[] stream->name;
+		delete[] stream->buffer;
+
+		// Free the FILE structure itself
+		delete stream;
+	}
 }
