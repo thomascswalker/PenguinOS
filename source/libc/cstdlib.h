@@ -8,6 +8,7 @@ void	free(void* ptr);
 void*	realloc(void* ptr, const uint32_t size);
 void	sleep(uint32_t seconds);
 int32_t open(const char* filename);
+size_t	read(int32_t fd, void* buffer, size_t size);
 
 namespace std
 {

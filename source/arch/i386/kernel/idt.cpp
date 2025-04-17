@@ -1,6 +1,6 @@
+#include <cstdio.h>
 #include <idt.h>
 #include <pic.h>
-#include <stdio.h>
 #include <syscall.h>
 
 static const char* idtMessages[] = {

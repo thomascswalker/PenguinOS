@@ -23,7 +23,9 @@ public:
 	virtual ~VirtualFileSystem() = default;
 
 	virtual int32_t open(const char* filename) = 0;
+	virtual size_t	read(int32_t fd, void* buffer, size_t size) = 0;
 
+	virtual size_t		   getFileSize(const char* filename) = 0;
 	virtual FileSystemType getType() const = 0;
 	virtual String		   getTypeName() const = 0;
 };

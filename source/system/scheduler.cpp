@@ -1,9 +1,9 @@
 #include <assert.h>
+#include <cstdio.h>
 #include <list.h>
 #include <memory.h>
 #include <pic.h>
 #include <scheduler.h>
-#include <stdio.h>
 
 using namespace Scheduler;
 

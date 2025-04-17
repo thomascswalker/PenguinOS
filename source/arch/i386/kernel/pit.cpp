@@ -1,7 +1,7 @@
+#include <cstdio.h>
 #include <pic.h>
 #include <pit.h>
 #include <scheduler.h>
-#include <stdio.h>
 
 // Global ticks for the timer.
 static uint32_t g_ticks = 0;

@@ -1,8 +1,8 @@
+#include <cstdio.h>
 #include <idt.h>
 #include <memory.h>
 #include <pic.h>
 #include <pit.h>
-#include <stdio.h>
 #include <syscall.h>
 #include <vfs.h>
 
@@ -79,8 +79,6 @@ int32_t sysSleep(CPUState* regs)
 	return 0;
 }
 
-int32_t sysRead(CPUState* regs) { return 0; }
-
 /**
  * Handles the system call for opening a file.
  *
@@ -94,13 +92,21 @@ int32_t sysRead(CPUState* regs) { return 0; }
  */
 int32_t sysOpen(CPUState* regs)
 {
-	debug("Sys Open");
 	const char* filename = (const char*)regs->ebx;
-
-	auto vfs = getVirtualFileSystem();
-	debug("(%s) Opening file: %s", vfs->getTypeName().data(), filename);
+	auto		vfs = getVirtualFileSystem();
 	return vfs->open(filename);
 }
+
+int32_t sysRead(CPUState* regs)
+{
+	int32_t fd = regs->ebx;
+	void*	buffer = (void*)regs->ecx;
+	size_t	size = regs->edx;
+
+	auto vfs = getVirtualFileSystem();
+	return vfs->read(fd, buffer, size);
+}
+
 int32_t sysWrite(CPUState* regs) { return 0; }
 
 int32_t sysFork(CPUState* regs) { return 0; }

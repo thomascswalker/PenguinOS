@@ -93,11 +93,11 @@ namespace FAT32
 
 	} __attribute__((packed));
 
-	String toShortName(const String& longName);
-	char*  sanitize(const String& component, size_t count);
-	bool   isValidChar(char c);
-	bool   isLongEntry(uint8_t* buffer);
-	void   parseLongEntry(LongEntry* entry, uint32_t count, char* filename);
+	char* toShortName(const char* longName);
+	char* sanitize(const String& component, size_t count);
+	bool  isValidChar(char c);
+	bool  isLongEntry(uint8_t* buffer);
+	void  parseLongEntry(LongEntry* entry, uint32_t count, char* filename);
 } // namespace FAT32
 
 class FAT32FileSystem : public VirtualFileSystem
@@ -112,10 +112,13 @@ public:
 	~FAT32FileSystem() override = default;
 
 	int32_t open(const char* filename) override;
+	size_t	read(int32_t fd, void* buffer, size_t size) override;
 
+	size_t		   getFileSize(const char* filename) override;
 	FileSystemType getType() const override { return FileSystemType::FAT32; };
 	String		   getTypeName() const override { return "FAT32"; };
 
+	bool	 getEntryFromPath(const char* filename, FAT32::ShortEntry* entry);
 	uint32_t getNextCluster(uint32_t n);
 	uint32_t getClusterSector(uint32_t n);
 	uint32_t getClusterCount();

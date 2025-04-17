@@ -1,5 +1,6 @@
+#include <cstdio.h>
 #include <shell.h>
-#include <stdio.h>
+#include <vfs.h>
 
 void putc(char c) { Shell::putNext(c); }
 
@@ -273,4 +274,28 @@ void panic(const char* format, ...)
 	println("\nSYSTEM HALTED\n");
 	va_end(args);
 	syshalt();
+}
+
+FILE* fopen(const char* filename)
+{
+	int32_t fd = open(filename);
+	if (fd <= 0)
+	{
+		return nullptr;
+	}
+
+	VirtualFileSystem* vfs = getVirtualFileSystem();
+
+	size_t size = vfs->getFileSize(filename);
+
+	char* buf = new char[size];
+	read(fd, buf, size);
+
+	FILE* f = new FILE();
+	f->fd = fd;
+	f->name = new char[strlen(filename) + 1];
+	strcpy(f->name, filename);
+	f->buffer = buf;
+	f->size = size;
+	return f;
 }

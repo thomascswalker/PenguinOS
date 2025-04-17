@@ -1,10 +1,10 @@
 #pragma once
 
 #include <allocator.h>
+#include <cstdio.h>
 #include <cstdlib.h>
 #include <initializerlist.h>
 #include <iterator.h>
-#include <stdio.h>
 
 template <typename T>
 class Array

@@ -1,6 +1,6 @@
 #pragma once
 
-#include <stdio.h>
+#include <cstdio.h>
 
 template <typename ValueType>
 class BitArray

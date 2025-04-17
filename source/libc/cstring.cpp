@@ -174,6 +174,16 @@ EXTERN char* strchr(const char* str, char c)
 	return (c == '\0') ? const_cast<char*>(str) : nullptr;
 }
 
+EXTERN int32_t strchri(const char* s, char c)
+{
+	char* pos = strchr(s, c);
+	if (pos == nullptr)
+	{
+		return -1;
+	}
+	return pos - s;
+}
+
 EXTERN char* strrchr(const char* str, char c)
 {
 	const char* last = nullptr;
@@ -188,6 +198,16 @@ EXTERN char* strrchr(const char* str, char c)
 	}
 	// If searching for the null terminator, return pointer to it.
 	return (c == '\0') ? const_cast<char*>(str) : const_cast<char*>(last);
+}
+
+EXTERN int32_t strrchri(const char* s, char c)
+{
+	char* pos = strrchr(s, c);
+	if (pos == nullptr)
+	{
+		return -1;
+	}
+	return pos - s;
 }
 
 char* strdup(const char* str)

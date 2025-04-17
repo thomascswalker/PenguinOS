@@ -1,6 +1,6 @@
 #include <cmd.h>
+#include <cstdio.h>
 #include <shell.h>
-#include <stdio.h>
 #include <string.h>
 
 static uint16_t* g_displayBuffer;

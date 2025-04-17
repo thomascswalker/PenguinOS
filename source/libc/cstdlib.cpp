@@ -1,6 +1,6 @@
+#include <cstdio.h>
 #include <cstdlib.h>
 #include <memory.h>
-#include <stdio.h>
 #include <syscall.h>
 
 /**
@@ -78,5 +78,12 @@ int32_t open(const char* filename)
 {
 	int32_t result = 0;
 	asm("int $0x80" : "=a"(result) : "0"(SYSCALL_OPEN), "b"(filename));
+	return result;
+}
+
+size_t read(int32_t fd, void* buffer, size_t size)
+{
+	int32_t result = 0;
+	asm("int $0x80" : "=a"(result) : "0"(SYSCALL_READ), "b"(fd), "c"(buffer), "d"(size));
 	return result;
 }

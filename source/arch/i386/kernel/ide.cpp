@@ -1,5 +1,6 @@
 #include <assert.h>
 #include <bitmask.h>
+#include <cstdio.h>
 #include <cstring.h>
 #include <fat.h>
 #include <filesystem.h>
@@ -9,7 +10,6 @@
 #include <memory.h>
 #include <pic.h>
 #include <scheduler.h>
-#include <stdio.h>
 
 ATADevice  g_devices[4];
 ATADevice* g_currentDevice;

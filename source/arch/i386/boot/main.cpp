@@ -45,9 +45,17 @@ EXTERN void kmain(MultibootInfo* info, uint32_t magic)
 	FAT32FileSystem fs;
 	setVirtualFileSystem(&fs);
 
-	const char* filename = "/test.bin";
-	int32_t		fd = open(filename);
-	debugd(fd);
+	const char* filename = "/etc/longFile.txt";
+	FILE*		f = fopen(filename);
+	if (f)
+	{
+		success("File opened successfully!");
+		println(f->buffer);
+	}
+	else
+	{
+		error("Failed to open file.");
+	}
 
 	while (1)
 	{

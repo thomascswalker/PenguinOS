@@ -1,7 +1,7 @@
 #pragma once
 
+#include <cstdio.h>
 #include <ctype.h>
-#include <stdio.h>
 
 void* __dso_handle = nullptr;
 

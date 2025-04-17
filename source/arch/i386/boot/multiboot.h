@@ -22,8 +22,8 @@
 
 #pragma once
 
+#include <cstdio.h>
 #include <stdint.h>
-#include <stdio.h>
 
 /* How many bytes from the start of the file we search for the header. */
 #define MULTIBOOT_SEARCH 8192
