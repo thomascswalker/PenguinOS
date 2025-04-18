@@ -25,6 +25,12 @@ FAT32FileSystem::FAT32FileSystem()
 
 bool FAT32FileSystem::getEntryFromPath(const char* filename, FAT32::ShortEntry* entry)
 {
+	if (strcmp(filename, "/"))
+	{
+		memcpy(entry, &m_rootEntry, sizeof(ShortEntry));
+		return true;
+	}
+
 	// Split the filename by `/`. This will result in an
 	// array of each path component we need to search for.
 	String		  str(filename);
@@ -153,6 +159,75 @@ void FAT32FileSystem::close(int32_t fd)
 			return;
 		}
 	}
+}
+
+Array<File*> FAT32FileSystem::getFilesInDirectory(int32_t fd)
+{
+	Array<File*> files;
+
+	char buffer[512];
+
+	// Get the first sector of this cluster.
+	uint32_t firstSector = getClusterSector(fd);
+
+	// Read each sector (16 total) of this cluster into `buffer` at the offset
+	// [n * BPS] where `n` is the current sector index and BPS is the bytes
+	// per sector.
+	for (uint8_t sector = 0; sector < m_device->bootSector.sectorsPerCluster; sector++)
+	{
+		if (!m_device->readSector(
+				firstSector + sector, buffer + (sector * m_device->bootSector.bytesPerSector)))
+		{
+			warning("Unable to read sector %d", firstSector + sector);
+			return files;
+		}
+	}
+
+	// Compute the number of entries we will look through
+	// in this cluster.
+	uint32_t entriesPerCluster =
+		(m_device->bootSector.sectorsPerCluster * m_device->bootSector.bytesPerSector)
+		/ sizeof(ShortEntry);
+
+	// Cast the raw buffer we read above to a short entry
+	// array we can iterate through.
+	ShortEntry* entries = (ShortEntry*)buffer;
+	for (uint32_t i = 0; i < entriesPerCluster; i++)
+	{
+		ShortEntry* current = &entries[i];
+
+		// No more entries
+		if (!current->isValid())
+		{
+			continue;
+		}
+		// Ignore long filename entries
+		else if (isLongEntry((uint8_t*)current))
+		{
+			continue;
+		}
+
+		File* f = new File();
+		f->name = new char[12];
+		memcpy(f->name, current->name, 11);
+		f->name[11] = '\0';
+		f->size = current->fileSize;
+		f->fd = current->cluster();
+		files.add(f);
+	}
+
+	return files;
+}
+
+Array<File*> FAT32FileSystem::getFilesInDirectoryFromName(const char* filename)
+{
+	ShortEntry entry;
+	if (!getEntryFromPath(filename, &entry))
+	{
+		return Array<File*>();
+	}
+
+	return getFilesInDirectory(entry.cluster());
 }
 
 size_t FAT32FileSystem::getFileSize(int32_t fd)
