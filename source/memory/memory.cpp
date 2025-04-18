@@ -36,9 +36,9 @@ See the PTE enum for details.
 
 */
 
+#include <cstdio.h>
 #include <math.h>
 #include <memory.h>
-#include <stdio.h>
 
 // Defined in linker.ld
 EXTERN uint32_t kernelStart;

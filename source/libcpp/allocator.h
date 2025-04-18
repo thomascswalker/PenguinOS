@@ -25,12 +25,12 @@ public:
 	// Allocate memory for n objects of type T.
 	PtrType allocate(SizeType n)
 	{
-		PtrType ptr = static_cast<PtrType>(std::malloc(n * sizeof(ValueType)));
+		PtrType ptr = static_cast<PtrType>(malloc(n * sizeof(ValueType)));
 		return ptr;
 	}
 
 	// Deallocate memory.
-	void deallocate(PtrType p, SizeType n) noexcept { std::free(p); }
+	void deallocate(PtrType p, SizeType n) noexcept { free(p); }
 };
 
 template <typename ValueType, typename U>

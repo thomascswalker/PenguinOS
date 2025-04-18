@@ -1,6 +1,6 @@
+#include <cstdio.h>
 #include <cstdlib.h>
 #include <memory.h>
-#include <stdio.h>
 #include <syscall.h>
 
 /**
@@ -42,20 +42,52 @@ void itoa(char* str, uint32_t value, uint32_t base)
  *
  * @param size Number of bytes to allocate.
  */
-void* std::malloc(const uint32_t size) { return Memory::kmalloc(size); }
+void* malloc(const uint32_t size) { return Memory::kmalloc(size); }
 
 /**
- * Deallocates the space previously allocated by `std::malloc` or `std::realloc`.
+ * Deallocates the space previously allocated by `malloc` or `realloc`.
  *
  * @param ptr Pointer to the memory area to be deallocated.
  */
-void std::free(void* ptr) { Memory::kfree(ptr); }
+void free(void* ptr) { Memory::kfree(ptr); }
 
 /**
- * Reallocates the given area of memory previously allocated by `std::malloc` or `std::realloc` to a
+ * Reallocates the given area of memory previously allocated by `malloc` or `realloc` to a
  * new size.
  *
  * @param ptr Pointer to the memory area to be reallocated.
  * @param size New size of the memory area.
  */
-void* std::realloc(void* ptr, const uint32_t size) { return Memory::krealloc(ptr, size); }
+void* realloc(void* ptr, const uint32_t size) { return Memory::krealloc(ptr, size); }
+
+// Calls sys_sleep in syscall.h
+void sleep(uint32_t seconds)
+{
+	// Convert seconds to milliseconds
+	uint32_t ticks = seconds * 1000;
+
+	// Execute interrupt 128 (0x80) to trigger a system call. Pass in
+	// The sleep code (12) and the number of ticks to sleep for.
+	asm("int $0x80" : : "a"(SYSCALL_SLEEP), "b"(ticks));
+}
+
+/**
+ * Opens a file specified by the given filename.
+ */
+int32_t open(const char* filename)
+{
+	int32_t result = 0;
+	asm("int $0x80" : "=a"(result) : "0"(SYSCALL_OPEN), "b"(filename));
+	return result;
+}
+
+size_t read(int32_t fd, void* buffer, size_t size)
+{
+	int32_t result = 0;
+	asm("int $0x80" : "=a"(result) : "0"(SYSCALL_READ), "b"(fd), "c"(buffer), "d"(size));
+	return result;
+}
+
+void close(int32_t fd) { asm("int $0x80" ::"a"(SYSCALL_CLOSE), "b"(fd)); }
+
+void stat(int32_t fd, void* buffer) { asm("int $0x80" ::"a"(SYSCALL_FSTAT), "b"(fd), "c"(buffer)); }

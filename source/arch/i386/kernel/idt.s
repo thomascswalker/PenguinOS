@@ -94,10 +94,7 @@ isrCommon:
     mov     fs, ax
     mov     gs, ax
 
-    push    esp                                             ; Push the current stack pointer onto the stack. At this point,
-                                                            ; ESP is a pointer to where GS (and the rest of the interrupt handler
-                                                            ; state) resides. 
-                                                            ; Push ESP as the first parameter as a pointer to CPUState.
+    push    esp                                             ; Push the current stack pointer onto the stack.
 
     cld
     call    isrHandler
@@ -119,10 +116,7 @@ irqCommon:
     mov     fs, ax
     mov     gs, ax
 
-    push    esp                                             ; Push the current stack pointer onto the stack. At this point,
-                                                            ; ESP is a pointer to where GS (and the rest of the interrupt handler
-                                                            ; state) resides. 
-                                                            ; Push ESP as the first parameter as a pointer to CPUState.
+    push    esp                                             ; Push the current stack pointer onto the stack.
 
     cld
     call    irqHandler

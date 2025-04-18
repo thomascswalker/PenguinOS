@@ -1,6 +1,7 @@
+#include <cstdio.h>
 #include <shell.h>
-#include <stdio.h>
-
+#include <syscall.h>
+#include <vfs.h>
 void putc(char c) { Shell::putNext(c); }
 
 char getc() { return 0; }
@@ -274,3 +275,66 @@ void panic(const char* format, ...)
 	va_end(args);
 	syshalt();
 }
+
+File* fopen(const char* filename)
+{
+	int32_t fd = open(filename);
+	if (fd <= 0)
+	{
+		error("Failed to open file: %s", filename);
+		return nullptr;
+	}
+	FileStat stat;
+	fstat(fd, &stat);
+
+	size_t size = stat.size;
+
+	char* buf = new char[size];
+	read(fd, buf, size);
+
+	File* f = new File();
+	f->fd = fd;
+	f->name = new char[strlen(filename) + 1];
+	strcpy(f->name, filename);
+	f->buffer = buf;
+	f->size = size;
+	f->pos = 0;
+	return f;
+}
+
+size_t fread(File* stream, void* buffer, size_t size)
+{
+	if (!stream || !buffer || size == 0)
+	{
+		return 0; // Invalid input
+	}
+
+	// Calculate the number of bytes available to read
+	size_t bytesAvailable = stream->size - stream->pos;
+	size_t bytesToRead = (size > bytesAvailable) ? bytesAvailable : size;
+
+	// Copy the data from the stream's buffer to the provided buffer
+	memcpy(buffer, stream->buffer + stream->pos, bytesToRead);
+
+	// Update the stream's position
+	stream->pos += bytesToRead;
+
+	return bytesToRead; // Return the number of bytes actually read
+}
+
+void fclose(File* stream)
+{
+	if (stream)
+	{
+		close(stream->fd);
+
+		// Free the allocated memory for the file name and buffer
+		delete[] stream->name;
+		delete[] stream->buffer;
+
+		// Free the File structure itself
+		delete stream;
+	}
+}
+
+void fstat(int32_t fd, FileStat* buffer) { stat(fd, (void*)buffer); }

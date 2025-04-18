@@ -27,14 +27,14 @@ static CMD::CWD g_cwd;
 
 void CMD::init()
 {
-	g_cwd = CWD(); // Reinstantiate
+	// g_cwd = CWD(); // Reinstantiate
 
-	// Default to "//0"
-	memset(g_cwd.path, 0, 128);
-	g_cwd.path[0] = '/';
+	// // Default to "//0"
+	// memset(g_cwd.path, 0, 128);
+	// g_cwd.path[0] = '/';
 
-	// Start at root entry
-	g_cwd.entry = *getRootEntry();
+	// // Start at root entry
+	// g_cwd.entry = *getRootEntry();
 }
 
 void CMD::processCmd(const String& cmd)
@@ -137,78 +137,78 @@ void CMD::clear() { Shell::clearDisplay(); }
 
 void CMD::cat(const String& path)
 {
-	File file;
-	if (!FileSystem::openFile(path, &file))
-	{
-		warning("cat: %s: No such file or directory", path.data());
-		return;
-	}
-	printf("%s\n", file.data);
+	// File file;
+	// if (!FileSystem::openFile(path, &file))
+	// {
+	// 	warning("cat: %s: No such file or directory", path.data());
+	// 	return;
+	// }
+	// printf("%s\n", file.data);
 }
 
 void CMD::pwd() { printf("pwd: %s\n", g_cwd.path); }
 
 void CMD::cd(const String& path)
 {
-	ShortEntry entry;
+	// ShortEntry entry;
 
-	if (!findEntry(g_cwd.entry.cluster(), path, &entry))
-	{
-		warning("cd: %s: No such directory", path.data());
-		return;
-	}
+	// if (!findEntry(g_cwd.entry.cluster(), path, &entry))
+	// {
+	// 	warning("cd: %s: No such directory", path.data());
+	// 	return;
+	// }
 
-	if (!entry.isValid())
-	{
-		warning("cd: Entry found is invalid: %s, %x", entry.name, entry.attribute);
-		return;
-	}
+	// if (!entry.isValid())
+	// {
+	// 	warning("cd: Entry found is invalid: %s, %x", entry.name, entry.attribute);
+	// 	return;
+	// }
 
-	if (!Bitmask::test((uint8_t)entry.attribute, (uint8_t)Attribute::Directory))
-	{
-		warning("cd: %s: Not a directory", path.data());
-		return;
-	}
+	// if (!Bitmask::test((uint8_t)entry.attribute, (uint8_t)Attribute::Directory))
+	// {
+	// 	warning("cd: %s: Not a directory", path.data());
+	// 	return;
+	// }
 
-	memcpy(&g_cwd.entry, &entry, sizeof(ShortEntry));
+	// memcpy(&g_cwd.entry, &entry, sizeof(ShortEntry));
 }
 
 void CMD::ls()
 {
-	Array<ShortEntry> entries;
-	if (!readDirectory(g_cwd.entry, entries))
-	{
-		warning("ls: Invalid current directory: %x, Attr:%x, Clus:%d", g_cwd.entry,
-			g_cwd.entry.attribute, g_cwd.entry.cluster());
-		return;
-	}
+	// Array<ShortEntry> entries;
+	// if (!readDirectory(g_cwd.entry, entries))
+	// {
+	// 	warning("ls: Invalid current directory: %x, Attr:%x, Clus:%d", g_cwd.entry,
+	// 		g_cwd.entry.attribute, g_cwd.entry.cluster());
+	// 	return;
+	// }
 
-	debug("Entry count: %d", entries.size());
-	for (const auto& entry : entries)
-	{
-		if (!entry.isValid())
-		{
-			continue;
-		}
-		char name[9];
-		memcpy(name, (void*)entry.name, 8);
-		name[8] = 0;
-		switch (entry.attribute)
-		{
-			case Attribute::Directory: // Folders
-				{
-					Shell::setForeColor(VGA_COLOR_CYAN);
-					printf(" %s\n", name);
-					Shell::resetColor();
-					break;
-				}
-			default: // Files and other types
-				{
-					Shell::setForeColor(VGA_COLOR_GREEN);
-					printf(" %s\n", name);
-					Shell::resetColor();
-					break;
-				}
-		}
-	}
+	// debug("Entry count: %d", entries.size());
+	// for (const auto& entry : entries)
+	// {
+	// 	if (!entry.isValid())
+	// 	{
+	// 		continue;
+	// 	}
+	// 	char name[9];
+	// 	memcpy(name, (void*)entry.name, 8);
+	// 	name[8] = 0;
+	// 	switch (entry.attribute)
+	// 	{
+	// 		case Attribute::Directory: // Folders
+	// 			{
+	// 				Shell::setForeColor(VGA_COLOR_CYAN);
+	// 				printf(" %s\n", name);
+	// 				Shell::resetColor();
+	// 				break;
+	// 			}
+	// 		default: // Files and other types
+	// 			{
+	// 				Shell::setForeColor(VGA_COLOR_GREEN);
+	// 				printf(" %s\n", name);
+	// 				Shell::resetColor();
+	// 				break;
+	// 			}
+	// 	}
+	// }
 }

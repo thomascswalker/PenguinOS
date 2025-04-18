@@ -14,10 +14,9 @@
 
 struct CPUState
 {
-	// uint32_t gs, fs, es, ds;
-	uint32_t edi, esi, ebp, esp, ebx, edx, ecx, eax;
-	uint32_t intNo, errCode;
-	uint32_t eip, cs, eFlags, userEsp, ss;
+	int32_t edi, esi, ebp, esp, ebx, edx, ecx, eax;
+	int32_t intNo, errCode;
+	int32_t eip, cs, eFlags, userEsp, ss;
 };
 
 // Function pointer to an IRQ callback
@@ -76,9 +75,3 @@ static inline void sysexit()
 }
 
 static inline void invalidate(uint32_t vaddr) { asm("invlpg %0" ::"m"(vaddr)); }
-
-void sleep(uint32_t seconds);
-
-#define PUSH(esp, value) \
-	*esp -= 1;           \
-	**esp = value;

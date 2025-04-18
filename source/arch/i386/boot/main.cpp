@@ -37,13 +37,33 @@ EXTERN void kmain(MultibootInfo* info, uint32_t magic)
 
 	Memory::init(start, size);
 	Scheduler::init();
-	FileSystem::init();
+	IDE::init();
 	CMD::init();
 
 	println("Welcome to Penguin OS!");
 
-	// https://build-your-own.org/blog/20230219_elf_craft/
-	ELF::ELFFile file("/test.bin");
+	FAT32FileSystem fs;
+	setVirtualFileSystem(&fs);
+
+	const char* filename = "/test.bin";
+
+	File* f = fopen(filename);
+	if (f)
+	{
+		success("File opened successfully!");
+		char* buf = new char[f->size + 1];
+		for (size_t i = 0; i < f->size; i++)
+		{
+			fread(f, buf + i, 1);
+			printf("%c ", (unsigned char)buf[i]);
+		}
+
+		fclose(f);
+	}
+	else
+	{
+		error("Failed to open file.");
+	}
 
 	while (1)
 	{

@@ -1,8 +1,8 @@
+#include <cstdio.h>
 #include <fat.h>
 #include <filesystem.h>
 #include <math.h>
 #include <memory.h>
-#include <stdio.h>
 
 Pair<String, String> FileSystem::splitExt(const String& path)
 {
@@ -33,35 +33,3 @@ String FileSystem::join(const Array<String>& components)
 	path[path.size()] = 0;
 	return path;
 }
-
-Path Path::parent() { return Path(); }
-
-String Path::filename()
-{
-	size_t dot = path.findLast('.');
-	return path.substr(0, dot);
-}
-
-String Path::stem()
-{
-	size_t dot = path.findLast('.');
-	return path.substr(dot + 1);
-}
-
-String Path::extension() { return String(); }
-
-void FileSystem::init()
-{
-	// Initialize the first IDE device.
-	IDE::init();
-
-	// Initialize the FAT32 filesystem by reading and
-	// storing the root directory.
-	FAT32::init();
-}
-
-bool FileSystem::openFile(const String& path, File* file) { return FAT32::openFile(path, file); }
-
-bool FileSystem::isFile(const String& path) { return path.split('.').size(); }
-
-bool FileSystem::isDirectory(const String& path) { return !path.split('.').size(); }

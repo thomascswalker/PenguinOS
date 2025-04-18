@@ -1,6 +1,6 @@
 #pragma once
 
-#include <stdio.h>
+#include <cstdio.h>
 
 #define ASSERT(x)                                                                             \
 	if (!(x))                                                                                 \

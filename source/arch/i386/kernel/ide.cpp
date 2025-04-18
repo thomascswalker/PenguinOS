@@ -1,5 +1,6 @@
 #include <assert.h>
 #include <bitmask.h>
+#include <cstdio.h>
 #include <cstring.h>
 #include <fat.h>
 #include <filesystem.h>
@@ -9,7 +10,6 @@
 #include <memory.h>
 #include <pic.h>
 #include <scheduler.h>
-#include <stdio.h>
 
 ATADevice  g_devices[4];
 ATADevice* g_currentDevice;
@@ -144,7 +144,7 @@ void ATADevice::identify()
 	-------------------------
 	*/
 
-	for (uint32_t i = 0; i < 21; i++)
+	for (uint32_t i = 0; i < 20; i++)
 	{
 		auto offset = i * 2;
 		model[offset] = modelPtr[offset + 1];

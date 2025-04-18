@@ -1,10 +1,10 @@
 #pragma once
 
 #include <allocator.h>
+#include <cstdio.h>
 #include <cstdlib.h>
 #include <initializerlist.h>
 #include <iterator.h>
-#include <stdio.h>
 
 template <typename T>
 class Array
@@ -71,6 +71,21 @@ public:
 		}
 		new (&m_data[m_size]) ValueType(std::move(value));
 		m_size++;
+	}
+
+	void remove(int32_t index)
+	{
+		if (index < 0 || index >= m_size)
+		{
+			return;
+		}
+		m_data[index].~ValueType();
+		for (SizeType i = index; i < m_size - 1; i++)
+		{
+			new (&m_data[i]) ValueType(std::move(m_data[i + 1]));
+			m_data[i + 1].~ValueType();
+		}
+		m_size--;
 	}
 
 	void grow()
