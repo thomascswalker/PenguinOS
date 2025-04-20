@@ -39,18 +39,18 @@ namespace FAT32
 		EOF
 	};
 
-	enum class Attribute : uint8_t
+	enum Attribute : uint8_t
 	{
-		Empty = 0,
-		ReadOnly = (1 << 0),
-		Hidden = (1 << 1),
-		System = (1 << 2),
-		VolumeID = (1 << 3),
-		LongFileName = 0x0F,
-		Directory = (1 << 4),
-		Archive = (1 << 5),
-		LastEntry = 0x41,
-		Deleted = 0xE5,
+		FA_Empty = 0,
+		FA_ReadOnly = 0x01,
+		FA_Hidden = 0x02,
+		FA_System = 0x04,
+		FA_VolumeID = 0x08,
+		FA_LongFileName = FA_ReadOnly | FA_Hidden | FA_System | FA_VolumeID,
+		FA_Directory = 0x10,
+		FA_Archive = 0x20,
+		FA_LastEntry = 0x41,
+		FA_Deleted = 0xE5,
 	};
 
 	struct ShortEntry // 32 bytes
@@ -69,10 +69,7 @@ namespace FAT32
 		uint16_t  clusterLow;
 		uint32_t  fileSize = 0;
 
-		bool isValid() const
-		{
-			return name[0] != (uint8_t)Attribute::Empty && name[0] != (uint8_t)Attribute::Deleted;
-		}
+		bool isValid() const { return name[0] != FA_Empty && name[0] != FA_Deleted; }
 		// Returns the full 32-bit cluster number composed of the low 16 bits
 		// of `clusterLow` and high 16 bits of `clusterHigh`.
 		uint32_t cluster() const { return clusterLow | (clusterHigh << 16); }
@@ -91,6 +88,12 @@ namespace FAT32
 
 		bool isLast() const { return (id & 0x40) == 0x40; }
 
+	} __attribute__((packed));
+
+	struct BaseEntry
+	{
+		ShortEntry* shortEntry;
+		char*		filename;
 	} __attribute__((packed));
 
 } // namespace FAT32
@@ -131,5 +134,7 @@ public:
 	char* sanitize(const String& component, size_t count);
 	bool  isValidChar(char c);
 	bool  isLongEntry(uint8_t* buffer);
-	void  parseLongEntry(FAT32::LongEntry* entry, uint32_t count, char* filename);
+
+	char* parseLongEntryName(FAT32::LongEntry* entry, uint32_t count);
+	char* parseShortEntryName(FAT32::ShortEntry* entry);
 };

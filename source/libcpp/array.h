@@ -88,6 +88,15 @@ public:
 		m_size--;
 	}
 
+	void clear()
+	{
+		for (SizeType i = 0; i < m_size; i++)
+		{
+			m_data[i].~ValueType();
+		}
+		m_size = 0;
+	}
+
 	void grow()
 	{
 		SizeType newCapacity = m_capacity == 0 ? 1 : m_capacity * 2;

@@ -33,7 +33,11 @@ bool FAT32FileSystem::getEntryFromPath(const char* filename, FAT32::ShortEntry* 
 
 	// Split the filename by `/`. This will result in an
 	// array of each path component we need to search for.
-	String		  str(filename);
+	String str(filename);
+	if (str.endsWith('/'))
+	{
+		str = str.substr(0, str.size() - 1);
+	}
 	Array<String> components = str.split('/');
 
 	if (components.empty())
@@ -66,7 +70,7 @@ bool FAT32FileSystem::getEntryFromPath(const char* filename, FAT32::ShortEntry* 
 			return false;
 		}
 
-		if (Bitmask::test((uint8_t)entry->attribute, (uint8_t)Attribute::Directory))
+		if (Bitmask::test((uint8_t)entry->attribute, FA_Directory))
 		{
 			currentCluster = entry->cluster();
 			continue;
@@ -163,7 +167,8 @@ void FAT32FileSystem::close(int32_t fd)
 
 Array<File*> FAT32FileSystem::getFilesInDirectory(int32_t fd)
 {
-	Array<File*> files;
+	Array<File*>	 files;
+	Array<LongEntry> longEntries;
 
 	char buffer[512];
 
@@ -191,29 +196,50 @@ Array<File*> FAT32FileSystem::getFilesInDirectory(int32_t fd)
 
 	// Cast the raw buffer we read above to a short entry
 	// array we can iterate through.
-	ShortEntry* entries = (ShortEntry*)buffer;
-	for (uint32_t i = 0; i < entriesPerCluster; i++)
+	ShortEntry* current = (ShortEntry*)buffer;
+	while (current != nullptr)
 	{
-		ShortEntry* current = &entries[i];
-
 		// No more entries
 		if (!current->isValid())
 		{
-			continue;
+			break;
 		}
-		// Ignore long filename entries
-		else if (isLongEntry((uint8_t*)current))
+
+		// Store long entries until we reach another short entry.
+		// These long entries comprise the long name of the filename
+		// for the next short entry that's found.
+		if (isLongEntry((uint8_t*)current))
 		{
+			LongEntry* longEntry = (LongEntry*)current;
+			longEntries.add(*longEntry);
+			current++;
 			continue;
 		}
 
 		File* f = new File();
-		f->name = new char[12];
-		memcpy(f->name, current->name, 11);
-		f->name[11] = '\0';
+		// If there's one or more long entries, we need to parse
+		// the long name and set it to the filename of this file.
+		if (longEntries.size() > 0)
+		{
+			// We have a long entry, parse it
+			int32_t count = longEntries.size();
+			f->name = parseLongEntryName(&longEntries[0], count);
+			longEntries.clear();
+		}
+		// Otherwise, we have a short entry. Parse it and set it to the filename.
+		else
+		{
+			f->name = parseShortEntryName(current);
+		}
+
+		// Set the file's attributes and size.
 		f->size = current->fileSize;
 		f->fd = current->cluster();
+		f->isDirectory = Bitmask::test(current->attribute, FA_Directory);
 		files.add(f);
+
+		// Go to the next entry
+		current++;
 	}
 
 	return files;
@@ -429,13 +455,15 @@ bool FAT32FileSystem::isLongEntry(uint8_t* buffer)
 	// - The first character of the entry is 0.
 	// - The 'attribute' component of a FAT entry is at offset 11 (0xB). This
 	// character is equal to 15 (0xF).
-	return *buffer == (uint8_t)Attribute::LastEntry
-		|| *(buffer + 11) == (uint8_t)Attribute::LongFileName;
+	return ((ShortEntry*)buffer)->attribute == FA_LongFileName;
 }
 
-void FAT32FileSystem::parseLongEntry(LongEntry* entry, uint32_t count, char* filename)
+char* FAT32FileSystem::parseLongEntryName(LongEntry* entry, uint32_t count)
 {
 	// While we still have entries to parse...
+	char* filename = new char[count * 13 + 1];
+	filename[count * 13] = '\0';
+
 	while (count)
 	{
 		// Decrement count
@@ -467,6 +495,26 @@ void FAT32FileSystem::parseLongEntry(LongEntry* entry, uint32_t count, char* fil
 		// long filename entry.
 		entry++;
 	}
+	// Append a null-terminator to the end of the filename.
+	return filename;
+}
+
+char* FAT32FileSystem::parseShortEntryName(FAT32::ShortEntry* entry)
+{
+	char* filename = new char[12];
+	for (int32_t i = 0; i < 12; i++)
+	{
+		// If the entry is a valid character, copy it to the filename.
+		if (entry->name[i] != ' ')
+		{
+			filename[i] = tolower(entry->name[i]);
+		}
+		else
+		{
+			filename[i] = '\0';
+		}
+	}
+	return filename;
 }
 
 bool FAT32FileSystem::readDirectory(const ShortEntry& entry, Array<ShortEntry>& entries)

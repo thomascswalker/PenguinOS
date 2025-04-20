@@ -8,11 +8,12 @@
 
 struct File
 {
-	char*	name;	// File name
-	char*	buffer; // Buffer for file I/O
-	size_t	size;	// Size of the buffer
-	int32_t fd;		// File descriptor
-	size_t	pos;	// Current position in the file
+	char*	name;		 // File name
+	char*	buffer;		 // Buffer for file I/O
+	size_t	size;		 // Size of the buffer
+	int32_t fd;			 // File descriptor
+	bool	isDirectory; // Is this a directory?
+	size_t	pos;		 // Current position in the file
 };
 
 struct FileStat
