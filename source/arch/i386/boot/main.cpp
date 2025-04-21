@@ -45,27 +45,6 @@ EXTERN void kmain(MultibootInfo* info, uint32_t magic)
 	FAT32FileSystem fs;
 	setVirtualFileSystem(&fs);
 
-	const char* filename = "/etc";
-	auto		files = fs.getFilesInDirectoryFromName(filename);
-	int32_t		longestName = 0;
-	for (const auto& file : files)
-	{
-		if (strlen(file->name) > longestName)
-		{
-			longestName = strlen(file->name);
-		}
-	}
-	String padding = " %-";
-	char*  lenStr = new char[3];
-	itoa(lenStr, longestName, 10);
-	padding += lenStr;
-	padding += "s | %4dB | %s\n";
-	char* fmt = padding.data();
-	for (const auto& file : files)
-	{
-		printf(fmt, file->name, file->size, file->isDirectory ? "Directory" : "File");
-	}
-
 	while (1)
 	{
 	}

@@ -14,6 +14,18 @@ struct File
 	int32_t fd;			 // File descriptor
 	bool	isDirectory; // Is this a directory?
 	size_t	pos;		 // Current position in the file
+
+	~File()
+	{
+		if (buffer)
+		{
+			delete[] buffer;
+		}
+		if (name)
+		{
+			delete[] name;
+		}
+	}
 };
 
 struct FileStat

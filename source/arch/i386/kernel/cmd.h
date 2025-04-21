@@ -25,5 +25,5 @@ namespace CMD
 	void cat(const String& path);
 	void pwd();
 	void cd(const String& path);
-	void ls();
+	void ls(const char* path);
 } // namespace CMD

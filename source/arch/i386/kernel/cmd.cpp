@@ -4,11 +4,12 @@
 
 using namespace FAT32;
 
-#define CHECK_ARGS(e, n)                                                                        \
-	if (args.size() != n)                                                                       \
-	{                                                                                           \
-		warning("Invalid number of arguments for '%s'. Wanted %d, got %d.", e, n, args.size()); \
-		return;                                                                                 \
+#define CHECK_ARGS(e, min, max)                                                                    \
+	if (args.size() < min || args.size() > max)                                                    \
+	{                                                                                              \
+		warning("Invalid number of arguments for '%s'. Wanted between %d and %d, got %d.", e, min, \
+			max, args.size());                                                                     \
+		return;                                                                                    \
 	}
 
 static const char* g_commands[] = {
@@ -44,7 +45,6 @@ void CMD::processCmd(const String& cmd)
 
 	// Extract all of the arguments from the command line string
 	Array<String> args = parseCmdArgs(cmd);
-	debug("Arg count: %d", args.size());
 	if (args.size() == 0)
 	{
 		return;
@@ -63,44 +63,52 @@ void CMD::processCmd(const String& cmd)
 	// Exit OS
 	if (strcmp(exe.data(), "exit"))
 	{
-		CHECK_ARGS("exit", 1);
+		CHECK_ARGS("exit", 1, 1);
 		exit();
 	}
 	// Dipslay help
 	else if (strcmp(exe.data(), "help"))
 	{
-		CHECK_ARGS("help", 1);
+		CHECK_ARGS("help", 1, 1);
 		help();
 	}
 	// Clear terminal
 	else if (strcmp(exe.data(), "clear"))
 	{
-		CHECK_ARGS("clear", 1);
+		CHECK_ARGS("clear", 1, 1);
 		clear();
 	}
 	// conCATenate
 	else if (strcmp(exe.data(), "cat"))
 	{
-		CHECK_ARGS("cat", 2);
+		CHECK_ARGS("cat", 2, 2);
 		cat(args[1]);
 	}
 	// Print working directory
 	else if (strcmp(exe.data(), "pwd"))
 	{
-		CHECK_ARGS("pwd", 1);
+		CHECK_ARGS("pwd", 1, 1);
 		pwd();
 	}
 	// Change directory
 	else if (strcmp(exe.data(), "cd"))
 	{
-		CHECK_ARGS("cd", 2);
+		CHECK_ARGS("cd", 2, 2);
 		cd(args[1]);
 	}
 	// List current directory
 	else if (strcmp(exe.data(), "ls"))
 	{
-		CHECK_ARGS("ls", 1);
-		ls();
+		CHECK_ARGS("ls", 1, 2);
+		if (args.size() == 2)
+		{
+			ls(args[1]);
+		}
+		else
+		{
+			// ls(g_cwd.path);
+			ls("/");
+		}
 	}
 }
 
@@ -173,42 +181,19 @@ void CMD::cd(const String& path)
 	// memcpy(&g_cwd.entry, &entry, sizeof(ShortEntry));
 }
 
-void CMD::ls()
+void CMD::ls(const char* path)
 {
-	// Array<ShortEntry> entries;
-	// if (!readDirectory(g_cwd.entry, entries))
-	// {
-	// 	warning("ls: Invalid current directory: %x, Attr:%x, Clus:%d", g_cwd.entry,
-	// 		g_cwd.entry.attribute, g_cwd.entry.cluster());
-	// 	return;
-	// }
-
-	// debug("Entry count: %d", entries.size());
-	// for (const auto& entry : entries)
-	// {
-	// 	if (!entry.isValid())
-	// 	{
-	// 		continue;
-	// 	}
-	// 	char name[9];
-	// 	memcpy(name, (void*)entry.name, 8);
-	// 	name[8] = 0;
-	// 	switch (entry.attribute)
-	// 	{
-	// 		case Attribute::Directory: // Folders
-	// 			{
-	// 				Shell::setForeColor(VGA_COLOR_CYAN);
-	// 				printf(" %s\n", name);
-	// 				Shell::resetColor();
-	// 				break;
-	// 			}
-	// 		default: // Files and other types
-	// 			{
-	// 				Shell::setForeColor(VGA_COLOR_GREEN);
-	// 				printf(" %s\n", name);
-	// 				Shell::resetColor();
-	// 				break;
-	// 			}
-	// 	}
-	// }
+	auto files = readdir(path);
+	for (const auto& file : files)
+	{
+		if (file->isDirectory && file->name[0] == '.')
+		{
+			continue; // Skip hidden directories
+		}
+		auto color = file->isDirectory ? VGA_COLOR_CYAN : VGA_COLOR_GREEN;
+		Shell::setForeColor(color);
+		printf(" %s", file->name);
+		Shell::resetColor();
+	}
+	printf("\n");
 }
