@@ -28,6 +28,8 @@ int 0x80        ; Trigger system call defined by value in EAX
 #define SYSCALL_MKDIR 19  // Mkdir
 #define SYSCALL_CLOSE 20  // Close
 
+#define SYSCALL_READDIR 21 // readdir
+
 void	sysCallDispatcher(CPUState* regs);
 int32_t sysFork(CPUState* regs);
 int32_t sysExit(CPUState* regs);
@@ -50,6 +52,7 @@ int32_t sysUnlink(CPUState* regs);
 int32_t sysLink(CPUState* regs);
 int32_t sysMkdir(CPUState* regs);
 int32_t sysClose(CPUState* regs);
+int32_t sysReadDir(CPUState* regs);
 
 // Syscall table
 typedef int32_t (*SysCallFunc)(CPUState*);

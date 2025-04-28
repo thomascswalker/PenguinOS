@@ -176,7 +176,7 @@ void Shell::scroll()
 void Shell::input(char c)
 {
 	size_t size = INPUT_MAX_SIZE + 1;
-	String cmd(size);
+	char*  cmd = new char[size];
 
 	switch (c)
 	{
@@ -216,6 +216,7 @@ void Shell::input(char c)
 				cmd[g_inputCursor] = '\0';
 
 				CMD::processCmd(cmd);
+				delete[] cmd;
 				clearInput();
 				return;
 			}

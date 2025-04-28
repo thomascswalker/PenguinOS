@@ -33,7 +33,7 @@ Developed in C++ and NASM-style Assembly.
 - [x] Timer
 - [ ] System Calls
   - [x] Basic implementation
-  - [ ] Memory (malloc, free, realloc)
+  - [x] IO
 - [x] Paging
 - [x] Simple memory management (kmalloc/kfree)
 - [ ] Data Types
@@ -43,11 +43,12 @@ Developed in C++ and NASM-style Assembly.
   - [x] std::list (called LinkedList)
   - [x] std::queue (called Queue)
 - [ ] File System
+  - [x] Virtual File System layer
   - [ ] FAT32
     - [x] Read
     - [ ] Write
-    - [ ] Open/Close lock
-    - [ ] File stream
+    - [-] Open/Close lock
+    - [-] File stream
   - [ ] NTFS
     - [ ] ???
 - [ ] Stack trace dump on error/panic

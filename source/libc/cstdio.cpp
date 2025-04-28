@@ -338,3 +338,10 @@ void fclose(File* stream)
 }
 
 void fstat(int32_t fd, FileStat* buffer) { stat(fd, (void*)buffer); }
+
+Array<File*> readdir(const char* filename)
+{
+	Array<File*> files;
+	asm("int $0x80" ::"a"(SYSCALL_READDIR), "b"(filename), "c"(&files));
+	return files;
+}

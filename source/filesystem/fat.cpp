@@ -25,9 +25,19 @@ FAT32FileSystem::FAT32FileSystem()
 
 bool FAT32FileSystem::getEntryFromPath(const char* filename, FAT32::ShortEntry* entry)
 {
+	if (strcmp(filename, "/"))
+	{
+		memcpy(entry, &m_rootEntry, sizeof(ShortEntry));
+		return true;
+	}
+
 	// Split the filename by `/`. This will result in an
 	// array of each path component we need to search for.
-	String		  str(filename);
+	String str(filename);
+	if (str.endsWith('/'))
+	{
+		str = str.substr(0, str.size() - 1);
+	}
 	Array<String> components = str.split('/');
 
 	if (components.empty())
@@ -60,7 +70,7 @@ bool FAT32FileSystem::getEntryFromPath(const char* filename, FAT32::ShortEntry* 
 			return false;
 		}
 
-		if (Bitmask::test((uint8_t)entry->attribute, (uint8_t)Attribute::Directory))
+		if (Bitmask::test((uint8_t)entry->attribute, FA_Directory))
 		{
 			currentCluster = entry->cluster();
 			continue;
@@ -113,6 +123,7 @@ uint32_t FAT32FileSystem::getSize()
 	return m_device->bootSector.tableCount * m_device->bootSector.bigSectorsPerTable;
 }
 
+// FAT32 implementation of syscall `open`.
 int32_t FAT32FileSystem::open(const char* filename)
 {
 	ShortEntry entry;
@@ -133,6 +144,7 @@ int32_t FAT32FileSystem::open(const char* filename)
 	return cluster;
 }
 
+// FAT32 implementation of syscall `read`.
 size_t FAT32FileSystem::read(int32_t fd, void* buffer, size_t size)
 {
 	uint32_t sector = getClusterSector(fd);
@@ -143,6 +155,7 @@ size_t FAT32FileSystem::read(int32_t fd, void* buffer, size_t size)
 	return 0;
 }
 
+// FAT32 implementation of syscall `close`.
 void FAT32FileSystem::close(int32_t fd)
 {
 	for (size_t i = 0; i < m_openEntries.size(); i++)
@@ -155,6 +168,122 @@ void FAT32FileSystem::close(int32_t fd)
 	}
 }
 
+/*
+Retrieves a list of files and directories within a specified
+cluster in a FAT32 file system. It reads the cluster's sectors,
+processes both short and long directory entries to extract
+file metadata, and returns an `Array<File*>` containing the
+parsed file objects.
+
+@param cluster The cluster number to read files from.
+
+@returns An array containing the files and directories
+		  found in the specified cluster.
+*/
+Array<File*> FAT32FileSystem::getFilesInDirectory(int32_t cluster)
+{
+	Array<File*>	 files;		  // Array of files to return
+	Array<LongEntry> longEntries; // Array of long entries to store long filenames
+
+	// Create a buffer which will hold all of the data for
+	// this cluster (all 16 sectors).
+	char buffer[512];
+
+	// Get the first sector of this cluster.
+	uint32_t firstSector = getClusterSector(cluster);
+
+	// Read each sector (16 total) of this cluster into `buffer` at the offset
+	// [n * BPS] where `n` is the current sector index and BPS is the bytes
+	// per sector.
+	for (uint8_t sector = 0; sector < m_device->bootSector.sectorsPerCluster; sector++)
+	{
+		if (!m_device->readSector(
+				firstSector + sector, buffer + (sector * m_device->bootSector.bytesPerSector)))
+		{
+			warning("Unable to read sector %d", firstSector + sector);
+			return files;
+		}
+	}
+
+	// Compute the number of entries we will look through
+	// in this cluster.
+	uint32_t entriesPerCluster =
+		(m_device->bootSector.sectorsPerCluster * m_device->bootSector.bytesPerSector)
+		/ sizeof(ShortEntry);
+
+	// Cast the raw buffer we read above to a short entry
+	// array we can iterate through.
+	ShortEntry* current = (ShortEntry*)buffer;
+	while (current != nullptr)
+	{
+		// No more entries
+		if (!current->isValid())
+		{
+			break;
+		}
+
+		// Store long entries until we reach another short entry.
+		// These long entries comprise the long name of the filename
+		// for the next short entry that's found.
+		if (isLongEntry((uint8_t*)current))
+		{
+			LongEntry* longEntry = (LongEntry*)current;
+			longEntries.add(*longEntry);
+			current++;
+			continue;
+		}
+
+		File* f = new File();
+		// If there's one or more long entries, we need to parse
+		// the long name and set it to the filename of this file.
+		if (longEntries.size() > 0)
+		{
+			// We have a long entry, parse it
+			int32_t count = longEntries.size();
+			f->name = parseLongEntryName(&longEntries[0], count);
+			longEntries.clear();
+		}
+		// Otherwise, we have a short entry. Parse it and set it to the filename.
+		else
+		{
+			f->name = parseShortEntryName(current);
+		}
+
+		// Set the file's attributes and size.
+		int32_t cluster = current->cluster();
+		f->size = current->fileSize;
+		f->fd = cluster;
+		f->isDirectory = Bitmask::test(current->attribute, FA_Directory);
+
+		files.add(f);
+
+		// Go to the next entry
+		current++;
+	}
+
+	return files;
+}
+
+// Similar to getFilesInDirectory, but takes a filename
+// rather than a cluster number.
+Array<File*> FAT32FileSystem::getFilesInDirectoryFromName(const char* filename)
+{
+	ShortEntry entry;
+	if (strcmp(filename, "/"))
+	{
+		entry = m_rootEntry;
+	}
+	else if (!getEntryFromPath(filename, &entry))
+	{
+		warning("Unable to get entry from path %s", filename);
+		return Array<File*>();
+	}
+
+	return getFilesInDirectory(entry.cluster());
+}
+
+// Returns the size of the file associated with the given
+// file descriptor `fd`.
 size_t FAT32FileSystem::getFileSize(int32_t fd)
 {
 	for (const auto& pair : m_openEntries)
@@ -354,13 +483,15 @@ bool FAT32FileSystem::isLongEntry(uint8_t* buffer)
 	// - The first character of the entry is 0.
 	// - The 'attribute' component of a FAT entry is at offset 11 (0xB). This
 	// character is equal to 15 (0xF).
-	return *buffer == (uint8_t)Attribute::LastEntry
-		|| *(buffer + 11) == (uint8_t)Attribute::LongFileName;
+	return ((ShortEntry*)buffer)->attribute == FA_LongFileName;
 }
 
-void FAT32FileSystem::parseLongEntry(LongEntry* entry, uint32_t count, char* filename)
+char* FAT32FileSystem::parseLongEntryName(LongEntry* entry, uint32_t count)
 {
 	// While we still have entries to parse...
+	char* filename = new char[count * 13 + 1];
+	filename[count * 13] = '\0';
+
 	while (count)
 	{
 		// Decrement count
@@ -392,6 +523,44 @@ void FAT32FileSystem::parseLongEntry(LongEntry* entry, uint32_t count, char* fil
 		// long filename entry.
 		entry++;
 	}
+	// Append a null-terminator to the end of the filename.
+	return filename;
+}
+
+char* FAT32FileSystem::parseShortEntryName(FAT32::ShortEntry* entry)
+{
+	char* filename = new char[12];
+	memset(filename, 0, 12);
+
+	if (strncmp(".       ", (const char*)entry->name, 8))
+	{
+		filename[0] = '.';
+		return filename;
+	}
+	else if (strncmp("..	  ", (const char*)entry->name, 8))
+	{
+		filename[0] = '.';
+		filename[1] = '.';
+		return filename;
+	}
+
+	int32_t mainEnd = 0;
+	int32_t extEnd = 0;
+	for (mainEnd = 8; mainEnd > 0 && entry->name[mainEnd - 1] == ' '; mainEnd--)
+		;
+	memcpy(filename, entry->name, mainEnd);
+	for (extEnd = 3; extEnd > 0 && entry->name[extEnd - 1 + 8] == ' '; extEnd--)
+		;
+	if (extEnd != 0)
+	{
+		filename[mainEnd] = '.';
+	}
+	memcpy(filename + mainEnd + 1, (void*)(entry->name + 8), extEnd);
+	for (int32_t i = 0; i < strlen(filename); i++)
+	{
+		filename[i] = tolower(filename[i]);
+	}
+	return filename;
 }
 
 bool FAT32FileSystem::readDirectory(const ShortEntry& entry, Array<ShortEntry>& entries)

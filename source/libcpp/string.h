@@ -69,6 +69,7 @@ public:
 		{
 			m_data[i] = str[i];
 		}
+		m_data[m_size] = '\0';
 	}
 	BasicString(const ValueType* str, SizeType count) : m_size(count), m_capacity(count + 1)
 	{

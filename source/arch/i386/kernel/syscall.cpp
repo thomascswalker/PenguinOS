@@ -28,6 +28,7 @@ static SysCallFunc syscalls[] = {
 	sysLink,
 	sysMkdir,
 	sysClose,
+	sysReadDir,
 };
 
 /*
@@ -114,6 +115,18 @@ int32_t sysClose(CPUState* regs)
 	vfs->close(fd);
 	return 0;
 }
+
+int32_t sysReadDir(CPUState* regs)
+{
+	// Make a local copy of the filename so we don't modify
+	// the original
+	Array<File*>* files = (Array<File*>*)regs->ecx;
+	files->clear(); // Clear the array before populating it.
+	auto fs = getVirtualFileSystem();
+	*files = fs->getFilesInDirectoryFromName((const char*)regs->ebx);
+	return 0;
+}
+
 int32_t sysWrite(CPUState* regs) { return 0; }
 int32_t sysFstat(CPUState* regs)
 {

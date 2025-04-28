@@ -1,7 +1,6 @@
 #pragma once
 
 #include <allocator.h>
-#include <cstdio.h>
 #include <cstdlib.h>
 #include <initializerlist.h>
 #include <iterator.h>
@@ -73,19 +72,35 @@ public:
 		m_size++;
 	}
 
-	void remove(int32_t index)
+	void remove(SizeType index)
 	{
-		if (index < 0 || index >= m_size)
+		if (index >= m_size)
 		{
+			// Handle out-of-bounds index
 			return;
 		}
+
+		// Destroy the element at the specified index
 		m_data[index].~ValueType();
+
+		// Shift elements to the left
 		for (SizeType i = index; i < m_size - 1; i++)
 		{
 			new (&m_data[i]) ValueType(std::move(m_data[i + 1]));
 			m_data[i + 1].~ValueType();
 		}
+
+		// Decrease the size
 		m_size--;
+	}
+
+	void clear()
+	{
+		for (SizeType i = 0; i < m_size; i++)
+		{
+			m_data[i].~ValueType();
+		}
+		m_size = 0;
 	}
 
 	void grow()
