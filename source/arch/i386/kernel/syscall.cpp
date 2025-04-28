@@ -118,11 +118,12 @@ int32_t sysClose(CPUState* regs)
 
 int32_t sysReadDir(CPUState* regs)
 {
-	const char*	  filename = (const char*)regs->ebx;
+	// Make a local copy of the filename so we don't modify
+	// the original
 	Array<File*>* files = (Array<File*>*)regs->ecx;
 	files->clear(); // Clear the array before populating it.
 	auto fs = getVirtualFileSystem();
-	*files = fs->getFilesInDirectoryFromName(filename);
+	*files = fs->getFilesInDirectoryFromName((const char*)regs->ebx);
 	return 0;
 }
 

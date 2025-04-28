@@ -123,6 +123,7 @@ uint32_t FAT32FileSystem::getSize()
 	return m_device->bootSector.tableCount * m_device->bootSector.bigSectorsPerTable;
 }
 
+// FAT32 implementation of syscall `open`.
 int32_t FAT32FileSystem::open(const char* filename)
 {
 	ShortEntry entry;
@@ -143,6 +144,7 @@ int32_t FAT32FileSystem::open(const char* filename)
 	return cluster;
 }
 
+// FAT32 implementation of syscall `read`.
 size_t FAT32FileSystem::read(int32_t fd, void* buffer, size_t size)
 {
 	uint32_t sector = getClusterSector(fd);
@@ -153,6 +155,7 @@ size_t FAT32FileSystem::read(int32_t fd, void* buffer, size_t size)
 	return 0;
 }
 
+// FAT32 implementation of syscall `close`.
 void FAT32FileSystem::close(int32_t fd)
 {
 	for (size_t i = 0; i < m_openEntries.size(); i++)
@@ -248,18 +251,10 @@ Array<File*> FAT32FileSystem::getFilesInDirectory(int32_t cluster)
 
 		// Set the file's attributes and size.
 		int32_t cluster = current->cluster();
-
-		// If the cluster is 0, this entry is invalid. Delete the file and continue.
-		if (cluster <= 0)
-		{
-			delete f;
-			longEntries.clear();
-			current++;
-			continue;
-		}
 		f->size = current->fileSize;
 		f->fd = cluster;
 		f->isDirectory = Bitmask::test(current->attribute, FA_Directory);
+
 		files.add(f);
 
 		// Go to the next entry
@@ -269,17 +264,26 @@ Array<File*> FAT32FileSystem::getFilesInDirectory(int32_t cluster)
 	return files;
 }
 
+// Similar to getFilesInDirectory, but takes a filename
+// rather than a cluster number.
 Array<File*> FAT32FileSystem::getFilesInDirectoryFromName(const char* filename)
 {
 	ShortEntry entry;
-	if (!getEntryFromPath(filename, &entry))
+	if (strcmp(filename, "/"))
 	{
+		entry = m_rootEntry;
+	}
+	else if (!getEntryFromPath(filename, &entry))
+	{
+		warning("Unable to get entry from path %s", filename);
 		return Array<File*>();
 	}
 
 	return getFilesInDirectory(entry.cluster());
 }
 
+// Returns the size of the file associated with the given
+// file descriptor `fd`.
 size_t FAT32FileSystem::getFileSize(int32_t fd)
 {
 	for (const auto& pair : m_openEntries)
@@ -526,24 +530,35 @@ char* FAT32FileSystem::parseLongEntryName(LongEntry* entry, uint32_t count)
 char* FAT32FileSystem::parseShortEntryName(FAT32::ShortEntry* entry)
 {
 	char* filename = new char[12];
-	for (int32_t i = 0; i < 12; i++)
+	memset(filename, 0, 12);
+
+	if (strncmp(".       ", (const char*)entry->name, 8))
 	{
-		// The first 8 characters are the base name, the next 3 are the extension,
-		// so the 9th character is always dot.
-		if (i == 8)
-		{
-			filename[i] = '.';
-			continue;
-		}
-		// If the entry is a valid character, copy it to the filename.
-		if (entry->name[i] != ' ')
-		{
-			filename[i] = tolower(entry->name[i]);
-		}
-		else
-		{
-			filename[i] = '\0';
-		}
+		filename[0] = '.';
+		return filename;
+	}
+	else if (strncmp("..	  ", (const char*)entry->name, 8))
+	{
+		filename[0] = '.';
+		filename[1] = '.';
+		return filename;
+	}
+
+	int32_t mainEnd = 0;
+	int32_t extEnd = 0;
+	for (mainEnd = 8; mainEnd > 0 && entry->name[mainEnd - 1] == ' '; mainEnd--)
+		;
+	memcpy(filename, entry->name, mainEnd);
+	for (extEnd = 3; extEnd > 0 && entry->name[extEnd - 1 + 8] == ' '; extEnd--)
+		;
+	if (extEnd != 0)
+	{
+		filename[mainEnd] = '.';
+	}
+	memcpy(filename + mainEnd + 1, (void*)(entry->name + 8), extEnd);
+	for (int32_t i = 0; i < strlen(filename); i++)
+	{
+		filename[i] = tolower(filename[i]);
 	}
 	return filename;
 }

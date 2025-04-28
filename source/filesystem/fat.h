@@ -69,6 +69,7 @@ namespace FAT32
 		uint16_t  clusterLow;
 		uint32_t  fileSize = 0;
 
+		bool hasExtension() const { return ext[0] != 0 && ext[0] != ' '; }
 		bool isValid() const { return name[0] != FA_Empty && name[0] != FA_Deleted; }
 		// Returns the full 32-bit cluster number composed of the low 16 bits
 		// of `clusterLow` and high 16 bits of `clusterHigh`.
