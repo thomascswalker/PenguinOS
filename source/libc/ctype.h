@@ -26,6 +26,8 @@ struct File
 			delete[] name;
 		}
 	}
+
+	bool isValid() const { return fd > 0; }
 };
 
 struct FileStat

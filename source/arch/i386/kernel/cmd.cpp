@@ -5,10 +5,10 @@
 using namespace FAT32;
 
 #define CHECK_ARGS(e, min, max)                                                                    \
-	if (args.size() < min || args.size() > max)                                                    \
+	if (argCount < min || argCount > max)                                                          \
 	{                                                                                              \
 		warning("Invalid number of arguments for '%s'. Wanted between %d and %d, got %d.", e, min, \
-			max, args.size());                                                                     \
+			max, argCount);                                                                        \
 		return;                                                                                    \
 	}
 
@@ -38,87 +38,147 @@ void CMD::init()
 	// g_cwd.entry = *getRootEntry();
 }
 
-void CMD::processCmd(const String& cmd)
+void CMD::processCmd(const char* cmd)
 {
 	// Print the entire command to the terminal
-	printf(">>> %s\n", cmd.data());
+	printf(">>> %s\n", cmd);
 
 	// Extract all of the arguments from the command line string
-	Array<String> args = parseCmdArgs(cmd);
-	if (args.size() == 0)
+
+	char** args = new char*[16]; // 16 == maximum number of arguments
+	memset(args, 0, 16);
+	int32_t argCount = 0;
+
+	parseCmdArgs(cmd, args, &argCount);
+	debug("CMD: %s: %d args", cmd, argCount);
+	if (argCount == 0)
 	{
-		return;
+		free(args);
+		delete[] args;
+		return; // No command entered
 	}
 
+	for (size_t i = 0; i < argCount; i++)
+	{
+		printf("args[%d]=%s, ", i, args[i]);
+	}
+	printf("\n");
+
 	// Check if the command is valid
-	String exe = args[0];
+	const char* exe = args[0];
 	if (!isValidExecutable(exe))
 	{
 		Shell::setForeColor(VGA_COLOR_LIGHT_RED);
-		printf("Unknown command '%s'.\n", exe.data());
+		printf("Unknown command '%s'.\n", exe);
 		Shell::resetColor();
-		return;
 	}
 
 	// Exit OS
-	if (strcmp(exe.data(), "exit"))
+	if (strcmp(exe, "exit"))
 	{
-		CHECK_ARGS("exit", 1, 1);
+		// CHECK_ARGS("exit", 0, 0);
 		exit();
 	}
 	// Dipslay help
-	else if (strcmp(exe.data(), "help"))
+	else if (strcmp(exe, "help"))
 	{
-		CHECK_ARGS("help", 1, 1);
+		// CHECK_ARGS("help", 0, 0);
 		help();
 	}
 	// Clear terminal
-	else if (strcmp(exe.data(), "clear"))
+	else if (strcmp(exe, "clear"))
 	{
-		CHECK_ARGS("clear", 1, 1);
+		// CHECK_ARGS("clear", 0, 0);
 		clear();
 	}
 	// conCATenate
-	else if (strcmp(exe.data(), "cat"))
+	else if (strcmp(exe, "cat"))
 	{
-		CHECK_ARGS("cat", 2, 2);
-		cat(args[1]);
+		// CHECK_ARGS("cat", 1, 1);
+		cat(args[0]);
 	}
 	// Print working directory
-	else if (strcmp(exe.data(), "pwd"))
+	else if (strcmp(exe, "pwd"))
 	{
-		CHECK_ARGS("pwd", 1, 1);
+		// CHECK_ARGS("pwd", 0, 0);
 		pwd();
 	}
 	// Change directory
-	else if (strcmp(exe.data(), "cd"))
+	else if (strcmp(exe, "cd"))
 	{
-		CHECK_ARGS("cd", 2, 2);
-		cd(args[1]);
+		// CHECK_ARGS("cd", 1, 1);
+		cd(args[0]);
 	}
 	// List current directory
-	else if (strcmp(exe.data(), "ls"))
+	else if (strcmp(exe, "ls"))
 	{
 		CHECK_ARGS("ls", 1, 2);
-		if (args.size() == 2)
+		if (argCount == 2)
 		{
 			ls(args[1]);
 		}
 		else
 		{
-			// ls(g_cwd.path);
 			ls("/");
 		}
 	}
+	for (int32_t i = 0; i < argCount; i++)
+	{
+		delete[] args[i]; // Free each argument
+		args[i] = nullptr;
+	}
+	free(args);
+	args = nullptr;
 }
 
 Array<String> CMD::parseCmdArgs(const String& cmd) { return cmd.split(' '); }
 
-bool CMD::isValidExecutable(const String& exe)
+void CMD::parseCmdArgs(const char* cmd, char* args[], int32_t* argCount)
 {
+	size_t		argIndex = 0;
+	const char* start = cmd;
+	const char* end = cmd;
+
+	while (*end != '\0')
+	{
+		// Skip leading spaces
+		while (*start == ' ' && *start != '\0')
+		{
+			start++;
+		}
+
+		// Find the end of the current argument
+		end = start;
+		while (*end != ' ' && *end != '\0')
+		{
+			end++;
+		}
+
+		// If we found a valid argument, add it to the array
+		if (start != end)
+		{
+			size_t length = end - start;
+			args[argIndex] = new char[length + 1]; // Allocate memory for the argument
+			strcpy(args[argIndex], start);
+			args[argIndex][length] = '\0'; // Null-terminate the string
+			argIndex++;
+		}
+
+		// Move to the next argument
+		start = end;
+	}
+
+	// Null-terminate the array of arguments
+	args[argIndex] = nullptr;
+	*argCount = argIndex;
+}
+
+bool CMD::isValidExecutable(const char* exe)
+{
+	debug("Checking if '%s' is a valid executable", exe);
 	for (size_t i = 0; i < g_commandsCount; i++)
 	{
-		if (strcmp(exe.data(), g_commands[i]))
+		if (strcmp(exe, g_commands[i]))
 		{
 			return true;
 		}
@@ -183,8 +243,8 @@ void CMD::cd(const String& path)
 
 void CMD::ls(const char* path)
 {
-	auto files = readdir(path);
-	for (const auto& file : files)
+	Array<File*> files = readdir(path);
+	for (auto file : files)
 	{
 		if (file->isDirectory && file->name[0] == '.')
 		{
@@ -196,4 +256,5 @@ void CMD::ls(const char* path)
 		Shell::resetColor();
 	}
 	printf("\n");
+	files.clear();
 }

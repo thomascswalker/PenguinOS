@@ -14,9 +14,10 @@ namespace CMD
 	};
 
 	void		  init();
-	void		  processCmd(const String& cmd);
+	void		  processCmd(const char* cmd);
 	Array<String> parseCmdArgs(const String& cmd);
-	bool		  isValidExecutable(const String& exe);
+	void		  parseCmdArgs(const char* cmd, char* args[], int32_t* argCount);
+	bool		  isValidExecutable(const char* exe);
 	const char*	  getCWD();
 
 	void exit();

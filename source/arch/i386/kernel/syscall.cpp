@@ -120,7 +120,8 @@ int32_t sysReadDir(CPUState* regs)
 {
 	const char*	  filename = (const char*)regs->ebx;
 	Array<File*>* files = (Array<File*>*)regs->ecx;
-	auto		  fs = getVirtualFileSystem();
+	files->clear(); // Clear the array before populating it.
+	auto fs = getVirtualFileSystem();
 	*files = fs->getFilesInDirectoryFromName(filename);
 	return 0;
 }

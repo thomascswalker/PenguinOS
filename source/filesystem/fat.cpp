@@ -165,15 +165,29 @@ void FAT32FileSystem::close(int32_t fd)
 	}
 }
 
-Array<File*> FAT32FileSystem::getFilesInDirectory(int32_t fd)
-{
-	Array<File*>	 files;
-	Array<LongEntry> longEntries;
+/*
+Retrieves a list of files and directories within a specified
+cluster in a FAT32 file system. It reads the cluster's sectors,
+processes both short and long directory entries to extract
+file metadata, and returns an `Array<File*>` containing the
+parsed file objects.
 
+@param cluster The cluster number to read files from.
+
+@returns An array containing the files and directories
+		  found in the specified cluster.
+*/
+Array<File*> FAT32FileSystem::getFilesInDirectory(int32_t cluster)
+{
+	Array<File*>	 files;		  // Array of files to return
+	Array<LongEntry> longEntries; // Array of long entries to store long filenames
+
+	// Create a buffer which will hold all of the data for
+	// this cluster (all 16 sectors).
 	char buffer[512];
 
 	// Get the first sector of this cluster.
-	uint32_t firstSector = getClusterSector(fd);
+	uint32_t firstSector = getClusterSector(cluster);
 
 	// Read each sector (16 total) of this cluster into `buffer` at the offset
 	// [n * BPS] where `n` is the current sector index and BPS is the bytes
@@ -233,8 +247,18 @@ Array<File*> FAT32FileSystem::getFilesInDirectory(int32_t fd)
 		}
 
 		// Set the file's attributes and size.
+		int32_t cluster = current->cluster();
+
+		// If the cluster is 0, this entry is invalid. Delete the file and continue.
+		if (cluster <= 0)
+		{
+			delete f;
+			longEntries.clear();
+			current++;
+			continue;
+		}
 		f->size = current->fileSize;
-		f->fd = current->cluster();
+		f->fd = cluster;
 		f->isDirectory = Bitmask::test(current->attribute, FA_Directory);
 		files.add(f);
 
@@ -504,6 +528,13 @@ char* FAT32FileSystem::parseShortEntryName(FAT32::ShortEntry* entry)
 	char* filename = new char[12];
 	for (int32_t i = 0; i < 12; i++)
 	{
+		// The first 8 characters are the base name, the next 3 are the extension,
+		// so the 9th character is always dot.
+		if (i == 8)
+		{
+			filename[i] = '.';
+			continue;
+		}
 		// If the entry is a valid character, copy it to the filename.
 		if (entry->name[i] != ' ')
 		{
