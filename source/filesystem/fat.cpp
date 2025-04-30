@@ -33,11 +33,15 @@ bool FAT32FileSystem::getEntryFromPath(const char* filename, FAT32::ShortEntry* 
 
 	// Split the filename by `/`. This will result in an
 	// array of each path component we need to search for.
-	String str(filename);
-	if (str.endsWith('/'))
+	char* temp = (char*)malloc(strlen(filename) + 1);
+	strcpy(temp, filename);
+	if (endswith(temp, "/"))
 	{
-		str = str.substr(0, str.size() - 1);
+		temp[strlen(temp) - 1] = '\0';
 	}
+
+	int32_t count = 0;
+
 	Array<String> components = str.split('/');
 
 	if (components.empty())
@@ -214,14 +218,9 @@ Array<File*> FAT32FileSystem::getFilesInDirectory(int32_t cluster)
 	// Cast the raw buffer we read above to a short entry
 	// array we can iterate through.
 	ShortEntry* current = (ShortEntry*)buffer;
-	while (current != nullptr)
+	while (current != nullptr && current->isValid())
 	{
-		// No more entries
-		if (!current->isValid())
-		{
-			break;
-		}
-
+		debugx(current->cluster());
 		// Store long entries until we reach another short entry.
 		// These long entries comprise the long name of the filename
 		// for the next short entry that's found.
@@ -234,6 +233,7 @@ Array<File*> FAT32FileSystem::getFilesInDirectory(int32_t cluster)
 		}
 
 		File* f = new File();
+
 		// If there's one or more long entries, we need to parse
 		// the long name and set it to the filename of this file.
 		if (longEntries.size() > 0)

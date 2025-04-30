@@ -22,14 +22,14 @@ static const char* g_commands[] = {
 static const size_t g_commandsCount = sizeof(g_commands) / sizeof(const char*);
 
 // Current working directory
-static char g_cwd[128];
+static char g_cwd[MAX_CMD_LENGTH];
 
 void CMD::init()
 {
 	// Default to "//0"
-	memset(g_cwd, 0, 128);
+	memset(g_cwd, 0, MAX_CMD_LENGTH);
 	g_cwd[0] = '/';
-	g_cwd[127] = '\0';
+	g_cwd[MAX_CMD_LENGTH - 1] = '\0';
 }
 
 void CMD::processCmd(const char* cmd)
@@ -39,8 +39,8 @@ void CMD::processCmd(const char* cmd)
 
 	// Extract all of the arguments from the command line string
 
-	char** args = new char*[16]; // 16 == maximum number of arguments
-	memset(args, 0, 16);
+	char** args = (char**)malloc(MAX_CMD_ARGS); // 16 == maximum number of arguments
+	memset(args, 0, MAX_CMD_ARGS);
 	int32_t argCount = 0;
 
 	parseCmdArgs(cmd, args, &argCount);
@@ -172,8 +172,8 @@ bool CMD::isValidExecutable(const char* exe)
 
 char* CMD::getCwd(bool relative)
 {
-	char* cwd = new char[128];
-	memset(cwd, 0, 128);
+	char* cwd = (char*)malloc(MAX_CMD_LENGTH);
+	memset(cwd, 0, MAX_CMD_LENGTH);
 	if (!relative)
 	{
 		auto last = strrchr(g_cwd, '/');
@@ -194,6 +194,8 @@ char* CMD::getCwd(bool relative)
 	}
 	return cwd;
 }
+
+bool CMD::isRootDir(const char* path) { return strcmp("/", path); }
 
 void CMD::exit() { sysexit(); }
 
@@ -222,10 +224,9 @@ void CMD::cd(const char* path)
 		return;
 	}
 
-	if (path[0] == '/')
+	if (startswith(path, "/"))
 	{
-		warning("cd: Path cannot start with '/'");
-		return;
+		path++; // Skip the leading '/'
 	}
 
 	CDCommand command;
@@ -265,6 +266,8 @@ void CMD::cd(const char* path)
 						return;
 					}
 
+					// Find the last '/' in the current working directory
+					// and remove everything after it
 					auto last = strrchr(g_cwd, '/');
 					if (last)
 					{
@@ -275,10 +278,11 @@ void CMD::cd(const char* path)
 				}
 			case CD_DOWN:
 				{
-					if (g_cwd[strlen(g_cwd) - 1] != '/')
+					if (!endswith(g_cwd, "/"))
 					{
 						strcat(g_cwd, "/");
 					}
+
 					strcat(g_cwd, file->name);
 					printf("cd: New directory: '%s'\n", g_cwd);
 					return;
@@ -301,19 +305,31 @@ void CMD::ls(const char* path)
 	files.clear();
 
 	// Construct the absolute path
-	if (!strcmp(g_cwd, "/"))
+	if (!isRootDir(path))
 	{
-		String absolutePath(g_cwd);
-		absolutePath.append("/");
-		absolutePath.append(path);
-		files = readdir(absolutePath.data());
+		// Compute the new path length
+		int32_t len = strlen(g_cwd) + strlen(path) + 2;
+
+		// Allocate memory for the new path
+		char* temp = (char*)malloc(len); // +2 for '/' and null terminator
+		memset(temp, 0, len);
+
+		// Copy the current working directory and append the new path
+		strcpy(temp, g_cwd);
+		strcat(temp, "/");
+		strcat(temp, path);
+
+		// Read the directory contents
+		files = readdir(temp);
+
+		// Free the allocated memory
+		free(temp);
 	}
 	else
 	{
 		files = readdir(g_cwd);
 	}
 
-	printf("ls: %d files in %s\n", files.size(), g_cwd);
 	for (const auto& file : files)
 	{
 		if (!file->isValid())

@@ -99,7 +99,12 @@ public:
 		memset(m_data, c, strlen(m_data));
 		m_data[m_size] = '\0';
 	}
-	~BasicString() { m_allocator.deallocate(m_data, m_capacity); }
+	~BasicString()
+	{
+		m_allocator.deallocate(m_data, m_capacity);
+		delete[] m_data;
+		m_data = nullptr;
+	}
 
 	/* Methods */
 
