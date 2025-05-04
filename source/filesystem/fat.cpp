@@ -59,18 +59,8 @@ bool FAT32FileSystem::getEntryFromPath(const char* filename, FAT32::ShortEntry* 
 		free(temp);
 		return 0;
 	}
-	debugd(count);
 
-	// TODO: Move this to global space as it's redundant
-	// Parse the root directory
-	ShortEntry data[FAT_ENTRIES_PER_SECTOR];
-	if (!m_device->readSectors(m_device->rootDirectorySector, 1, &data))
-	{
-		free(components);
-		free(temp);
-		panic("FAT32: Failed to read root directory sector.");
-	}
-	ShortEntry* rootDirectory = &data[0];
+	ShortEntry* rootDirectory = &m_rootEntry;
 	uint32_t	currentCluster = rootDirectory->cluster();
 
 	uint32_t sector = 0;
@@ -83,6 +73,10 @@ bool FAT32FileSystem::getEntryFromPath(const char* filename, FAT32::ShortEntry* 
 	{
 		char* comp = components[i];
 		debug("FAT32FileSystem::getEntryFromPath: component %d: %s", i, comp);
+
+		// If we don't find the entry for the current component,
+		// then we need to free all the memory we've allocated
+		// and return.
 		if (!findEntry(currentCluster, comp, entry))
 		{
 
@@ -96,12 +90,21 @@ bool FAT32FileSystem::getEntryFromPath(const char* filename, FAT32::ShortEntry* 
 			return false;
 		}
 
-		// if (Bitmask::test((uint8_t)entry->attribute, FA_Directory))
-		// {
-		// 	currentCluster = entry->cluster();
-		// 	continue;
-		// }
-		// break;
+		// Is the current entry (component) a directory? If
+		// so, we need to step into that directory by setting
+		// the current cluster to that entry's cluster.
+		if (Bitmask::test((uint8_t)entry->attribute, FA_Directory))
+		{
+			currentCluster = entry->cluster();
+			continue;
+		}
+
+		// If we hit this point, we've both:
+		// - Found the entry for the current component
+		// - The entry is not a directory.
+		// Therefore the current component is the file we
+		// are looking for.
+		break;
 	}
 
 	for (size_t j = 0; j < count; j++)
@@ -245,7 +248,7 @@ Array<File*> FAT32FileSystem::getFilesInDirectory(int32_t cluster)
 
 	// Cast the raw buffer we read above to a short entry
 	// array we can iterate through.
-	ShortEntry* current = (ShortEntry*)buffer;
+	auto current = (ShortEntry*)buffer;
 	while (current != nullptr && current->isValid())
 	{
 		debugx(current->cluster());
@@ -254,7 +257,7 @@ Array<File*> FAT32FileSystem::getFilesInDirectory(int32_t cluster)
 		// for the next short entry that's found.
 		if (isLongEntry((uint8_t*)current))
 		{
-			LongEntry* longEntry = (LongEntry*)current;
+			auto longEntry = (LongEntry*)current;
 			longEntries.add(*longEntry);
 			current++;
 			continue;
@@ -304,7 +307,7 @@ Array<File*> FAT32FileSystem::getFilesInDirectoryFromName(const char* filename)
 	else if (!getEntryFromPath(filename, &entry))
 	{
 		warning("Unable to get entry from path %s", filename);
-		return Array<File*>();
+		return {};
 	}
 
 	return getFilesInDirectory(entry.cluster());

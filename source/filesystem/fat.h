@@ -101,7 +101,7 @@ namespace FAT32
 
 class FAT32FileSystem : public VirtualFileSystem
 {
-	typedef Pair<int32_t, FAT32::ShortEntry> EntryType;
+	using EntryType = Pair<int32_t, FAT32::ShortEntry>;
 
 	FAT32::ShortEntry m_rootEntry;
 	Array<EntryType>  m_openEntries;

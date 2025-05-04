@@ -156,9 +156,9 @@ void CMD::parseCmdArgs(const char* cmd, char* args[], int32_t* argCount)
 
 bool CMD::isValidExecutable(const char* exe)
 {
-	for (size_t i = 0; i < g_commandsCount; i++)
+	for (auto& command : g_commands)
 	{
-		if (strcmp(exe, g_commands[i]))
+		if (strcmp(exe, command))
 		{
 			return true;
 		}
@@ -241,10 +241,8 @@ void CMD::cd(const char* path)
 		return;
 	}
 	debugx(&files[0]);
-	for (size_t i = 0; i < files.size(); i++)
+	for (auto file : files)
 	{
-		File* file = files[i];
-
 		debug("cd: path: %s, %x", path, path);
 		debug("cd: file: %s, %d | %x", file->name, file->fd, file->name);
 		if (!file->isDirectory)
@@ -299,7 +297,8 @@ void CMD::cd(const char* path)
 				break;
 		}
 	}
-	warning("cd: No dir found matching '%s'", path);
+
+		warning("cd: No dir found matching '%s'", path);
 }
 
 void CMD::ls(int32_t fd)

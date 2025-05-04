@@ -1,4 +1,3 @@
-#include <assert.h>
 #include <cstdio.h>
 #include <list.h>
 #include <memory.h>
@@ -30,7 +29,7 @@ static void processStartup()
 
 ProcessControlBlock* Scheduler::create(EntryPoint func)
 {
-	ProcessControlBlock* newProcess = (ProcessControlBlock*)malloc(sizeof(ProcessControlBlock));
+	auto newProcess = (ProcessControlBlock*)malloc(sizeof(ProcessControlBlock));
 
 	if (!newProcess)
 	{
