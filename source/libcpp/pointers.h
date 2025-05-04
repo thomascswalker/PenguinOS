@@ -74,3 +74,9 @@ public:
 	T* operator->() const { return m_ptr; }
 	T& operator*() const { return *m_ptr; }
 };
+
+template <typename T, typename... Args>
+SharedPtr<T> MakeShared(Args&&... args)
+{
+	return SharedPtr<T>(new T(std::forward<Args>(args)...));
+}

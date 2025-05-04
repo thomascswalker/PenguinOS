@@ -215,10 +215,10 @@ parsed file objects.
 @returns An array containing the files and directories
 		  found in the specified cluster.
 */
-Array<File*> FAT32FileSystem::getFilesInDirectory(int32_t cluster)
+Array<SharedPtr<File>> FAT32FileSystem::getFilesInDirectory(int32_t cluster)
 {
-	Array<File*>	 files;		  // Array of files to return
-	Array<LongEntry> longEntries; // Array of long entries to store long filenames
+	Array<SharedPtr<File>> files;		// Array of files to return
+	Array<LongEntry>	   longEntries; // Array of long entries to store long filenames
 
 	// Create a buffer which will hold all of the data for
 	// this cluster (all 16 sectors).
@@ -263,7 +263,7 @@ Array<File*> FAT32FileSystem::getFilesInDirectory(int32_t cluster)
 			continue;
 		}
 
-		File* f = new File();
+		SharedPtr<File> f = MakeShared<File>();
 
 		// If there's one or more long entries, we need to parse
 		// the long name and set it to the filename of this file.
@@ -297,7 +297,7 @@ Array<File*> FAT32FileSystem::getFilesInDirectory(int32_t cluster)
 
 // Similar to getFilesInDirectory, but takes a filename
 // rather than a cluster number.
-Array<File*> FAT32FileSystem::getFilesInDirectoryFromName(const char* filename)
+Array<SharedPtr<File>> FAT32FileSystem::getFilesInDirectoryFromName(const char* filename)
 {
 	ShortEntry entry;
 	if (strcmp(filename, "/"))

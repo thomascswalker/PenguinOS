@@ -234,7 +234,7 @@ void CMD::cd(const char* path)
 		command = CD_DOWN;
 	}
 
-	Array<File*> files = readdir(g_cwd_fd);
+	Array<SharedPtr<File>> files = readdir(g_cwd_fd);
 	if (files.size() == 0)
 	{
 		warning("cd: No files found in directory '%s'", path);
@@ -298,12 +298,12 @@ void CMD::cd(const char* path)
 		}
 	}
 
-		warning("cd: No dir found matching '%s'", path);
+	warning("cd: No dir found matching '%s'", path);
 }
 
 void CMD::ls(int32_t fd)
 {
-	Array<File*> files = readdir(fd);
+	Array<SharedPtr<File>> files = readdir(fd);
 	debugd(files.size());
 
 	for (const auto& file : files)

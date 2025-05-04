@@ -114,8 +114,8 @@ public:
 	size_t	read(int32_t fd, void* buffer, size_t size) override;
 	void	close(int32_t fd) override;
 
-	Array<File*> getFilesInDirectory(int32_t fd) override;
-	Array<File*> getFilesInDirectoryFromName(const char* filename) override;
+	Array<SharedPtr<File>> getFilesInDirectory(int32_t fd) override;
+	Array<SharedPtr<File>> getFilesInDirectoryFromName(const char* filename) override;
 
 	size_t		   getFileSize(int32_t fd) override;
 	size_t		   getFileSizeFromName(const char* filename) override;
