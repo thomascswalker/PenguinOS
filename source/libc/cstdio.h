@@ -40,4 +40,4 @@ File*		 fopen(const char* filename);
 size_t		 fread(File* stream, void* buffer, size_t size);
 void		 fclose(File* stream);
 void		 fstat(int32_t fd, FileStat* buffer);
-Array<File*> readdir(const char* filename);
+Array<File*> readdir(int32_t fd);

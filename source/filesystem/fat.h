@@ -120,7 +120,7 @@ public:
 	size_t		   getFileSize(int32_t fd) override;
 	size_t		   getFileSizeFromName(const char* filename) override;
 	FileSystemType getType() const override { return FileSystemType::FAT32; };
-	String		   getTypeName() const override { return "FAT32"; };
+	const char*	   getTypeName() const override { return "FAT32"; };
 
 	bool	 getEntryFromPath(const char* filename, FAT32::ShortEntry* entry);
 	uint32_t getNextCluster(uint32_t n);
@@ -128,11 +128,11 @@ public:
 	uint32_t getClusterCount();
 	uint32_t getSize();
 
-	bool findEntry(uint32_t startCluster, const String& name, FAT32::ShortEntry* entry);
+	bool findEntry(uint32_t startCluster, const char*, FAT32::ShortEntry* entry);
 	bool readDirectory(const FAT32::ShortEntry& entry, Array<FAT32::ShortEntry>& entries);
 
 	char* toShortName(const char* longName);
-	char* sanitize(const String& component, size_t count);
+	char* sanitize(const char* component, size_t count);
 	bool  isValidChar(char c);
 	bool  isLongEntry(uint8_t* buffer);
 

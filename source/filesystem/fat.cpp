@@ -1,11 +1,9 @@
-#include <assert.h>
 #include <bitmask.h>
 #include <cstdio.h>
 #include <cstring.h>
 #include <fat.h>
 #include <filesystem.h>
 #include <idt.h>
-#include <math.h>
 #include <memory.h>
 
 using namespace FAT32;
@@ -40,21 +38,36 @@ bool FAT32FileSystem::getEntryFromPath(const char* filename, FAT32::ShortEntry* 
 		temp[strlen(temp) - 1] = '\0';
 	}
 
-	int32_t count = 0;
-
-	Array<String> components = str.split('/');
-
-	if (components.empty())
+	size_t count = 0;
+	char** components = strsplit(temp, "/", &count);
+	if (components == nullptr)
 	{
-		warning("FAT32: No components in path %s", str.data());
+		warning("FAT32: Failed to split path %s", temp);
+		free(temp);
+		return false;
+	}
+
+	for (size_t i = 0; i < count; i++)
+	{
+		debug("FAT32: component %d: %s", i, components[i]);
+	}
+
+	if (count == 0)
+	{
+		warning("FAT32: No components in path %s", temp);
+		free(components);
+		free(temp);
 		return 0;
 	}
+	debugd(count);
 
 	// TODO: Move this to global space as it's redundant
 	// Parse the root directory
 	ShortEntry data[FAT_ENTRIES_PER_SECTOR];
 	if (!m_device->readSectors(m_device->rootDirectorySector, 1, &data))
 	{
+		free(components);
+		free(temp);
 		panic("FAT32: Failed to read root directory sector.");
 	}
 	ShortEntry* rootDirectory = &data[0];
@@ -66,22 +79,37 @@ bool FAT32FileSystem::getEntryFromPath(const char* filename, FAT32::ShortEntry* 
 	// the corresponding entry. If a component is a directory,
 	// step into that directory by setting the current cluster
 	// to that entry's cluster.
-	for (const auto& c : components)
+	for (size_t i = 0; i < count; i++)
 	{
-		if (!findEntry(currentCluster, c, entry))
+		char* comp = components[i];
+		debug("FAT32FileSystem::getEntryFromPath: component %d: %s", i, comp);
+		if (!findEntry(currentCluster, comp, entry))
 		{
-			warning("FAT32: Unable to find entry %s", c.data());
+
+			warning("FAT32: Unable to find entry %s", comp);
+			for (size_t j = 0; j < count; j++)
+			{
+				free(components[j]);
+			}
+			free(components);
+			free(temp);
 			return false;
 		}
 
-		if (Bitmask::test((uint8_t)entry->attribute, FA_Directory))
-		{
-			currentCluster = entry->cluster();
-			continue;
-		}
-		break;
+		// if (Bitmask::test((uint8_t)entry->attribute, FA_Directory))
+		// {
+		// 	currentCluster = entry->cluster();
+		// 	continue;
+		// }
+		// break;
 	}
 
+	for (size_t j = 0; j < count; j++)
+	{
+		free(components[j]);
+	}
+	free(components);
+	free(temp);
 	return true;
 }
 
@@ -317,8 +345,8 @@ char* FAT32FileSystem::toShortName(const char* longName)
 	memset(result, ' ', 11);
 	result[11] = '\0';
 
-	auto size = strlen(longName);
-	auto dot = strchri(longName, '.');
+	size_t	size = strlen(longName);
+	int32_t dot = strchri(longName, '.');
 
 	// Extension
 	// '.profile'
@@ -330,9 +358,9 @@ char* FAT32FileSystem::toShortName(const char* longName)
 	// 'file.txt'
 	else if (dot > 0)
 	{
-		int ext = size - dot - 1;
-		ext = std::min(ext, 3);
-		for (int i = 0; i < ext; i++)
+		size_t ext = size - dot - 1;
+		ext = std::min((int)ext, 3); // Case to int to prevent compiler warning
+		for (size_t i = 0; i < ext; i++)
 		{
 			result[8 + i] = toupper(longName[dot + 1 + i]);
 		}
@@ -345,7 +373,7 @@ char* FAT32FileSystem::toShortName(const char* longName)
 
 	if (size > 8)
 	{
-		for (int i = 0; i < 6; i++)
+		for (size_t i = 0; i < 6; i++)
 		{
 			result[i] = toupper(longName[i]);
 		}
@@ -354,7 +382,7 @@ char* FAT32FileSystem::toShortName(const char* longName)
 	}
 	else
 	{
-		for (int i = 0; i < size; i++)
+		for (size_t i = 0; i < size; i++)
 		{
 			result[i] = toupper(longName[i]);
 		}
@@ -366,7 +394,7 @@ char* FAT32FileSystem::toShortName(const char* longName)
 // Sanitizes the name component (either the base or the ext)
 // to remove invalid characters and force all characters
 // to uppercase.
-char* FAT32FileSystem::sanitize(const String& component, size_t count)
+char* FAT32FileSystem::sanitize(const char* component, size_t count)
 {
 	char*  result = (char*)malloc(count);
 	size_t j = 0;
@@ -406,10 +434,11 @@ bool FAT32FileSystem::isValidChar(char c)
 		|| c == ';' || c == '=' || c == ',');
 }
 
-bool FAT32FileSystem::findEntry(uint32_t startCluster, const String& name, ShortEntry* entry)
+bool FAT32FileSystem::findEntry(uint32_t startCluster, const char* name, ShortEntry* entry)
 {
 	// Convert the input `name` to the FAT 8.3 short name specification.
 	char* shortName = toShortName(name);
+	debug("FAT32FileSystem::findEntry: %s => %s", name, shortName);
 
 	// Start at `startCluster`. This will be updated as we traverse a cluster
 	// and do not (yet) find the matching entry.
@@ -465,7 +494,7 @@ bool FAT32FileSystem::findEntry(uint32_t startCluster, const String& name, Short
 			{
 				// If we have a match, we've found the corresponding
 				// entry. Copy `current` memory into our in/out `entry`.
-				memcpy(entry, current, 32);
+				memcpy(entry, current, sizeof(ShortEntry));
 				return true;
 			}
 		}
@@ -556,7 +585,7 @@ char* FAT32FileSystem::parseShortEntryName(FAT32::ShortEntry* entry)
 		filename[mainEnd] = '.';
 	}
 	memcpy(filename + mainEnd + 1, (void*)(entry->name + 8), extEnd);
-	for (int32_t i = 0; i < strlen(filename); i++)
+	for (size_t i = 0; i < strlen(filename); i++)
 	{
 		filename[i] = tolower(filename[i]);
 	}

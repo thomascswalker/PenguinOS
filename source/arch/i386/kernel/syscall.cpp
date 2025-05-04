@@ -122,8 +122,10 @@ int32_t sysReadDir(CPUState* regs)
 	// the original
 	Array<File*>* files = (Array<File*>*)regs->ecx;
 	files->clear(); // Clear the array before populating it.
-	auto fs = getVirtualFileSystem();
-	*files = fs->getFilesInDirectoryFromName((const char*)regs->ebx);
+	auto	fs = getVirtualFileSystem();
+	int32_t fd = regs->ebx;
+	debugd(fd);
+	*files = fs->getFilesInDirectory(fd);
 	return 0;
 }
 

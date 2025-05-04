@@ -1,3 +1,4 @@
+#include <cstdio.h>
 #include <cstdlib.h>
 #include <cstring.h>
 
@@ -308,55 +309,49 @@ char* strdup(const char* str)
 }
 
 /**
- * Tokenizes a string using the specified delimiter.
+ * Splits a string into tokens.
  *
  * @param str The string to tokenize.
  * @param delim The delimiter character.
  *
  * @return Pointer to the next token or a null pointer.
  */
-char* strtok(char* str, const char delim)
+char* strtok(char* str, const char* delimiter)
 {
-	static size_t pos = 0;
-	static char*  buffer = nullptr;
-	static char*  token = nullptr;
+	static int32_t pos = 0;
 
-	if (str)
-	{
-		pos = 0;
-		buffer = str;
-
-		if (token)
-		{
-			delete token;
-		}
-		token = new char[strlen(buffer) + 1];
-	}
-
-	if (!buffer)
+	if (!str || !delimiter || str[pos] == '\0')
 	{
 		return nullptr;
 	}
 
-	if (pos >= strlen(buffer))
-	{
-		return nullptr;
-	}
+	char*	token = (char*)malloc(100);
+	int32_t i = pos, k = 0, j = 0;
 
-	memset(token, 0, strlen(buffer) + 1);
-
-	size_t i = 0;
-	while (pos < strlen(buffer))
+	while (str[i] != '\0')
 	{
-		if (buffer[pos] == delim)
+		j = 0;
+		while (delimiter[j] != '\0')
 		{
-			pos++;
-			return token;
+			if (str[i] != delimiter[j])
+			{
+				token[k] = str[i];
+			}
+			else
+			{
+				token[i] = 0;
+				pos = i + 1;
+				return token;
+			}
+			j++;
 		}
-		token[i] = buffer[pos];
+
 		i++;
-		pos++;
+		k++;
 	}
+
+	token[i] = 0;
+	pos = i + 1;
 	return token;
 }
 
@@ -461,4 +456,49 @@ bool endswith(const char* str, const char* suffix)
 {
 	int32_t len = strlen(suffix);
 	return strncmp(str + strlen(str) - len, suffix, len);
+}
+
+/**
+ * Splits a string into an array of strings based on a
+ * delimiter.
+ *
+ * @param str The string to split.
+ * @param delim The delimiter character.
+ * @param count Pointer to the number of tokens found.
+ *
+ * @note This function allocates memory for the array and
+ * the components, so it is the caller's responsibility to
+ * free it for both each component and the array itself.
+ *
+ * @return Pointer to the array of strings or a null pointer.
+ */
+char** strsplit(const char* str, const char* delim, size_t* count)
+{
+	for (size_t i = 0; i < strlen(str); i++)
+	{
+		for (size_t j = 0; j < strlen(delim); j++)
+		{
+			if (str[i] == delim[j])
+			{
+				(*count)++;
+				break;
+			}
+		}
+	}
+
+	char** result = (char**)malloc(*count + 1);
+
+	char* current = strtok((char*)str, delim);
+	for (size_t i = 0; i < *count; i++)
+	{
+		debugs(current);
+		size_t len = strlen(current);
+		result[i] = (char*)malloc(len + 1);
+		memcpy(result[i], current, len);
+		result[i][len] = '\0';
+		current = strtok((char*)str, delim);
+	}
+	free(current);
+
+	return result;
 }

@@ -22,7 +22,8 @@ static const char* g_commands[] = {
 static const size_t g_commandsCount = sizeof(g_commands) / sizeof(const char*);
 
 // Current working directory
-static char g_cwd[MAX_CMD_LENGTH];
+static char	   g_cwd[MAX_CMD_LENGTH];
+static int32_t g_cwd_fd;
 
 void CMD::init()
 {
@@ -30,6 +31,8 @@ void CMD::init()
 	memset(g_cwd, 0, MAX_CMD_LENGTH);
 	g_cwd[0] = '/';
 	g_cwd[MAX_CMD_LENGTH - 1] = '\0';
+
+	g_cwd_fd = 3; // 3 == root directory
 }
 
 void CMD::processCmd(const char* cmd)
@@ -99,15 +102,8 @@ void CMD::processCmd(const char* cmd)
 	// List current directory
 	else if (strcmp(exe, "ls"))
 	{
-		CHECK_ARGS("ls", 1, 2);
-		if (argCount == 2)
-		{
-			ls(args[1]);
-		}
-		else
-		{
-			ls("/");
-		}
+		// CHECK_ARGS("ls", 1, 2);
+		ls(g_cwd_fd);
 	}
 	for (int32_t i = 0; i < argCount; i++)
 	{
@@ -224,11 +220,6 @@ void CMD::cd(const char* path)
 		return;
 	}
 
-	if (startswith(path, "/"))
-	{
-		path++; // Skip the leading '/'
-	}
-
 	CDCommand command;
 	if (strcmp("..", path))
 	{
@@ -243,14 +234,25 @@ void CMD::cd(const char* path)
 		command = CD_DOWN;
 	}
 
-	Array<File*> files = readdir(g_cwd);
-	for (const auto& file : files)
+	Array<File*> files = readdir(g_cwd_fd);
+	if (files.size() == 0)
 	{
+		warning("cd: No files found in directory '%s'", path);
+		return;
+	}
+	debugx(&files[0]);
+	for (size_t i = 0; i < files.size(); i++)
+	{
+		File* file = files[i];
+
+		debug("cd: path: %s, %x", path, path);
+		debug("cd: file: %s, %d | %x", file->name, file->fd, file->name);
 		if (!file->isDirectory)
 		{
 			continue; // Skip non-directory files
 		}
 
+		debug("cd: comparing '%s' with '%s'", path, file->name);
 		if (!strncmp(path, file->name, strlen(path)))
 		{
 			continue;
@@ -273,8 +275,9 @@ void CMD::cd(const char* path)
 					{
 						*(last + 1) = '\0'; // Remove the last part of the path
 					}
-					printf("cd: New directory: '%s'\n", g_cwd);
-					return;
+					g_cwd_fd = file->fd;
+					printf("cd: New directory: '%s' : %d\n", g_cwd, g_cwd_fd);
+					break;
 				}
 			case CD_DOWN:
 				{
@@ -282,15 +285,15 @@ void CMD::cd(const char* path)
 					{
 						strcat(g_cwd, "/");
 					}
-
 					strcat(g_cwd, file->name);
-					printf("cd: New directory: '%s'\n", g_cwd);
-					return;
+					g_cwd_fd = file->fd;
+					printf("cd: New directory: '%s' : %d\n", g_cwd, g_cwd_fd);
+					break;
 				}
 			case CD_SAME:
 				{
 					printf("cd: Staying in current directory: '%s'\n", g_cwd);
-					return;
+					break;
 				}
 			default:
 				break;
@@ -299,46 +302,16 @@ void CMD::cd(const char* path)
 	warning("cd: No dir found matching '%s'", path);
 }
 
-void CMD::ls(const char* path)
+void CMD::ls(int32_t fd)
 {
-	Array<File*> files;
-	files.clear();
-
-	// Construct the absolute path
-	if (!isRootDir(path))
-	{
-		// Compute the new path length
-		int32_t len = strlen(g_cwd) + strlen(path) + 2;
-
-		// Allocate memory for the new path
-		char* temp = (char*)malloc(len); // +2 for '/' and null terminator
-		memset(temp, 0, len);
-
-		// Copy the current working directory and append the new path
-		strcpy(temp, g_cwd);
-		strcat(temp, "/");
-		strcat(temp, path);
-
-		// Read the directory contents
-		files = readdir(temp);
-
-		// Free the allocated memory
-		free(temp);
-	}
-	else
-	{
-		files = readdir(g_cwd);
-	}
+	Array<File*> files = readdir(fd);
+	debugd(files.size());
 
 	for (const auto& file : files)
 	{
-		if (!file->isValid())
-		{
-			continue;
-		}
 		auto color = file->isDirectory ? VGA_COLOR_CYAN : VGA_COLOR_GREEN;
 		Shell::setForeColor(color);
-		printf(" %s", file->name);
+		printf(" [ %-12s%-3d ]\n", file->name, file->fd);
 		Shell::resetColor();
 	}
 	printf("\n");

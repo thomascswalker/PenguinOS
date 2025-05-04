@@ -173,7 +173,7 @@ qemu-system-i386 \
 	 -boot d \
 	-drive file=disk.img,format=raw,if=ide \
 	-display gtk,zoom-to-fit=on \
-	-d int \
-	-no-reboot \
-	-no-shutdown \
+	# -d int \
+	# -no-reboot \
+	# -no-shutdown \
 	# -s -S

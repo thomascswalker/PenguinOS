@@ -33,7 +33,7 @@ public:
 	virtual size_t		   getFileSize(int32_t fd) = 0;
 	virtual size_t		   getFileSizeFromName(const char* filename) = 0;
 	virtual FileSystemType getType() const = 0;
-	virtual String		   getTypeName() const = 0;
+	virtual const char*	   getTypeName() const = 0;
 };
 
 void			   setVirtualFileSystem(VirtualFileSystem* vfs);

@@ -31,5 +31,5 @@ namespace CMD
 	void cat(const char* path);
 	void pwd();
 	void cd(const char* path);
-	void ls(const char* path);
+	void ls(int32_t fd);
 } // namespace CMD
