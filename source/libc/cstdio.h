@@ -37,8 +37,8 @@ void panic(const char* format, ...);
 
 // Files
 
-File*				   fopen(const char* filename);
-size_t				   fread(File* stream, void* buffer, size_t size);
-void				   fclose(File* stream);
-void				   fstat(int32_t fd, FileStat* buffer);
-Array<SharedPtr<File>> readdir(int32_t fd);
+File*		 fopen(const char* filename);
+size_t		 fread(File* stream, void* buffer, size_t size);
+void		 fclose(File* stream);
+void		 fstat(int32_t fd, FileStat* buffer);
+Array<File*> readdir(int32_t fd);

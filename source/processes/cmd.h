@@ -19,7 +19,7 @@ namespace CMD
 
 	void init();
 	void processCmd(const char* cmd);
-	void parseCmdArgs(const char* cmd, char* args[], int32_t* argCount);
+	bool parseCmdArgs(const char* cmd, char* args[], int32_t* argCount);
 	bool isValidExecutable(const char* exe);
 
 	char* getCwd(bool relative);

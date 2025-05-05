@@ -17,7 +17,9 @@ enum class FileSystemType
 
 class VirtualFileSystem
 {
+
 protected:
+	using FileArray = Array<File*>;
 	ATADevice* m_device;
 
 public:
@@ -28,8 +30,8 @@ public:
 	virtual size_t	read(int32_t fd, void* buffer, size_t size) = 0;
 	virtual void	close(int32_t fd) = 0;
 
-	virtual Array<SharedPtr<File>> getFilesInDirectory(int32_t fd) = 0;
-	virtual Array<SharedPtr<File>> getFilesInDirectoryFromName(const char* filename) = 0;
+	virtual void getFilesInDirectory(int32_t fd, FileArray* files) = 0;
+	virtual void getFilesInDirectoryFromName(const char* filename, FileArray* files) = 0;
 
 	virtual size_t		   getFileSize(int32_t fd) = 0;
 	virtual size_t		   getFileSizeFromName(const char* filename) = 0;

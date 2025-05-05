@@ -71,6 +71,8 @@ namespace FAT32
 
 		bool hasExtension() const { return ext[0] != 0 && ext[0] != ' '; }
 		bool isValid() const { return name[0] != FA_Empty && name[0] != FA_Deleted; }
+		bool isDirectory() const { return Bitmask::test((uint8_t)attribute, FA_Directory); }
+		bool isFile() const { return Bitmask::test((uint8_t)attribute, FA_Archive); }
 		// Returns the full 32-bit cluster number composed of the low 16 bits
 		// of `clusterLow` and high 16 bits of `clusterHigh`.
 		uint32_t cluster() const { return clusterLow | (clusterHigh << 16); }
@@ -114,8 +116,8 @@ public:
 	size_t	read(int32_t fd, void* buffer, size_t size) override;
 	void	close(int32_t fd) override;
 
-	Array<SharedPtr<File>> getFilesInDirectory(int32_t fd) override;
-	Array<SharedPtr<File>> getFilesInDirectoryFromName(const char* filename) override;
+	void getFilesInDirectory(int32_t fd, FileArray* files) override;
+	void getFilesInDirectoryFromName(const char* filename, FileArray* files) override;
 
 	size_t		   getFileSize(int32_t fd) override;
 	size_t		   getFileSizeFromName(const char* filename) override;

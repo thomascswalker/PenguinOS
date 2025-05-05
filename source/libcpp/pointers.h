@@ -76,7 +76,7 @@ public:
 };
 
 template <typename T, typename... Args>
-SharedPtr<T> MakeShared(Args&&... args)
+SharedPtr<T> makeShared(Args&&... args)
 {
 	return SharedPtr<T>(new T(std::forward<Args>(args)...));
 }

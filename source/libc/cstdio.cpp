@@ -339,9 +339,9 @@ void fclose(File* stream)
 
 void fstat(int32_t fd, FileStat* buffer) { stat(fd, (void*)buffer); }
 
-Array<SharedPtr<File>> readdir(int32_t fd)
+Array<File*> readdir(int32_t fd)
 {
-	Array<SharedPtr<File>> files;
+	Array<File*> files;
 	asm("int $0x80" ::"a"(SYSCALL_READDIR), "b"(fd), "c"((int32_t)&files));
 	return files;
 }

@@ -41,16 +41,12 @@ void CMD::processCmd(const char* cmd)
 	printf(">>> %s\n", cmd);
 
 	// Extract all of the arguments from the command line string
-
 	char** args = (char**)malloc(MAX_CMD_ARGS); // 16 == maximum number of arguments
 	memset(args, 0, MAX_CMD_ARGS);
 	int32_t argCount = 0;
-
-	parseCmdArgs(cmd, args, &argCount);
-	if (argCount == 0)
+	if (!parseCmdArgs(cmd, args, &argCount))
 	{
 		free(args);
-		delete[] args;
 		return; // No command entered
 	}
 
@@ -105,16 +101,16 @@ void CMD::processCmd(const char* cmd)
 		// CHECK_ARGS("ls", 1, 2);
 		ls(g_cwd_fd);
 	}
-	for (int32_t i = 0; i < argCount; i++)
+
+	// Free all arguments
+	for (int32_t i = 0; i < MAX_CMD_ARGS; i++)
 	{
-		delete[] args[i]; // Free each argument
-		args[i] = nullptr;
+		free(args[i]); // Free each argument string
 	}
-	free(args);
-	args = nullptr;
+	free(args); // Free the array of arguments
 }
 
-void CMD::parseCmdArgs(const char* cmd, char* args[], int32_t* argCount)
+bool CMD::parseCmdArgs(const char* cmd, char* args[], int32_t* argCount)
 {
 	size_t		argIndex = 0;
 	const char* start = cmd;
@@ -139,7 +135,7 @@ void CMD::parseCmdArgs(const char* cmd, char* args[], int32_t* argCount)
 		if (start != end)
 		{
 			size_t length = end - start;
-			args[argIndex] = new char[length + 1]; // Allocate memory for the argument
+			args[argIndex] = (char*)malloc(length + 1); // Allocate memory for the argument
 			strcpy(args[argIndex], start);
 			args[argIndex][length] = '\0'; // Null-terminate the string
 			argIndex++;
@@ -152,6 +148,8 @@ void CMD::parseCmdArgs(const char* cmd, char* args[], int32_t* argCount)
 	// Null-terminate the array of arguments
 	args[argIndex] = nullptr;
 	*argCount = argIndex;
+
+	return *argCount > 0; // Return true if we found any arguments
 }
 
 bool CMD::isValidExecutable(const char* exe)
@@ -234,23 +232,26 @@ void CMD::cd(const char* path)
 		command = CD_DOWN;
 	}
 
-	Array<SharedPtr<File>> files = readdir(g_cwd_fd);
+	// TODO: This currently only searches for directories in
+	// the current working directory. It should be updated
+	// to search for directories in the specified path.
+	Array<File*> files = readdir(g_cwd_fd);
 	if (files.size() == 0)
 	{
 		warning("cd: No files found in directory '%s'", path);
 		return;
 	}
-	debugx(&files[0]);
+
 	for (auto file : files)
 	{
-		debug("cd: path: %s, %x", path, path);
-		debug("cd: file: %s, %d | %x", file->name, file->fd, file->name);
+		// debug("cd: path: %s, %x", path, path);
+		// debug("cd: file: %s, %d | %x", file->name, file->fd, file->name);
 		if (!file->isDirectory)
 		{
 			continue; // Skip non-directory files
 		}
 
-		debug("cd: comparing '%s' with '%s'", path, file->name);
+		// debug("cd: comparing '%s' with '%s'", path, file->name);
 		if (!strncmp(path, file->name, strlen(path)))
 		{
 			continue;
@@ -274,8 +275,7 @@ void CMD::cd(const char* path)
 						*(last + 1) = '\0'; // Remove the last part of the path
 					}
 					g_cwd_fd = file->fd;
-					printf("cd: New directory: '%s' : %d\n", g_cwd, g_cwd_fd);
-					break;
+					return;
 				}
 			case CD_DOWN:
 				{
@@ -285,13 +285,11 @@ void CMD::cd(const char* path)
 					}
 					strcat(g_cwd, file->name);
 					g_cwd_fd = file->fd;
-					printf("cd: New directory: '%s' : %d\n", g_cwd, g_cwd_fd);
-					break;
+					return;
 				}
 			case CD_SAME:
 				{
-					printf("cd: Staying in current directory: '%s'\n", g_cwd);
-					break;
+					return;
 				}
 			default:
 				break;
@@ -303,16 +301,14 @@ void CMD::cd(const char* path)
 
 void CMD::ls(int32_t fd)
 {
-	Array<SharedPtr<File>> files = readdir(fd);
-	debugd(files.size());
-
+	Array<File*> files = readdir(fd);
 	for (const auto& file : files)
 	{
 		auto color = file->isDirectory ? VGA_COLOR_CYAN : VGA_COLOR_GREEN;
 		Shell::setForeColor(color);
-		printf(" [ %-12s%-3d ]\n", file->name, file->fd);
+		printf(" %s", file->name);
 		Shell::resetColor();
 	}
+
 	printf("\n");
-	files.clear();
 }
