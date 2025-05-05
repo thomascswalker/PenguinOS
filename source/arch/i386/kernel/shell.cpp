@@ -5,6 +5,7 @@
 
 static uint16_t* g_displayBuffer;
 static uint16_t* g_inputBuffer;
+static char*	 g_commandBuffer;
 
 static size_t g_inputCursor;
 
@@ -176,7 +177,11 @@ void Shell::scroll()
 void Shell::input(char c)
 {
 	size_t size = INPUT_MAX_SIZE + 1;
-	char*  cmd = new char[size];
+	if (!g_commandBuffer)
+	{
+		g_commandBuffer = (char*)malloc(size);
+		memset(g_commandBuffer, 0, size);
+	}
 
 	switch (c)
 	{
@@ -211,12 +216,12 @@ void Shell::input(char c)
 
 				for (size_t i = 0; i < g_inputCursor; i++)
 				{
-					cmd[i] = g_inputBuffer[i];
+					g_commandBuffer[i] = g_inputBuffer[i];
 				}
-				cmd[g_inputCursor] = '\0';
+				g_commandBuffer[g_inputCursor] = '\0';
 
-				CMD::processCmd(cmd);
-				delete[] cmd;
+				CMD::processCmd(g_commandBuffer);
+				memset(g_commandBuffer, 0, size);
 				clearInput();
 				return;
 			}

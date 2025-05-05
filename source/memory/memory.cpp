@@ -37,7 +37,7 @@ See the PTE enum for details.
 */
 
 #include <cstdio.h>
-#include <math.h>
+#include <math.h> // IWYU pragma: keep
 #include <memory.h>
 
 // Defined in linker.ld
@@ -90,7 +90,7 @@ void Memory::init(uint32_t start, uint32_t size)
 		// immediately after the page directory ends [PD + 0x1000].
 		// Each table is 0x1000 bytes, so each table is offset
 		// [i * 0x1000] from table 0.
-		uint32_t  address = PAGE_ALIGN((uint32_t)pageDirectory + PAGE_SIZE + (i * PAGE_SIZE));
+		uint32_t  address = PAGE_ALIGN((uintptr_t)pageDirectory + PAGE_SIZE + (i * PAGE_SIZE));
 		uint32_t  index = PD_INDEX(address);
 		uint32_t* entry = &pageDirectory[index];
 
@@ -120,10 +120,10 @@ void Memory::init(uint32_t start, uint32_t size)
 
 	// Setup memory allocation
 	// Page-aligned start and end of usable memory in the system.
-	memoryStart = (uint32_t)pageDirectory + PAGE_SIZE + DIR_SIZE;
+	memoryStart = (uintptr_t)pageDirectory + PAGE_SIZE + DIR_SIZE;
 	memoryEnd = PAGE_ALIGN(memoryStart + (size - PAGE_SIZE - DIR_SIZE));
 	memorySize = memoryEnd - memoryStart;
-	memoryPool = (uint8_t*)memoryStart;
+	memoryPool = (uint8_t*)(uintptr_t)memoryStart;
 
 	// Initialize buddy allocator
 	size_t offset = 0;
@@ -178,7 +178,7 @@ void Memory::identityMapTable(uint32_t index)
  */
 uint32_t* Memory::getTableFromAddress(uint32_t address)
 {
-	return (uint32_t*)(pageDirectory[PD_INDEX(address)] & PAGE_MASK);
+	return (uint32_t*)((uintptr_t)pageDirectory[PD_INDEX(address)] & PAGE_MASK);
 }
 
 /**
@@ -187,7 +187,7 @@ uint32_t* Memory::getTableFromAddress(uint32_t address)
  */
 uint32_t* Memory::getTableFromIndex(uint32_t index)
 {
-	return (uint32_t*)(pageDirectory[index] & PAGE_MASK);
+	return (uint32_t*)((uintptr_t)pageDirectory[index] & PAGE_MASK);
 }
 
 /**
@@ -208,7 +208,7 @@ void Memory::enablePaging()
  */
 void Memory::setPageDirectory(uint32_t* directory)
 {
-	asm("mov %0, %%cr3" ::"r"((uint32_t)directory));
+	asm("mov %0, %%cr3" ::"r"((uintptr_t)directory));
 }
 
 /**
@@ -348,7 +348,7 @@ void* Memory::kmalloc(size_t size)
 		size_t newBlockSize = bucketSizes[currentOrder];
 
 		// Create a new block for the buddy.
-		Block* buddy = (Block*)((uint8_t*)block + newBlockSize);
+		auto buddy = (Block*)((uint8_t*)block + newBlockSize);
 		buddy->order = currentOrder;
 		buddy->isFree = true;
 		buddy->next = nullptr;
@@ -380,7 +380,7 @@ void Memory::kfree(void* ptr)
 	}
 
 	// Get the block header the pointer.
-	Block* block = (Block*)((char*)ptr - sizeof(Block));
+	auto block = (Block*)((char*)ptr - sizeof(Block));
 
 	// Mark the block as free.
 	block->isFree = true;
@@ -392,8 +392,8 @@ void Memory::kfree(void* ptr)
 	while (order < BUCKET_COUNT)
 	{
 		// Calculate the buddy's address and check if it's free.
-		uintptr_t blockOffset = (uintptr_t)((char*)block - (char*)memoryPool);
-		size_t	  blockSize = bucketSizes[order];
+		auto   blockOffset = (uintptr_t)((char*)block - (char*)memoryPool);
+		size_t blockSize = bucketSizes[order];
 
 		// Calculate the buddy's offset.
 		uintptr_t buddyOffset = blockOffset ^ blockSize;

@@ -1,0 +1,9 @@
+InlayHints:
+    Enabled: No
+
+Diagnostics:
+  Suppress: 
+    - modernize-use-trailing-return-type
+    - modernize-avoid-c-arrays
+    - modernize-deprecated-headers
+    - Wint-to-pointer-cast

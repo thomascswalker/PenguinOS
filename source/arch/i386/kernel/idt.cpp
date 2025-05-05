@@ -139,6 +139,10 @@ namespace IDT
 				dumpCPUState(regs);
 				panic("Double Fault. Code: %d", regs->errCode);
 				break;
+			case SEGMENT_NOT_PRESENT:
+				dumpCPUState(regs);
+				panic("Segment Not Present. Code: %d", regs->errCode);
+				break;
 			case GENERAL_PROTECTION_FAULT:
 				handleGeneralProtectionFault(regs);
 				break;

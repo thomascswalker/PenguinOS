@@ -1,0 +1,10 @@
+-xc++
+-I**
+-Isource/arch/i386/boot
+-Isource/arch/i386/kernel
+-Isource/filesystem
+-Isource/memory
+-Isource/libc
+-Isource/libcpp
+-Isource/processes
+-Isource/system

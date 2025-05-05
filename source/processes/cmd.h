@@ -5,9 +5,11 @@
 #include <filesystem.h>
 #include <string.h>
 
+#define MAX_CMD_ARGS 16
+#define MAX_CMD_LENGTH 128
+
 namespace CMD
 {
-
 	enum CDCommand
 	{
 		CD_UP,
@@ -17,10 +19,11 @@ namespace CMD
 
 	void init();
 	void processCmd(const char* cmd);
-	void parseCmdArgs(const char* cmd, char* args[], int32_t* argCount);
+	bool parseCmdArgs(const char* cmd, char* args[], int32_t* argCount);
 	bool isValidExecutable(const char* exe);
 
 	char* getCwd(bool relative);
+	bool  isRootDir(const char* path);
 
 	void exit();
 	void help();
@@ -28,5 +31,5 @@ namespace CMD
 	void cat(const char* path);
 	void pwd();
 	void cd(const char* path);
-	void ls(const char* path);
+	void ls(int32_t fd);
 } // namespace CMD
