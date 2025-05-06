@@ -115,6 +115,7 @@ public:
 	int32_t open(const char* filename) override;
 	size_t	read(int32_t fd, void* buffer, size_t size) override;
 	void	close(int32_t fd) override;
+	size_t	write(int32_t fd, const void* buffer, size_t size) override;
 
 	void getFilesInDirectory(int32_t fd, FileArray* files) override;
 	void getFilesInDirectoryFromName(const char* filename, FileArray* files) override;

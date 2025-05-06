@@ -29,6 +29,7 @@ public:
 	virtual int32_t open(const char* filename) = 0;
 	virtual size_t	read(int32_t fd, void* buffer, size_t size) = 0;
 	virtual void	close(int32_t fd) = 0;
+	virtual size_t	write(int32_t fd, const void* buffer, size_t size) = 0;
 
 	virtual void getFilesInDirectory(int32_t fd, FileArray* files) = 0;
 	virtual void getFilesInDirectoryFromName(const char* filename, FileArray* files) = 0;

@@ -252,7 +252,7 @@ bool ATADevice::accessSectors(uint32_t sector, uint32_t count, bool read, void* 
 		{
 			waitBusy();
 			// Read 256 words
-			for (uint32_t j = 0; j < 256; j++)
+			for (uint32_t j = 0; j < ATA_WORDS_PER_SECTOR; j++)
 			{
 				*ptr++ = inw(ports.data);
 			}
@@ -266,7 +266,7 @@ bool ATADevice::accessSectors(uint32_t sector, uint32_t count, bool read, void* 
 		{
 			waitBusy();
 			// Write 256 words
-			for (uint32_t j = 0; j < 256; j++)
+			for (uint32_t j = 0; j < ATA_WORDS_PER_SECTOR; j++)
 			{
 				outw(ports.data, *ptr++);
 			}

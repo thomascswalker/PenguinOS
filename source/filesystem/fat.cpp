@@ -198,6 +198,14 @@ void FAT32FileSystem::close(int32_t fd)
 	}
 }
 
+// FAT32 implementation of syscall `write`.
+size_t FAT32FileSystem::write(int32_t fd, const void* buffer, size_t size)
+{
+	debug("FAT32FileSystem::write(): FD %d, size %d, buffer %x", fd, size, buffer);
+	m_device->writeSector(fd, (void*)buffer);
+	return size_t();
+}
+
 /*
 Retrieves a list of files and directories within a specified
 cluster in a FAT32 file system. It reads the cluster's sectors,
