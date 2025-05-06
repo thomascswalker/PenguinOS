@@ -2,7 +2,7 @@
 
 Developed in C++ and NASM-style Assembly.
 
-![Example Image](images/example.png)
+![Example Image](images/example.gif)
 
 ## Requirements
 
