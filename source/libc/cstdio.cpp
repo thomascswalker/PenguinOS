@@ -339,6 +339,12 @@ void fclose(File* stream)
 
 void fstat(int32_t fd, FileStat* buffer) { stat(fd, (void*)buffer); }
 
+size_t fwrite(int32_t fd, const void* buffer, size_t size)
+{
+	asm("int $0x80" ::"a"(SYSCALL_WRITE), "b"(fd), "c"((int32_t)buffer), "d"(size));
+	return 0;
+}
+
 Array<File*> readdir(int32_t fd)
 {
 	Array<File*> files;

@@ -5,17 +5,16 @@ Main entry point into PenguinOS.
 #include <cmd.h>
 #include <crt.h>
 #include <elf.h>
-#include <filesystem.h>
 #include <gdt.h>
 #include <keyboard.h>
-#include <list.h>
 #include <memory.h>
 #include <multiboot.h>
 #include <pit.h>
 #include <scheduler.h>
 #include <shell.h>
+#include <fat.h>
 
-EXTERN void kmain(MultibootInfo* info, uint32_t magic)
+EXTERN [[noreturn]] void kmain(MultibootInfo* info, const uint32_t magic)
 {
 	Shell::init();
 	if (magic != MULTIBOOT_BOOTLOADER_MAGIC)
@@ -45,7 +44,7 @@ EXTERN void kmain(MultibootInfo* info, uint32_t magic)
 	FAT32FileSystem fs;
 	setVirtualFileSystem(&fs);
 
-	while (1)
+	while (true)
 	{
 	}
 }

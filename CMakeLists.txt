@@ -1,0 +1,70 @@
+cmake_minimum_required(VERSION 3.31)
+project(PengOS)
+
+set(CMAKE_CXX_STANDARD 14)
+
+include_directories(source/arch/i386/boot)
+include_directories(source/arch/i386/kernel)
+include_directories(source/filesystem)
+include_directories(source/libc)
+include_directories(source/libcpp)
+include_directories(source/memory)
+include_directories(source/processes)
+include_directories(source/system)
+
+add_executable(PengOS
+        source/arch/i386/boot/crt.h
+        source/arch/i386/boot/main.cpp
+        source/arch/i386/boot/multiboot.h
+        source/arch/i386/kernel/gdt.cpp
+        source/arch/i386/kernel/gdt.h
+        source/arch/i386/kernel/ide.cpp
+        source/arch/i386/kernel/ide.h
+        source/arch/i386/kernel/idt.cpp
+        source/arch/i386/kernel/idt.h
+        source/arch/i386/kernel/keyboard.cpp
+        source/arch/i386/kernel/keyboard.h
+        source/arch/i386/kernel/pic.cpp
+        source/arch/i386/kernel/pic.h
+        source/arch/i386/kernel/pit.cpp
+        source/arch/i386/kernel/pit.h
+        source/arch/i386/kernel/shell.cpp
+        source/arch/i386/kernel/shell.h
+        source/arch/i386/kernel/sys.h
+        source/arch/i386/kernel/syscall.cpp
+        source/arch/i386/kernel/syscall.h
+        source/filesystem/fat.cpp
+        source/filesystem/fat.h
+        source/filesystem/vfs.cpp
+        source/filesystem/vfs.h
+        source/libc/cstdio.cpp
+        source/libc/cstdio.h
+        source/libc/cstdlib.cpp
+        source/libc/cstdlib.h
+        source/libc/cstring.cpp
+        source/libc/cstring.h
+        source/libc/ctype.h
+        source/libcpp/allocator.h
+        source/libcpp/array.h
+        source/libcpp/assert.h
+        source/libcpp/bitarray.h
+        source/libcpp/bitmask.h
+        source/libcpp/compare.h
+        source/libcpp/functional.h
+        source/libcpp/initializerlist.h
+        source/libcpp/iterator.h
+        source/libcpp/list.h
+        source/libcpp/map.h
+        source/libcpp/math.h
+        source/libcpp/pair.h
+        source/libcpp/pointers.h
+        source/libcpp/queue.h
+        source/libcpp/string.h
+        source/memory/memory.cpp
+        source/memory/memory.h
+        source/processes/cmd.cpp
+        source/processes/cmd.h
+        source/processes/elf.cpp
+        source/processes/elf.h
+        source/system/scheduler.cpp
+        source/system/scheduler.h)

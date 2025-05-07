@@ -2,9 +2,6 @@
 
 #pragma once
 
-#include <bitmask.h>
-#include <cstring.h>
-#include <string.h>
 #include <sys.h>
 
 #define ATA_PRIMARY 0x00
@@ -16,6 +13,8 @@
 #define ATA_CMD_READ 0x20
 #define ATA_CMD_WRITE 0x30
 #define ATA_CMD_IDENTIFY 0xEC
+
+#define ATA_WORDS_PER_SECTOR 256
 
 // https://wiki.osdev.org/ATA_Command_Matrix
 // https://people.freebsd.org/~imp/asiabsdcon2015/works/d2161r5-ATAATAPI_Command_Set_-_3.pdf

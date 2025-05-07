@@ -1,12 +1,10 @@
 #pragma once
 
-#include <array.h>
-#include <fat.h>
-#include <filesystem.h>
-#include <string.h>
+#include <stdint.h>
 
 #define MAX_CMD_ARGS 16
-#define MAX_CMD_LENGTH 128
+#define MAX_FILENAME_LENGTH 128
+#define MAX_FILE_DEPTH 32
 
 namespace CMD
 {
@@ -21,9 +19,7 @@ namespace CMD
 	void processCmd(const char* cmd);
 	bool parseCmdArgs(const char* cmd, char* args[], int32_t* argCount);
 	bool isValidExecutable(const char* exe);
-
-	char* getCwd(bool relative);
-	bool  isRootDir(const char* path);
+	bool isRootDir(const char* path);
 
 	void exit();
 	void help();

@@ -1,6 +1,5 @@
 #pragma once
 
-#include <stddef.h>
 #include <stdint.h>
 
 #define VIRTUAL_START 0xC0000000
@@ -70,7 +69,7 @@ namespace Memory
 	uint32_t* getTableFromIndex(uint32_t index);
 
 	void enablePaging();
-	void setPageDirectory(uint32_t* directory);
+	void setPageDirectory(const uint32_t* directory);
 	void setLargePaging(bool state);
 
 	void dumpPageTable();

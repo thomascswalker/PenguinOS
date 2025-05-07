@@ -60,3 +60,5 @@ image.img
 disk.img
 disk.img
 base/bin/*
+/.idea
+/cmake-build-debug/

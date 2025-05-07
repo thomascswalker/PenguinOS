@@ -2,7 +2,6 @@
 
 #include <cstdlib.h>
 #include <stddef.h>
-#include <stdint.h>
 
 // A simple allocator that uses malloc and free
 template <typename T>

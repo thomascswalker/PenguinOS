@@ -1,9 +1,5 @@
 #pragma once
 
-#include <array.h>
-#include <cstdlib.h>
-#include <cstring.h>
-#include <gdt.h>
 #include <idt.h>
 
 #define STACK_SIZE 0x400

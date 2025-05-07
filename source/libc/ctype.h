@@ -1,6 +1,6 @@
 #pragma once
 
-#include <stddef.h>
+#include <cstddef>
 #include <stdint.h>
 
 #define EXTERN extern "C"
@@ -17,14 +17,8 @@ struct File
 
 	~File()
 	{
-		if (buffer)
-		{
-			delete[] buffer;
-		}
-		if (name)
-		{
-			delete[] name;
-		}
+		delete[] buffer;
+		delete[] name;
 	}
 
 	bool isValid() const { return fd > 0; }
@@ -35,18 +29,18 @@ struct FileStat
 	size_t size; // Size of the file
 };
 
-static bool isascii(unsigned char c) { return c <= 127; }
-static bool isintegral(unsigned char c) { return ((c >= 48) && (c <= 57)); }
-static bool isalpha(unsigned char c) { return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z'); }
-static bool isdigit(unsigned char c) { return (c >= '0' && c <= '9'); }
-static bool isalnum(unsigned char c) { return (isalpha(c) || isdigit(c)); }
-static bool islower(unsigned char c) { return (c >= 'a' && c <= 'z'); }
-static bool isupper(unsigned char c) { return (c >= 'A' && c <= 'Z'); }
+static bool isascii(const uint8_t c) { return c <= 127; }
+static bool isintegral(const uint8_t c) { return ((c >= 48) && (c <= 57)); }
+static bool isalpha(const uint8_t c) { return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z'); }
+static bool isdigit(const uint8_t c) { return (c >= '0' && c <= '9'); }
+static bool isalnum(const uint8_t c) { return (isalpha(c) || isdigit(c)); }
+static bool islower(const uint8_t c) { return (c >= 'a' && c <= 'z'); }
+static bool isupper(const uint8_t c) { return (c >= 'A' && c <= 'Z'); }
 
-static void wctoc(wchar_t* in, char* out, uint32_t count)
+static void wctoc(const wchar_t* in, char* out, const uint32_t count)
 {
 	for (uint32_t i = 0; i < count; i++)
 	{
-		out[i] = (char)in[i];
+		out[i] = static_cast<char>(in[i]);
 	}
 }

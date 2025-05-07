@@ -1,7 +1,5 @@
 #include <cstdio.h>
-#include <idt.h>
 #include <memory.h>
-#include <pic.h>
 #include <pit.h>
 #include <syscall.h>
 #include <vfs.h>
@@ -128,7 +126,15 @@ int32_t sysReadDir(CPUState* regs)
 	return 0;
 }
 
-int32_t sysWrite(CPUState* regs) { return 0; }
+int32_t sysWrite(CPUState* regs)
+{
+	int32_t fd = regs->ebx;
+	void*	buffer = (void*)regs->ecx;
+	size_t	size = regs->edx;
+	auto	vfs = getVirtualFileSystem();
+	vfs->write(fd, buffer, size);
+	return 0;
+}
 int32_t sysFstat(CPUState* regs)
 {
 	int32_t	  fd = regs->ebx;

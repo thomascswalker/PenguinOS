@@ -4,11 +4,8 @@
 
 #include <array.h>
 #include <bitmask.h>
-#include <cstring.h>
-#include <ide.h>
 #include <pair.h>
 #include <string.h>
-#include <sys.h>
 #include <vfs.h>
 
 // Maximum number of characters in a file name
@@ -115,6 +112,7 @@ public:
 	int32_t open(const char* filename) override;
 	size_t	read(int32_t fd, void* buffer, size_t size) override;
 	void	close(int32_t fd) override;
+	size_t	write(int32_t fd, const void* buffer, size_t size) override;
 
 	void getFilesInDirectory(int32_t fd, FileArray* files) override;
 	void getFilesInDirectoryFromName(const char* filename, FileArray* files) override;
@@ -125,19 +123,19 @@ public:
 	const char*	   getTypeName() const override { return "FAT32"; };
 
 	bool	 getEntryFromPath(const char* filename, FAT32::ShortEntry* entry);
-	uint32_t getNextCluster(uint32_t n);
-	uint32_t getClusterSector(uint32_t n);
-	uint32_t getClusterCount();
-	uint32_t getSize();
+	uint32_t getNextCluster(uint32_t n) const;
+	uint32_t getClusterSector(uint32_t n) const;
+	uint32_t getClusterCount() const;
+	uint32_t getSize() const;
 
-	bool findEntry(uint32_t startCluster, const char*, FAT32::ShortEntry* entry);
-	bool readDirectory(const FAT32::ShortEntry& entry, Array<FAT32::ShortEntry>& entries);
+	bool findEntry(uint32_t startCluster, const char*, FAT32::ShortEntry* entry) const;
+	bool readDirectory(const FAT32::ShortEntry& entry, Array<FAT32::ShortEntry>& entries) const;
 
-	char* toShortName(const char* longName);
-	char* sanitize(const char* component, size_t count);
-	bool  isValidChar(char c);
-	bool  isLongEntry(uint8_t* buffer);
+	static char* toShortName(const char* longName);
+	static char* sanitize(const char* component, size_t count);
+	static bool	 isValidChar(char c);
+	static bool	 isLongEntry(const uint8_t* buffer);
 
-	char* parseLongEntryName(FAT32::LongEntry* entry, uint32_t count);
-	char* parseShortEntryName(FAT32::ShortEntry* entry);
+	static char* parseLongEntryName(FAT32::LongEntry* entry, uint32_t count);
+	static char* parseShortEntryName(FAT32::ShortEntry* entry);
 };

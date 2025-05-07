@@ -3,13 +3,9 @@
 #include <cstdio.h>
 #include <cstring.h>
 #include <fat.h>
-#include <filesystem.h>
 #include <ide.h>
 #include <idt.h>
-#include <math.h>
-#include <memory.h>
 #include <pic.h>
-#include <scheduler.h>
 
 ATADevice  g_devices[4];
 ATADevice* g_currentDevice;
@@ -20,7 +16,7 @@ void IDE::init()
 {
 	g_devices[0].init(true, true);
 	g_currentDevice = &g_devices[0];
-	IDT::registerInterruptHandler(IRQ14, IDE::callback);
+	IDT::registerInterruptHandler(IRQ14, callback);
 }
 
 void IDE::callback(CPUState* regs) { PIC::sendEOI(regs->intNo); }
@@ -252,7 +248,7 @@ bool ATADevice::accessSectors(uint32_t sector, uint32_t count, bool read, void* 
 		{
 			waitBusy();
 			// Read 256 words
-			for (uint32_t j = 0; j < 256; j++)
+			for (uint32_t j = 0; j < ATA_WORDS_PER_SECTOR; j++)
 			{
 				*ptr++ = inw(ports.data);
 			}
@@ -266,7 +262,7 @@ bool ATADevice::accessSectors(uint32_t sector, uint32_t count, bool read, void* 
 		{
 			waitBusy();
 			// Write 256 words
-			for (uint32_t j = 0; j < 256; j++)
+			for (uint32_t j = 0; j < ATA_WORDS_PER_SECTOR; j++)
 			{
 				outw(ports.data, *ptr++);
 			}

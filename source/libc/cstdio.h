@@ -1,8 +1,6 @@
 #pragma once
 
 #include <array.h>
-#include <cstdlib.h>
-#include <pointers.h>
 #include <stdarg.h>
 
 // Printing
@@ -41,4 +39,5 @@ File*		 fopen(const char* filename);
 size_t		 fread(File* stream, void* buffer, size_t size);
 void		 fclose(File* stream);
 void		 fstat(int32_t fd, FileStat* buffer);
+size_t		 fwrite(int32_t fd, const void* buffer, size_t size);
 Array<File*> readdir(int32_t fd);
