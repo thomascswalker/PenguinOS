@@ -1,7 +1,5 @@
 #include <cstdio.h>
-#include <list.h>
 #include <memory.h>
-#include <pic.h>
 #include <scheduler.h>
 
 using namespace Scheduler;

@@ -2,9 +2,6 @@
 
 #pragma once
 
-#include <bitmask.h>
-#include <cstring.h>
-#include <string.h>
 #include <sys.h>
 
 #define ATA_PRIMARY 0x00

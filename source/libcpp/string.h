@@ -1,9 +1,7 @@
 #pragma once
 
 #include <array.h>
-#include <assert.h>
 #include <cstring.h>
-#include <math.h>
 #include <memory.h>
 
 template <typename T>

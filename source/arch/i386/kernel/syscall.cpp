@@ -1,7 +1,5 @@
 #include <cstdio.h>
-#include <idt.h>
 #include <memory.h>
-#include <pic.h>
 #include <pit.h>
 #include <syscall.h>
 #include <vfs.h>

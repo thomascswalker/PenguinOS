@@ -1,5 +1,4 @@
 #include <elf.h>
-#include <cstdio.h>
 
 using namespace ELF;
 //

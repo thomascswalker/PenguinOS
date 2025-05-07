@@ -1,7 +1,7 @@
 #include <cmd.h>
-#include <cstdio.h>
 #include <shell.h>
 #include <string.h>
+#include <sys.h>
 
 static uint16_t* g_displayBuffer;
 static uint16_t* g_inputBuffer;

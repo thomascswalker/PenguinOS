@@ -2,6 +2,7 @@
 #include <cstdio.h>
 #include <cstring.h>
 #include <fat.h>
+#include <math.h>
 
 using namespace FAT32;
 

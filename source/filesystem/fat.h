@@ -4,11 +4,8 @@
 
 #include <array.h>
 #include <bitmask.h>
-#include <cstring.h>
-#include <ide.h>
 #include <pair.h>
 #include <string.h>
-#include <sys.h>
 #include <vfs.h>
 
 // Maximum number of characters in a file name

@@ -1,7 +1,5 @@
 #pragma once
 
-#include <memory.h>
-
 template <typename T>
 class ListNode;
 template <typename T>

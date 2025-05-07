@@ -1,8 +1,6 @@
 #pragma once
 
 #include <array.h>
-#include <cstdlib.h>
-#include <pointers.h>
 #include <stdarg.h>
 
 // Printing
