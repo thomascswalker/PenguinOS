@@ -22,17 +22,17 @@ static const char* g_commands[] = {
 };
 
 // Current working directory
-static char	   g_cwd[MAX_CMD_LENGTH];
+static char	   g_cwd[MAX_FILENAME_LENGTH];
 static int32_t g_cwd_fd;
 
 void CMD::init()
 {
-	// Default to "//0"
-	memset(g_cwd, 0, MAX_CMD_LENGTH);
+	// Default to "/" ([ '/' , '\0' ])
+	memset(g_cwd, 0, MAX_FILENAME_LENGTH);
 	g_cwd[0] = '/';
-	g_cwd[MAX_CMD_LENGTH - 1] = '\0';
 
-	g_cwd_fd = 3; // 3 == root directory
+	// 3 == root directory
+	g_cwd_fd = 3;
 }
 
 void CMD::processCmd(const char* cmd)
@@ -141,11 +141,6 @@ bool CMD::parseCmdArgs(const char* cmd, char* args[], int32_t* argCount)
 		{
 			const size_t length = end - start;
 			args[argIndex] = static_cast<char*>(malloc(length + 1));
-			if (!args[argIndex])
-			{
-				free(args[argIndex]);
-				return false;
-			}
 			strcpy(args[argIndex], start);
 			args[argIndex][length] = '\0'; // Null-terminate the string
 			argIndex++;
@@ -174,31 +169,6 @@ bool CMD::isValidExecutable(const char* exe)
 	return false;
 }
 
-char* CMD::getCwd(const bool relative)
-{
-	const auto cwd = (char*)malloc(MAX_CMD_LENGTH);
-	memset(cwd, 0, MAX_CMD_LENGTH);
-	if (!relative)
-	{
-		const auto last = strrchr(g_cwd, '/');
-		const auto remaining = strlen(last);
-		if (remaining > 0)
-		{
-			strncpy(cwd, last + 1, remaining);
-			cwd[remaining] = '\0'; // Null-terminate the string
-		}
-		else
-		{
-			strcpy(cwd, g_cwd); // Copy the entire path if no '/' is found
-		}
-	}
-	else
-	{
-		strcpy(cwd, g_cwd); // Copy the entire path if no '/' is found
-	}
-	return cwd;
-}
-
 bool CMD::isRootDir(const char* path) { return strcmp("/", path); }
 
 void CMD::exit() { sysexit(); }
@@ -218,7 +188,7 @@ void CMD::clear() { Shell::clearDisplay(); }
 
 void CMD::cat(const char* path) { warning("cat: Not implemented yet."); }
 
-void CMD::pwd() { printf("pwd: %s\n", getCwd(true)); }
+void CMD::pwd() { printf("pwd: %s (%d)\n", g_cwd, g_cwd_fd); }
 
 void CMD::cd(const char* path)
 {
@@ -242,9 +212,12 @@ void CMD::cd(const char* path)
 		command = CD_DOWN;
 	}
 
-	// TODO: This currently only searches for directories in
-	// the current working directory. It should be updated
-	// to search for directories in the specified path.
+	/**
+	 * TODO: This currently only searches for directories in
+	 * the current working directory. It should be updated
+	 * to search for directories in the specified path (relative
+	 * or absolute).
+	*/
 	Array<File*> files = readdir(g_cwd_fd);
 	if (files.empty())
 	{
@@ -254,14 +227,11 @@ void CMD::cd(const char* path)
 
 	for (const auto file : files)
 	{
-		// debug("cd: path: %s, %x", path, path);
-		// debug("cd: file: %s, %d | %x", file->name, file->fd, file->name);
 		if (!file->isDirectory)
 		{
 			continue; // Skip non-directory files
 		}
 
-		// debug("cd: comparing '%s' with '%s'", path, file->name);
 		if (!strncmp(path, file->name, strlen(path)))
 		{
 			continue;
@@ -271,30 +241,36 @@ void CMD::cd(const char* path)
 		{
 			case CD_UP:
 				{
-					if (strcmp(g_cwd, "/"))
+					if (isRootDir(g_cwd))
 					{
 						warning("cd: Cannot go up from root directory");
 						return;
 					}
 
-					// Find the last '/' in the current working directory
-					// and remove everything after it
-					const auto last = strrchr(g_cwd, '/');
-					if (last)
+					char* index = strrchr(g_cwd, '/');
+					if (index - g_cwd > 0)
 					{
-						*(last + 1) = '\0'; // Remove the last part of the path
+						*index = '\0';
 					}
+					else
+					{
+						g_cwd[0] = '/';
+						g_cwd[1] = '\0';
+					}
+
 					g_cwd_fd = file->fd;
+					printf("cd: %s\n", g_cwd);
 					return;
 				}
 			case CD_DOWN:
 				{
-					if (!endswith(g_cwd, "/"))
+					if (!isRootDir(g_cwd))
 					{
 						strcat(g_cwd, "/");
 					}
 					strcat(g_cwd, file->name);
 					g_cwd_fd = file->fd;
+					printf("cd: %s\n", g_cwd);
 					return;
 				}
 			case CD_SAME:
@@ -317,6 +293,5 @@ void CMD::ls(const int32_t fd)
 		printf(" %s", file->name);
 		Shell::resetColor();
 	}
-
 	printf("\n");
 }
