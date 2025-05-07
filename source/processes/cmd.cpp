@@ -1,4 +1,5 @@
 #include <cmd.h>
+#include <cstdio.h>
 #include <shell.h>
 #include <sys.h>
 
@@ -19,7 +20,6 @@ static const char* g_commands[] = {
 	"pwd",
 	"ls",
 };
-static const size_t g_commandsCount = sizeof(g_commands) / sizeof(const char*);
 
 // Current working directory
 static char	   g_cwd[MAX_CMD_LENGTH];
@@ -41,7 +41,7 @@ void CMD::processCmd(const char* cmd)
 	printf(">>> %s\n", cmd);
 
 	// Extract all of the arguments from the command line string
-	char** args = (char**)malloc(MAX_CMD_ARGS); // 16 == maximum number of arguments
+	const auto args = (char**)malloc(MAX_CMD_ARGS); // 16 == maximum number of arguments
 	memset(args, 0, MAX_CMD_ARGS);
 	int32_t argCount = 0;
 	if (!parseCmdArgs(cmd, args, &argCount))
@@ -112,6 +112,11 @@ void CMD::processCmd(const char* cmd)
 
 bool CMD::parseCmdArgs(const char* cmd, char* args[], int32_t* argCount)
 {
+	if (!cmd || !args || !argCount)
+	{
+		return false;
+	}
+
 	size_t		argIndex = 0;
 	const char* start = cmd;
 	const char* end = cmd;
@@ -134,8 +139,13 @@ bool CMD::parseCmdArgs(const char* cmd, char* args[], int32_t* argCount)
 		// If we found a valid argument, add it to the array
 		if (start != end)
 		{
-			size_t length = end - start;
-			args[argIndex] = (char*)malloc(length + 1); // Allocate memory for the argument
+			const size_t length = end - start;
+			args[argIndex] = static_cast<char*>(malloc(length + 1));
+			if (!args[argIndex])
+			{
+				free(args[argIndex]);
+				return false;
+			}
 			strcpy(args[argIndex], start);
 			args[argIndex][length] = '\0'; // Null-terminate the string
 			argIndex++;
@@ -164,14 +174,14 @@ bool CMD::isValidExecutable(const char* exe)
 	return false;
 }
 
-char* CMD::getCwd(bool relative)
+char* CMD::getCwd(const bool relative)
 {
-	char* cwd = (char*)malloc(MAX_CMD_LENGTH);
+	const auto cwd = (char*)malloc(MAX_CMD_LENGTH);
 	memset(cwd, 0, MAX_CMD_LENGTH);
 	if (!relative)
 	{
-		auto last = strrchr(g_cwd, '/');
-		auto remaining = strlen(last);
+		const auto last = strrchr(g_cwd, '/');
+		const auto remaining = strlen(last);
 		if (remaining > 0)
 		{
 			strncpy(cwd, last + 1, remaining);
@@ -236,13 +246,13 @@ void CMD::cd(const char* path)
 	// the current working directory. It should be updated
 	// to search for directories in the specified path.
 	Array<File*> files = readdir(g_cwd_fd);
-	if (files.size() == 0)
+	if (files.empty())
 	{
 		warning("cd: No files found in directory '%s'", path);
 		return;
 	}
 
-	for (auto file : files)
+	for (const auto file : files)
 	{
 		// debug("cd: path: %s, %x", path, path);
 		// debug("cd: file: %s, %d | %x", file->name, file->fd, file->name);
@@ -269,7 +279,7 @@ void CMD::cd(const char* path)
 
 					// Find the last '/' in the current working directory
 					// and remove everything after it
-					auto last = strrchr(g_cwd, '/');
+					const auto last = strrchr(g_cwd, '/');
 					if (last)
 					{
 						*(last + 1) = '\0'; // Remove the last part of the path
@@ -291,20 +301,18 @@ void CMD::cd(const char* path)
 				{
 					return;
 				}
-			default:
-				break;
 		}
 	}
 
 	warning("cd: No dir found matching '%s'", path);
 }
 
-void CMD::ls(int32_t fd)
+void CMD::ls(const int32_t fd)
 {
 	Array<File*> files = readdir(fd);
 	for (const auto& file : files)
 	{
-		auto color = file->isDirectory ? VGA_COLOR_CYAN : VGA_COLOR_GREEN;
+		const auto color = file->isDirectory ? VGA_COLOR_CYAN : VGA_COLOR_GREEN;
 		Shell::setForeColor(color);
 		printf(" %s", file->name);
 		Shell::resetColor();

@@ -126,19 +126,19 @@ public:
 	const char*	   getTypeName() const override { return "FAT32"; };
 
 	bool	 getEntryFromPath(const char* filename, FAT32::ShortEntry* entry);
-	uint32_t getNextCluster(uint32_t n);
-	uint32_t getClusterSector(uint32_t n);
-	uint32_t getClusterCount();
-	uint32_t getSize();
+	uint32_t getNextCluster(uint32_t n) const;
+	uint32_t getClusterSector(uint32_t n) const;
+	uint32_t getClusterCount() const;
+	uint32_t getSize() const;
 
-	bool findEntry(uint32_t startCluster, const char*, FAT32::ShortEntry* entry);
-	bool readDirectory(const FAT32::ShortEntry& entry, Array<FAT32::ShortEntry>& entries);
+	bool findEntry(uint32_t startCluster, const char*, FAT32::ShortEntry* entry) const;
+	bool readDirectory(const FAT32::ShortEntry& entry, Array<FAT32::ShortEntry>& entries) const;
 
-	char* toShortName(const char* longName);
-	char* sanitize(const char* component, size_t count);
-	bool  isValidChar(char c);
-	bool  isLongEntry(uint8_t* buffer);
+	static char* toShortName(const char* longName);
+	static char* sanitize(const char* component, size_t count);
+	static bool	 isValidChar(char c);
+	static bool	 isLongEntry(const uint8_t* buffer);
 
-	char* parseLongEntryName(FAT32::LongEntry* entry, uint32_t count);
-	char* parseShortEntryName(FAT32::ShortEntry* entry);
+	static char* parseLongEntryName(FAT32::LongEntry* entry, uint32_t count);
+	static char* parseShortEntryName(FAT32::ShortEntry* entry);
 };

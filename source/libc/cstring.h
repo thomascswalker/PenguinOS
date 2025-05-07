@@ -1,7 +1,6 @@
 #pragma once
 
 #include <ctype.h>
-#include <stdarg.h>
 
 void*	  memcpy(void* dest, void* source, size_t size);
 void*	  memset(void* dest, uint8_t value, int32_t size);

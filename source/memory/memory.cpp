@@ -51,7 +51,7 @@ static void*	memoryPool;
 
 // An array of bucket sizes corresponding to orders 0..NUM_BUCKETS-1.
 // Order 0: 32 bytes, order 1: 64 bytes, ..., order 7: 4096 bytes.
-static const size_t bucketSizes[BUCKET_COUNT] = {
+static constexpr size_t bucketSizes[BUCKET_COUNT] = {
 	1 << MIN_ORDER,		  // 32 bytes
 	1 << (MIN_ORDER + 1), // 64 bytes
 	1 << (MIN_ORDER + 2), // 128 bytes
@@ -130,11 +130,11 @@ void Memory::init(uint32_t start, uint32_t size)
 	for (uint32_t order = BUCKET_COUNT - 1; order > 0; order--)
 	{
 		// Create blocks of the current order until we run out of memory.
-		size_t blockSize = bucketSizes[order];
+		const size_t blockSize = bucketSizes[order];
 		while (offset + blockSize < memorySize)
 		{
 			// Create a new block and add it to the free list.
-			Block* block = (Block*)((uint8_t*)memoryPool + offset);
+			const auto block = (Block*)((uint8_t*)memoryPool + offset);
 			block->order = order;
 			block->isFree = true;
 			block->next = nullptr;
@@ -206,7 +206,7 @@ void Memory::enablePaging()
  * Sets the page directory by writing the address of the
  * page directory to the CR3 register.
  */
-void Memory::setPageDirectory(uint32_t* directory)
+void Memory::setPageDirectory(const uint32_t* directory)
 {
 	asm("mov %0, %%cr3" ::"r"((uintptr_t)directory));
 }
@@ -353,7 +353,7 @@ void* Memory::kmalloc(size_t size)
 		buddy->isFree = true;
 		buddy->next = nullptr;
 
-		Memory::addBlock(buddy);
+		addBlock(buddy);
 
 		block->order = currentOrder;
 	}
@@ -396,7 +396,7 @@ void Memory::kfree(void* ptr)
 		size_t blockSize = bucketSizes[order];
 
 		// Calculate the buddy's offset.
-		uintptr_t buddyOffset = blockOffset ^ blockSize;
+		const uintptr_t buddyOffset = blockOffset ^ blockSize;
 		if (buddyOffset + blockSize > memorySize)
 		{
 			break; // Buddy is out of bounds
@@ -404,14 +404,14 @@ void Memory::kfree(void* ptr)
 
 		// Get the buddy block and check if it's free and
 		// of the same order.
-		Block* buddy = (Block*)((char*)memoryPool + buddyOffset);
+		const auto buddy = (Block*)((char*)memoryPool + buddyOffset);
 		if (!buddy->isFree || buddy->order != order)
 		{
 			break; // Cannot merge
 		}
 
 		// Remove the buddy from the free list.
-		Memory::removeBlock(buddy, order);
+		removeBlock(buddy, order);
 
 		// Merge the blocks by taking the lower address block.
 		// This ensures that we always merge in the same direction.
@@ -428,7 +428,7 @@ void Memory::kfree(void* ptr)
 	}
 
 	// Add the block back to the free list.
-	Memory::addBlock(block);
+	addBlock(block);
 }
 
 /**
@@ -459,11 +459,11 @@ void* Memory::krealloc(void* ptr, size_t newSize)
 	}
 
 	// Get the block header from the pointer.
-	Block* header = (Block*)((char*)ptr - sizeof(Block));
+	const auto header = (Block*)((char*)ptr - sizeof(Block));
 
 	// Get the current size of the block.
-	size_t currentTotalSize = bucketSizes[header->order];
-	size_t currentDataSize = currentTotalSize - sizeof(Block);
+	const size_t currentTotalSize = bucketSizes[header->order];
+	const size_t currentDataSize = currentTotalSize - sizeof(Block);
 
 	// New size is smaller than currently-allocated size,
 	// we can just return the existing pointer.

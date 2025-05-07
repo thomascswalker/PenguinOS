@@ -2,8 +2,8 @@
 
 #include <array.h>
 #include <ide.h>
-#include <pointers.h>
-#include <string.h>
+
+#define MAX_FILENAME 256
 
 /**
  * Represents the types of file systems supported.
@@ -17,10 +17,9 @@ enum class FileSystemType
 
 class VirtualFileSystem
 {
-
 protected:
 	using FileArray = Array<File*>;
-	ATADevice* m_device;
+	ATADevice* m_device = nullptr;
 
 public:
 	VirtualFileSystem() = default;

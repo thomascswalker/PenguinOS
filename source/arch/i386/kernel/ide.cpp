@@ -3,13 +3,9 @@
 #include <cstdio.h>
 #include <cstring.h>
 #include <fat.h>
-#include <filesystem.h>
 #include <ide.h>
 #include <idt.h>
-#include <math.h>
-#include <memory.h>
 #include <pic.h>
-#include <scheduler.h>
 
 ATADevice  g_devices[4];
 ATADevice* g_currentDevice;
@@ -20,7 +16,7 @@ void IDE::init()
 {
 	g_devices[0].init(true, true);
 	g_currentDevice = &g_devices[0];
-	IDT::registerInterruptHandler(IRQ14, IDE::callback);
+	IDT::registerInterruptHandler(IRQ14, callback);
 }
 
 void IDE::callback(CPUState* regs) { PIC::sendEOI(regs->intNo); }

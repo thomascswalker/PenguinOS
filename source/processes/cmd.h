@@ -1,12 +1,10 @@
 #pragma once
 
-#include <array.h>
-#include <fat.h>
-#include <filesystem.h>
-#include <string.h>
+#include <stdint.h>
 
 #define MAX_CMD_ARGS 16
 #define MAX_CMD_LENGTH 128
+#define MAX_FILE_DEPTH 32
 
 namespace CMD
 {

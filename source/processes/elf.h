@@ -1,6 +1,5 @@
 #pragma once
 
-#include <filesystem.h>
 #include <stdint.h>
 
 #define EI_MAG0 0
@@ -72,21 +71,21 @@ namespace ELF
 
 		void dump(const char* inName, int index) const;
 	};
-
+	//
 	class ELFFile
 	{
-		File*				 m_file;
-		FileHeader			 m_header;
-		Array<ProgramHeader> m_programHeaders;
-		Array<SectionHeader> m_sectionHeaders;
-		Array<String>		 m_sectionNames;
-
-	public:
-		ELFFile(const char* path);
-		~ELFFile() {}
-		void parseHeaders();
-		void dumpHeaders() const;
-		bool isValid() const { return m_file != nullptr; }
+	// 	File*				 m_file;
+	// 	FileHeader			 m_header;
+	// 	Array<ProgramHeader> m_programHeaders;
+	// 	Array<SectionHeader> m_sectionHeaders;
+	// 	Array<String>		 m_sectionNames;
+	//
+	// public:
+	// 	ELFFile(const char* path);
+	// 	~ELFFile() {}
+	// 	void parseHeaders();
+	// 	void dumpHeaders() const;
+	// 	bool isValid() const { return m_file != nullptr; }
 	};
 
 } // namespace ELF
