@@ -171,7 +171,7 @@ int32_t FAT32FileSystem::open(const char* filename)
 }
 
 // FAT32 implementation of syscall `read`.
-size_t FAT32FileSystem::read(const int32_t fd, void* buffer, size_t size)
+size_t FAT32FileSystem::read(const int32_t fd, void* buffer, const size_t size)
 {
 	const uint32_t sector = getClusterSector(fd);
 	if (m_device->readSector(sector, buffer))
@@ -195,7 +195,7 @@ void FAT32FileSystem::close(const int32_t fd)
 }
 
 // FAT32 implementation of syscall `write`.
-size_t FAT32FileSystem::write(const int32_t fd, const void* buffer, size_t size)
+size_t FAT32FileSystem::write(const int32_t fd, const void* buffer, const size_t size)
 {
 	debug("FAT32FileSystem::write(): FD %d, size %d, buffer %x", fd, size, buffer);
 	m_device->writeSector(fd, (void*)buffer);
@@ -340,10 +340,8 @@ char* FAT32FileSystem::toShortName(const char* longName)
 	int32_t dot = strchri(longName, '.');
 
 	// Extension
-	// '.profile'
 	if (dot == 0)
 	{
-		size--; // TODO: Maybe remove?
 		dot = 9;
 	}
 	// 'file.txt'
@@ -368,7 +366,10 @@ char* FAT32FileSystem::toShortName(const char* longName)
 		{
 			result[i] = toupper(longName[i]);
 		}
+		// TODO: At some point actually work out multiple short names with
+		// the same basename.
 		result[6] = '~';
+		// Assume only one file with this name.
 		result[7] = '1';
 	}
 	else
@@ -411,7 +412,7 @@ char* FAT32FileSystem::sanitize(const char* component, const size_t count)
 
 // Checks if the given char `c` is a valid FAT short name
 // character.
-bool FAT32FileSystem::isValidChar(char c)
+bool FAT32FileSystem::isValidChar(const char c)
 {
 	// If the char is alpha-numeric (i.e. a-z || A-Z || 0-9)
 	if (isalnum(c))
@@ -558,16 +559,16 @@ char* FAT32FileSystem::parseShortEntryName(ShortEntry* entry)
 		filename[1] = '\0';
 		return filename;
 	}
-	else if (entry->isDirectory() && strncmp("..      ", (const char*)entry->name, 8))
+	if (entry->isDirectory() && strncmp("..      ", (const char*)entry->name, 8))
 	{
-		char* filename = new char[3];
+		const auto filename = new char[3];
 		filename[0] = '.';
 		filename[1] = '.';
 		filename[2] = '\0';
 		return filename;
 	}
 
-	char* filename = new char[12];
+	const auto filename = new char[12];
 	memset(filename, 0, 12);
 
 	// Design curtosy of CactusOS
@@ -582,7 +583,7 @@ char* FAT32FileSystem::parseShortEntryName(ShortEntry* entry)
 	{
 		filename[mainEnd] = '.';
 	}
-	memcpy(filename + mainEnd + 1, (void*)(entry->name + 8), extEnd);
+	memcpy(filename + mainEnd + 1, entry->name + 8, extEnd);
 
 	// Convert all chars to lowercase
 	for (size_t i = 0; i < strlen(filename); i++)
@@ -619,7 +620,7 @@ bool FAT32FileSystem::readDirectory(const ShortEntry& entry, Array<ShortEntry>& 
 		for (uint8_t sector = 0; sector < m_device->bootSector.sectorsPerCluster; sector++)
 		{
 			if (!m_device->readSector(
-					firstSector + sector, buffer + (sector * m_device->bootSector.bytesPerSector)))
+					firstSector + sector, buffer + sector * m_device->bootSector.bytesPerSector))
 			{
 				warning("Unable to read sector %d", firstSector + sector);
 				return false;
@@ -628,9 +629,8 @@ bool FAT32FileSystem::readDirectory(const ShortEntry& entry, Array<ShortEntry>& 
 
 		// Compute the number of entries we will look through
 		// in this cluster.
-		const uint32_t entriesPerCluster =
-			(m_device->bootSector.sectorsPerCluster * m_device->bootSector.bytesPerSector)
-			/ sizeof(ShortEntry);
+		const uint32_t entriesPerCluster = m_device->bootSector.sectorsPerCluster
+			* m_device->bootSector.bytesPerSector / sizeof(ShortEntry);
 
 		// Cast the raw buffer we read above to a short entry
 		// array we can iterate through.
