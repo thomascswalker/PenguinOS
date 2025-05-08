@@ -220,7 +220,7 @@ void Shell::input(char c)
 				}
 				g_commandBuffer[g_inputCursor] = '\0';
 
-				CMD::processCmd(g_commandBuffer);
+				CMD::run(g_commandBuffer);
 				memset(g_commandBuffer, 0, size);
 				clearInput();
 				return;
