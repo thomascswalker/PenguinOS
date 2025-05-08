@@ -11,6 +11,7 @@
 		return;                                                                                    \
 	}
 
+// List of commands available to the user
 static const char* g_commands[] = {
 	"exit",
 	"help",
@@ -22,8 +23,9 @@ static const char* g_commands[] = {
 };
 
 // Current working directory
-static char	   g_cwd[MAX_FILENAME_LENGTH];
-static int32_t g_cwd_fd;
+static char g_cwd[MAX_FILENAME_LENGTH];
+// Current file descriptor
+static int32_t g_cfd;
 
 void CMD::init()
 {
@@ -32,10 +34,10 @@ void CMD::init()
 	g_cwd[0] = '/';
 
 	// 3 == root directory
-	g_cwd_fd = 3;
+	g_cfd = 3;
 }
 
-void CMD::processCmd(const char* cmd)
+void CMD::run(const char* cmd)
 {
 	// Print the entire command to the terminal
 	printf(">>> %s\n", cmd);
@@ -99,7 +101,7 @@ void CMD::processCmd(const char* cmd)
 	else if (strcmp(exe, "ls"))
 	{
 		// CHECK_ARGS("ls", 1, 2);
-		ls(g_cwd_fd);
+		ls(g_cfd);
 	}
 
 	// Free all arguments
@@ -188,7 +190,7 @@ void CMD::clear() { Shell::clearDisplay(); }
 
 void CMD::cat(const char* path) { warning("cat: Not implemented yet."); }
 
-void CMD::pwd() { printf("pwd: %s (%d)\n", g_cwd, g_cwd_fd); }
+void CMD::pwd() { printf("pwd: %s (%d)\n", g_cwd, g_cfd); }
 
 void CMD::cd(const char* path)
 {
@@ -217,69 +219,86 @@ void CMD::cd(const char* path)
 	 * the current working directory. It should be updated
 	 * to search for directories in the specified path (relative
 	 * or absolute).
-	*/
-	Array<File*> files = readdir(g_cwd_fd);
+	 */
+	Array<File*> files = readdir(g_cfd);
 	if (files.empty())
 	{
 		warning("cd: No files found in directory '%s'", path);
 		return;
 	}
 
-	for (const auto file : files)
+	for (const File* file : files)
 	{
+		// Skip non-directory files.
 		if (!file->isDirectory)
 		{
-			continue; // Skip non-directory files
+			continue;
 		}
 
-		if (!strncmp(path, file->name, strlen(path)))
+		// Exact name comparison.
+		if (!strcmp(path, file->name))
 		{
 			continue;
 		}
 
 		switch (command)
 		{
+			// Change to the parent directory.
 			case CD_UP:
+			{
+				// Check if we are already at the root directory. If we are, just return.
+				if (isRootDir(g_cwd))
 				{
-					if (isRootDir(g_cwd))
-					{
-						warning("cd: Cannot go up from root directory");
-						return;
-					}
-
-					char* index = strrchr(g_cwd, '/');
-					if (index - g_cwd > 0)
-					{
-						*index = '\0';
-					}
-					else
-					{
-						g_cwd[0] = '/';
-						g_cwd[1] = '\0';
-					}
-
-					g_cwd_fd = file->fd;
-					printf("cd: %s\n", g_cwd);
+					warning("cd: Cannot go up from root directory");
 					return;
 				}
+
+				// Get the last '/' in the current working directory and replace it with a null
+				// terminator, effectively removing the last directory from the path.
+				char* index = strrchr(g_cwd, '/');
+				if (index - g_cwd > 0)
+				{
+					*index = '\0';
+				}
+				// If we are at the root directory, set the current working directory to "/".
+				else
+				{
+					g_cwd[0] = '/';
+					g_cwd[1] = '\0';
+				}
+
+				// Set the current file descriptor to the parent directory.
+				g_cfd = file->fd;
+				printf("cd: %s\n", g_cwd);
+				return;
+			}
+			// Change to the specified directory.
 			case CD_DOWN:
+			{
+				// If we are not at the root directory, add a '/' to the current working directory.
+				if (!isRootDir(g_cwd))
 				{
-					if (!isRootDir(g_cwd))
-					{
-						strcat(g_cwd, "/");
-					}
-					strcat(g_cwd, file->name);
-					g_cwd_fd = file->fd;
-					printf("cd: %s\n", g_cwd);
-					return;
+					strcat(g_cwd, "/");
 				}
+				// Add the directory name to the current working directory.
+				// At this point, g_cwd should be `/old/new`.
+				strcat(g_cwd, file->name);
+
+				//  Set the current file descriptor to the new directory.
+				g_cfd = file->fd;
+				printf("cd: %s\n", g_cwd);
+				return;
+			}
+			// If the path is the same as the current working directory, just return.
 			case CD_SAME:
-				{
-					return;
-				}
+			{
+				return;
+			}
 		}
 	}
 
+	// If we get here, it means we didn't find any matching directories within the current
+	// working directory. Issue a warning.
 	warning("cd: No dir found matching '%s'", path);
 }
 

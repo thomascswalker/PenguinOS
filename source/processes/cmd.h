@@ -16,7 +16,7 @@ namespace CMD
 	};
 
 	void init();
-	void processCmd(const char* cmd);
+	void run(const char* cmd);
 	bool parseCmdArgs(const char* cmd, char* args[], int32_t* argCount);
 	bool isValidExecutable(const char* exe);
 	bool isRootDir(const char* path);
