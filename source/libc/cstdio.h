@@ -2,6 +2,7 @@
 
 #include <array.h>
 #include <stdarg.h>
+#include <fs.h>
 
 // Printing
 

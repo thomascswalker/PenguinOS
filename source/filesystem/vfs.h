@@ -1,6 +1,7 @@
 #pragma once
 
 #include <array.h>
+#include <fs.h>
 #include <ide.h>
 
 #define MAX_FILENAME 256

@@ -67,4 +67,5 @@ add_executable(PengOS
         source/processes/elf.cpp
         source/processes/elf.h
         source/system/scheduler.cpp
-        source/system/scheduler.h)
+        source/system/scheduler.h
+        source/filesystem/fs.h)
