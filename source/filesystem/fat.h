@@ -114,8 +114,8 @@ public:
 	void	close(int32_t fd) override;
 	size_t	write(int32_t fd, const void* buffer, size_t size) override;
 
-	void getFilesInDirectory(int32_t fd, FileArray* files) override;
-	void getFilesInDirectoryFromName(const char* filename, FileArray* files) override;
+	void getFilesInDirectory(int32_t fd, NodeArray* files) override;
+	void getFilesInDirectoryFromName(const char* filename, NodeArray* files) override;
 
 	size_t		   getFileSize(int32_t fd) override;
 	size_t		   getFileSizeFromName(const char* filename) override;
@@ -136,6 +136,6 @@ public:
 	static bool	 isValidChar(char c);
 	static bool	 isLongEntry(const uint8_t* buffer);
 
-	static char* parseLongEntryName(FAT32::LongEntry* entry, uint32_t count);
-	static char* parseShortEntryName(FAT32::ShortEntry* entry);
+	static void	 parseLongEntryName(FAT32::LongEntry* entry, char* filename, uint32_t count);
+	static void	 parseShortEntryName(FAT32::ShortEntry* entry, char* filename);
 };

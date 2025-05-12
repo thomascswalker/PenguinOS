@@ -14,12 +14,13 @@ enum class FileSystemType
 	None,
 	FAT32,
 	NTFS,
+	EXT2,
 };
 
 class VirtualFileSystem
 {
 protected:
-	using FileArray = Array<File*>;
+	using NodeArray = Array<INode>;
 	ATADevice* m_device = nullptr;
 
 public:
@@ -31,8 +32,8 @@ public:
 	virtual void	close(int32_t fd) = 0;
 	virtual size_t	write(int32_t fd, const void* buffer, size_t size) = 0;
 
-	virtual void getFilesInDirectory(int32_t fd, FileArray* files) = 0;
-	virtual void getFilesInDirectoryFromName(const char* filename, FileArray* files) = 0;
+	virtual void getFilesInDirectory(int32_t fd, NodeArray* files) = 0;
+	virtual void getFilesInDirectoryFromName(const char* filename, NodeArray* files) = 0;
 
 	virtual size_t		   getFileSize(int32_t fd) = 0;
 	virtual size_t		   getFileSizeFromName(const char* filename) = 0;

@@ -5,5 +5,5 @@
 #define ASSERT(x)                                                                             \
 	if (!(x))                                                                                 \
 	{                                                                                         \
-		panic("Assertion failed: %s.\n\t\t  File:%s\n\t\t  Line:%d", #x, __FILE__, __LINE__); \
+		panic("Assertion failed: %s.\n\t\t  INode:%s\n\t\t  Line:%d", #x, __FILE__, __LINE__); \
 	}

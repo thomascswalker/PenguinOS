@@ -284,7 +284,7 @@ File* fopen(const char* filename)
 		error("Failed to open file: %s", filename);
 		return nullptr;
 	}
-	FileStat stat;
+	FileStat stat{};
 	fstat(fd, &stat);
 
 	size_t size = stat.size;
@@ -292,12 +292,11 @@ File* fopen(const char* filename)
 	char* buf = new char[size];
 	read(fd, buf, size);
 
-	File* f = new File();
-	f->fd = fd;
-	f->name = new char[strlen(filename) + 1];
-	strcpy(f->name, filename);
+	auto f = new File();
+	f->inode->fd = fd;
+	strcpy(f->inode->name, filename);
 	f->buffer = buf;
-	f->size = size;
+	f->inode->size = size;
 	f->pos = 0;
 	return f;
 }
@@ -310,7 +309,7 @@ size_t fread(File* stream, void* buffer, size_t size)
 	}
 
 	// Calculate the number of bytes available to read
-	size_t bytesAvailable = stream->size - stream->pos;
+	size_t bytesAvailable = stream->inode->size - stream->pos;
 	size_t bytesToRead = (size > bytesAvailable) ? bytesAvailable : size;
 
 	// Copy the data from the stream's buffer to the provided buffer
@@ -326,18 +325,18 @@ void fclose(File* stream)
 {
 	if (stream)
 	{
-		close(stream->fd);
+		close(stream->inode->fd);
 
 		// Free the allocated memory for the file name and buffer
-		delete[] stream->name;
+		// delete[] stream->inode->name;
 		delete[] stream->buffer;
 
-		// Free the File structure itself
+		// Free the INode structure itself
 		delete stream;
 	}
 }
 
-void fstat(int32_t fd, FileStat* buffer) { stat(fd, (void*)buffer); }
+void fstat(int32_t fd, FileStat* buffer) { stat(fd, buffer); }
 
 size_t fwrite(int32_t fd, const void* buffer, size_t size)
 {
@@ -345,9 +344,7 @@ size_t fwrite(int32_t fd, const void* buffer, size_t size)
 	return 0;
 }
 
-Array<File*> readdir(int32_t fd)
+void readdir(int32_t fd, Array<INode>* nodes)
 {
-	Array<File*> files;
-	asm("int $0x80" ::"a"(SYSCALL_READDIR), "b"(fd), "c"((int32_t)&files));
-	return files;
+	asm("int $0x80" ::"a"(SYSCALL_READDIR), "b"(fd), "c"((int32_t)nodes));
 }

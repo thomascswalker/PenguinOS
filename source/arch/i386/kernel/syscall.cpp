@@ -118,11 +118,11 @@ int32_t sysReadDir(CPUState* regs)
 {
 	// Make a local copy of the filename so we don't modify
 	// the original
-	Array<File*>* files = (Array<File*>*)regs->ecx;
-	files->clear(); // Clear the array before populating it.
+	auto nodes = (Array<INode>*)regs->ecx;
+	nodes->clear(); // Clear the array before populating it.
 	auto	fs = getVirtualFileSystem();
 	int32_t fd = regs->ebx;
-	fs->getFilesInDirectory(fd, files);
+	fs->getFilesInDirectory(fd, nodes);
 	return 0;
 }
 

@@ -1,3 +1,5 @@
+#include "bitmask.h"
+
 #include <cmd.h>
 #include <cstdio.h>
 #include <shell.h>
@@ -212,27 +214,22 @@ void CMD::cd(const char* path)
 		command = CD_DOWN;
 	}
 
-	/**
-	 * TODO: This currently only searches for directories in
-	 * the current working directory. It should be updated
-	 * to search for directories in the specified path (relative
-	 * or absolute).
-	*/
-	Array<File*> files = readdir(g_cwd_fd);
-	if (files.empty())
+	Array<INode> nodes{};
+	readdir(g_cwd_fd, &nodes);
+	if (nodes.empty())
 	{
 		warning("cd: No files found in directory '%s'", path);
 		return;
 	}
 
-	for (const auto file : files)
+	for (const auto& inode : nodes)
 	{
-		if (!file->isDirectory)
+		if (!inode.isDirectory())
 		{
 			continue; // Skip non-directory files
 		}
 
-		if (!strncmp(path, file->name, strlen(path)))
+		if (!strncmp(path, inode.name, strlen(path)))
 		{
 			continue;
 		}
@@ -258,7 +255,7 @@ void CMD::cd(const char* path)
 						g_cwd[1] = '\0';
 					}
 
-					g_cwd_fd = file->fd;
+					g_cwd_fd = inode.fd;
 					printf("cd: %s\n", g_cwd);
 					return;
 				}
@@ -268,8 +265,11 @@ void CMD::cd(const char* path)
 					{
 						strcat(g_cwd, "/");
 					}
-					strcat(g_cwd, file->name);
-					g_cwd_fd = file->fd;
+					strcat(g_cwd, inode.name);
+					strcat(g_cwd, "/");
+					g_cwd_fd = inode.fd;
+
+					// Print the current working directory
 					printf("cd: %s\n", g_cwd);
 					return;
 				}
@@ -285,12 +285,13 @@ void CMD::cd(const char* path)
 
 void CMD::ls(const int32_t fd)
 {
-	Array<File*> files = readdir(fd);
-	for (const auto& file : files)
+	Array<INode> nodes{};
+	readdir(fd, &nodes);
+	for (const auto& inode : nodes)
 	{
-		const auto color = file->isDirectory ? VGA_COLOR_CYAN : VGA_COLOR_GREEN;
+		const auto color = inode.type == IT_Directory ? VGA_COLOR_CYAN : VGA_COLOR_GREEN;
 		Shell::setForeColor(color);
-		printf(" %s", file->name);
+		printf(" %s", inode.name);
 		Shell::resetColor();
 	}
 	printf("\n");

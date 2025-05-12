@@ -206,7 +206,7 @@ size_t FAT32FileSystem::write(const int32_t fd, const void* buffer, const size_t
 Retrieves a list of files and directories within a specified
 cluster in a FAT32 file system. It reads the cluster's sectors,
 processes both short and long directory entries to extract
-file metadata, and returns an `Array<File*>` containing the
+file metadata, and returns an `Array<INode>` containing the
 parsed file objects.
 
 @param cluster The cluster number to read files from.
@@ -214,7 +214,7 @@ parsed file objects.
 @returns An array containing the files and directories
 		  found in the specified cluster.
 */
-void FAT32FileSystem::getFilesInDirectory(const int32_t fd, FileArray* files)
+void FAT32FileSystem::getFilesInDirectory(const int32_t fd, NodeArray* files)
 {
 	Array<LongEntry> longEntries; // Array of long entries to store long filenames
 
@@ -254,7 +254,7 @@ void FAT32FileSystem::getFilesInDirectory(const int32_t fd, FileArray* files)
 			continue;
 		}
 
-		auto f = new File();
+		INode node{};
 
 		// If there's one or more long entries, we need to parse
 		// the long name and set it to the filename of this file.
@@ -262,21 +262,21 @@ void FAT32FileSystem::getFilesInDirectory(const int32_t fd, FileArray* files)
 		{
 			// We have a long entry, parse it
 			const uint32_t count = longEntries.size();
-			f->name = parseLongEntryName(&longEntries[0], count);
+			parseLongEntryName(&longEntries[0], node.name, count);
 			longEntries.clear();
 		}
 		// Otherwise, we have a short entry. Parse it and set it to the filename.
 		else
 		{
-			f->name = parseShortEntryName(current);
+			parseShortEntryName(current, node.name);
 		}
 
 		// Set the file's attributes and size.
-		f->size = current->fileSize;
-		f->fd = (int32_t)current->cluster();
-		f->isDirectory = current->isDirectory();
+		node.size = current->fileSize;
+		node.fd = (int32_t)current->cluster();
+		node.type = Bitmask::test(current->attribute, FA_Directory) ? IT_Directory : IT_Regular;
 
-		files->add(f);
+		files->add(node);
 
 		// Go to the next entry
 		current++;
@@ -285,7 +285,7 @@ void FAT32FileSystem::getFilesInDirectory(const int32_t fd, FileArray* files)
 
 // Similar to getFilesInDirectory, but takes a filename
 // rather than a cluster number.
-void FAT32FileSystem::getFilesInDirectoryFromName(const char* filename, FileArray* files)
+void FAT32FileSystem::getFilesInDirectoryFromName(const char* filename, NodeArray* files)
 {
 	ShortEntry entry;
 	if (strcmp(filename, "/") == true)
@@ -508,10 +508,11 @@ bool FAT32FileSystem::isLongEntry(const uint8_t* buffer)
 	return ((ShortEntry*)buffer)->attribute == FA_LongFileName;
 }
 
-char* FAT32FileSystem::parseLongEntryName(LongEntry* entry, uint32_t count)
+void FAT32FileSystem::parseLongEntryName(LongEntry* entry, char* filename, uint32_t count)
 {
+	memset(filename, 0, MAX_FILENAME_LENGTH);
+
 	// While we still have entries to parse...
-	const auto filename = new char[count * 13 + 1];
 	filename[count * 13] = '\0';
 
 	while (count)
@@ -545,30 +546,27 @@ char* FAT32FileSystem::parseLongEntryName(LongEntry* entry, uint32_t count)
 		// long filename entry.
 		entry++;
 	}
-	// Append a null-terminator to the end of the filename.
-	return filename;
 }
 
-char* FAT32FileSystem::parseShortEntryName(ShortEntry* entry)
+void FAT32FileSystem::parseShortEntryName(ShortEntry* entry, char* filename)
 {
+	memset(filename, 0, MAX_FILENAME_LENGTH);
+
 	// Special case for '.' and '..' entries.
 	if (entry->isDirectory() && strncmp(".       ", (const char*)entry->name, 8))
 	{
-		const auto filename = new char[2];
 		filename[0] = '.';
 		filename[1] = '\0';
-		return filename;
+		return;
 	}
 	if (entry->isDirectory() && strncmp("..      ", (const char*)entry->name, 8))
 	{
-		const auto filename = new char[3];
 		filename[0] = '.';
 		filename[1] = '.';
 		filename[2] = '\0';
-		return filename;
+		return;
 	}
 
-	const auto filename = new char[12];
 	memset(filename, 0, 12);
 
 	// Design curtosy of CactusOS
@@ -590,7 +588,6 @@ char* FAT32FileSystem::parseShortEntryName(ShortEntry* entry)
 	{
 		filename[i] = tolower(filename[i]);
 	}
-	return filename;
 }
 
 bool FAT32FileSystem::readDirectory(const ShortEntry& entry, Array<ShortEntry>& entries) const

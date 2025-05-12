@@ -74,7 +74,7 @@ namespace ELF
 	//
 	class ELFFile
 	{
-	// 	File*				 m_file;
+	// 	INode*				 m_file;
 	// 	FileHeader			 m_header;
 	// 	Array<ProgramHeader> m_programHeaders;
 	// 	Array<SectionHeader> m_sectionHeaders;
